@@ -1,6 +1,15 @@
 
 #include <Servo.h>
+#include <MsTimer2.h>
 
+
+/* Hardware usage
+
+* Timer0: system clock
+* Timer1: Servo
+* Timer2: <custom, action executor / PWM>
+
+*/
 
 Servo dump_arm;
 Servo driver_arm;
@@ -20,24 +29,24 @@ public:
   const int8_t MOTOR_VEL_KEEP = 0x80;
   int8_t motor_vel[2];
 
-}
+};
 
 class ActionQueue {
 private:
-  const int size = 4;
+  const static int size = 4;
   Action queue[size];
   int ix = 0;
   int n = 0;
 public:
   Action& add() {
-    auto act = queue[(ix + n) % size];
+    Action& act = queue[(ix + n) % size];
     n += 1;
     return act;
   }
 
   Action* peek() {
     if (n == 0) {
-      return nullptr;
+      return NULL;
     } else {
       return &queue[ix];
     }
@@ -45,9 +54,9 @@ public:
 
   Action* pop() {
     if (n == 0) {
-      return nullptr;
+      return NULL;
     } else {
-      auto ptr = &queue[ix];
+      Action* ptr = &queue[ix];
       ix = (ix + 1) % size;
       n -= 1;
       return ptr;
@@ -57,7 +66,7 @@ public:
   void clear() {
     n = 0;
   }
-}
+};
 
 ActionQueue queue;
 
@@ -78,6 +87,11 @@ int curr_index = 0;
 
 int drv_arm_pos = 0;
 
+
+void action_loop() {
+
+}
+
 void setup()  {
   Serial.begin(9600);
 
@@ -89,6 +103,9 @@ void setup()  {
   pinMode(9, OUTPUT);
   digitalWrite(8, false);
   digitalWrite(9, false);
+
+  MsTimer2::set(10 /* ms */, action_loop);
+  MsTimer2::start();
 }
 
 void print_calib() {
@@ -153,7 +170,7 @@ void loop() {
       // attach arm
       drv_arm_pos = 120;
       Action& a = queue.add();
-      a.
+      
     } else if (command == 'y') {
       // detach arm
       drv_arm_pos = 0;
@@ -165,5 +182,4 @@ void loop() {
   dump_arm.write(120 + calib[CIX_DUMP].offset);
   driver_arm.write(drv_arm_pos + calib[CIX_DRIVER].offset);
   train_ori.write(120 + calib[CIX_ORI].offset);
-  delay(100);
 }
