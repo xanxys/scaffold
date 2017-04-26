@@ -2,6 +2,7 @@
 #include <Servo.h>
 #include <MsTimer2.h>
 
+#include "action.h"
 
 /* Hardware usage
 
@@ -19,56 +20,7 @@ Servo train_ori;
 // 10-150: active range
 // +: CW (top view), -: CCW
 
-
-class Action {
-public:
-  const uint8_t SERVO_POS_KEEP = 0xff;
-  uint8_t servo_pos[3];
-
-  // -0x7f~0x7f (max CCW~max CW), 0x80: keep
-  const int8_t MOTOR_VEL_KEEP = 0x80;
-  int8_t motor_vel[2];
-
-};
-
-class ActionQueue {
-private:
-  const static int size = 4;
-  Action queue[size];
-  int ix = 0;
-  int n = 0;
-public:
-  Action& add() {
-    Action& act = queue[(ix + n) % size];
-    n += 1;
-    return act;
-  }
-
-  Action* peek() {
-    if (n == 0) {
-      return NULL;
-    } else {
-      return &queue[ix];
-    }
-  }
-
-  Action* pop() {
-    if (n == 0) {
-      return NULL;
-    } else {
-      Action* ptr = &queue[ix];
-      ix = (ix + 1) % size;
-      n -= 1;
-      return ptr;
-    }
-  }
-
-  void clear() {
-    n = 0;
-  }
-};
-
-ActionQueue queue;
+ActionExecutor actions;
 
 class ServoCalib {
 public:
@@ -89,7 +41,7 @@ int drv_arm_pos = 0;
 
 
 void action_loop() {
-
+  actions.loop();
 }
 
 void setup()  {
@@ -170,7 +122,7 @@ void loop() {
       // attach arm
       drv_arm_pos = 120;
       Action& a = queue.add();
-      
+
     } else if (command == 'y') {
       // detach arm
       drv_arm_pos = 0;
