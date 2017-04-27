@@ -1,8 +1,20 @@
-#pragma once
 
 #include "hardware.h"
 
-const static int ACTION_RES_MS = 1;
+// ms / step
+const static int SUBSTEP_MS = 1;
+
+// interpolation steps.
+const static int SUBSTEPS = 16;
+
+// Max duration = (256*NUM_SUB_ACTIONS) ms
+
+// Safely calculate va + (vb - va) * (ix / num)
+uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
+  uint8_t delta = (vb > va) ? vb - va : va - vb;
+  uint8_t dv = (static_cast<uint16_t>(delta) * ix) / num;
+  return (vb > va) ? va + dv : va - dv;
+}
 
 class Action {
 public:
@@ -13,7 +25,12 @@ public:
   const static int8_t MOTOR_VEL_KEEP = 0x80;
   int8_t motor_vel[2];
 
-  uint16_t duration_ms;
+  uint8_t duration_step;
+
+  Action() {}
+
+  Action(uint16_t duration_ms) : duration_step(duration_ms / (SUBSTEP_MS * SUBSTEPS)) {
+  }
 };
 
 // ActionExecState = Zero | Executing
@@ -23,25 +40,28 @@ private:
   Action* action;
   // elapsed time since starting exec of current action.
   // Don't care when action is null.
-  uint16_t elapsed_ms;
+  uint8_t elapsed_step;
 
   uint8_t servo_pos_pre[3];
 public:
-  ActionExecState(Action* action, const uint8_t* servo_pos) : elapsed_ms(0), action(action) {
+  ActionExecState() : action(NULL) {}
+
+  ActionExecState(Action* action, const uint8_t* servo_pos) : elapsed_step(0), action(action) {
     for (int i = 0; i < 3; i++) {
       servo_pos_pre[i] = servo_pos[i];
     }
   }
 
+  // Somehow heavy because of u16/u8 3 divisions.
   void step(uint8_t* servo_pos_out, int8_t* motor_vel_out) {
     if (action == NULL) {
       return;
     }
 
     for (int i = 0; i < 3; i++) {
-      int8_t targ_pos = action->servo_pos[i];
+      uint8_t targ_pos = action->servo_pos[i];
       if (targ_pos != Action::SERVO_POS_KEEP) {
-        servo_pos_out[i] = targ_pos - servo_pos_pre[i] elapsed_ms / duration_ms;
+        servo_pos_out[i] = interp(servo_pos_pre[i], targ_pos, elapsed_step, action->duration_step);
       }
     }
     for (int i = 0; i < 2; i++) {
@@ -51,11 +71,11 @@ public:
       }
     }
 
-    elapsed_ms += ACTION_RES_MS;
+    elapsed_step++;
   }
 
   bool is_running() {
-    return action != NULL && (elapsed_ms < action->duration_ms);
+    return action != NULL && (elapsed_step < action->duration_step);
   }
 };
 
@@ -119,11 +139,22 @@ public:
   DCMotor motors[2];
   static const int PWM_NUM_PHASE = 16;
   uint8_t pwm_phase; // 0-15
-  static const int MV_DUMP_ARM = 0;
+  static const int MV_TRAIN = 0;
   static const int MV_SCREW_DRIVER = 1;
 
+  uint8_t subaction_ix = 0;
+
 public:
-  ActionExecutor() {
+  ActionExecutorSingleton() :
+      servos({
+        CalibratedServo(6, 30, 30),
+        CalibratedServo(7, 30, 30),
+        CalibratedServo(5, 30, 30)
+      }),
+      motors({
+        DCMotor(8, 9),
+        DCMotor(10, 11)
+      }) {
   }
 
   // Must be called periodically with ACTION_RES_MS.
@@ -131,7 +162,10 @@ public:
     // Update values. Apply servo values.
     if (state.is_running()) {
       // Update values using state.
-      state.step(servo_pos, motor_vel);
+      if (subaction_ix == 0) {
+        state.step(servo_pos, motor_vel);
+      }
+      subaction_ix = (subaction_ix + 1) % SUBSTEPS;
     } else {
       // Fetch new action.
       Action* new_action = queue.pop();

@@ -1,4 +1,5 @@
 
+#include <Arduino.h>
 #include <Servo.h>
 #include <MsTimer2.h>
 
@@ -12,10 +13,13 @@ void action_loop() {
 }
 
 void setup()  {
-  setup_hw();
-  MsTimer2::set(1 /* ms */, action_loop);
+  Serial.begin(9600);
+
+  MsTimer2::set(SUBSTEP_MS, action_loop);
   MsTimer2::start();
 }
+
+/*
 
 void print_calib() {
   for (int i = 0; i < 3; i++) {
@@ -27,10 +31,12 @@ void print_calib() {
   }
   Serial.println("");
 }
+*/
 
 void loop() {
   if (Serial.available() > 0) {
     char command = Serial.read();
+    /*
     if (command == 'c') {
       // Enter calibration mode.
       Serial.println("enter:calibration");
@@ -83,8 +89,8 @@ void loop() {
     } else if (command == 'y') {
       // detach arm
       drv_arm_pos = 0;
-    } else if (command == 'x') {
-      queue.clear();
+    } else */ if (command == 'x') {
+      actions.clear();
     }
   }
 }

@@ -1,4 +1,3 @@
-#pragma once
 
 /* Hardware usage
 
@@ -13,20 +12,6 @@
 // 10-150: active range
 // +: CW (top view), -: CCW
 
-
-void setup_hw() {
-  Serial.begin(9600);
-
-  dump_arm.attach(6);
-  train_ori.attach(5);
-  driver_arm.attach(7);
-
-  pinMode(8, OUTPUT);
-  pinMode(9, OUTPUT);
-  digitalWrite(8, false);
-  digitalWrite(9, false);
-}
-
 class CalibratedServo {
 private:
   Servo servo;
@@ -40,6 +25,10 @@ private:
   // Actual output to add. Will be saved, reset to 0 upon entering (re-)calibration.
   int offset;
 public:
+  CalibratedServo(int pin, int rot_assy, int rot_init) : rot_assy(rot_assy), rot_init(rot_init) {
+    servo.attach(pin);
+  }
+
   void set(uint8_t targ) {
     servo.write(static_cast<int>(targ) + offset);
   }
@@ -51,6 +40,10 @@ private:
   uint8_t pin1;
 public:
   DCMotor(int pin0, int pin1) : pin0(pin0), pin1(pin1) {
+    pinMode(pin0, OUTPUT);
+    pinMode(pin1, OUTPUT);
+    digitalWrite(pin0, false);
+    digitalWrite(pin1, false);
   }
 
   void stop() {
