@@ -4,59 +4,16 @@
 
 #include "action.h"
 
-/* Hardware usage
 
-* Timer0: system clock
-* Timer1: Servo
-* Timer2: <custom, action executor / PWM>
-
-*/
-
-Servo dump_arm;
-Servo driver_arm;
-Servo train_ori;
-
-// GWServo PICO
-// 10-150: active range
-// +: CW (top view), -: CCW
-
-ActionExecutor actions;
-
-class ServoCalib {
-public:
-  int offset = 20;
-  ServoCalib() {
-  }
-
-};
-
-const int CIX_DUMP = 0;
-const int CIX_DRIVER = 1;
-const int CIX_ORI = 2;
-
-ServoCalib calib[3];  //  = {ServoCalib(), ServoCalib(), ServoCalib()};
-int curr_index = 0;
-
-int drv_arm_pos = 0;
-
+ActionExecutorSingleton actions;
 
 void action_loop() {
   actions.loop();
 }
 
 void setup()  {
-  Serial.begin(9600);
-
-  dump_arm.attach(6);
-  train_ori.attach(5);
-  driver_arm.attach(7);
-
-  pinMode(8, OUTPUT);
-  pinMode(9, OUTPUT);
-  digitalWrite(8, false);
-  digitalWrite(9, false);
-
-  MsTimer2::set(10 /* ms */, action_loop);
+  setup_hw();
+  MsTimer2::set(1 /* ms */, action_loop);
   MsTimer2::start();
 }
 
@@ -130,8 +87,4 @@ void loop() {
       queue.clear();
     }
   }
-
-  dump_arm.write(120 + calib[CIX_DUMP].offset);
-  driver_arm.write(drv_arm_pos + calib[CIX_DRIVER].offset);
-  train_ori.write(120 + calib[CIX_ORI].offset);
 }
