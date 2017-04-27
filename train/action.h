@@ -1,6 +1,14 @@
 
 #include "hardware.h"
 
+const int CIX_DUMP = 0;
+const int CIX_DRIVER = 1;
+const int CIX_ORI = 2;
+
+const int MV_TRAIN = 0;
+const int MV_SCREW_DRIVER = 1;
+
+
 // ms / step
 const static int SUBSTEP_MS = 1;
 
@@ -19,6 +27,7 @@ uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
 class Action {
 public:
   const static uint8_t SERVO_POS_KEEP = 0xff;
+  // 20~100
   uint8_t servo_pos[3];
 
   // -0x7f~0x7f (max CCW~max CW), 0x80: keep
@@ -27,9 +36,12 @@ public:
 
   uint8_t duration_step;
 
-  Action() {}
+  Action() : Action(1) {}
 
-  Action(uint16_t duration_ms) : duration_step(duration_ms / (SUBSTEP_MS * SUBSTEPS)) {
+  Action(uint16_t duration_ms) :
+      duration_step(duration_ms / (SUBSTEP_MS * SUBSTEPS)),
+      servo_pos({SERVO_POS_KEEP, SERVO_POS_KEEP, SERVO_POS_KEEP}),
+      motor_vel({MOTOR_VEL_KEEP, MOTOR_VEL_KEEP, MOTOR_VEL_KEEP}) {
   }
 };
 
@@ -87,8 +99,8 @@ private:
   int ix = 0;
   int n = 0;
 public:
-  Action& add() {
-    Action& act = queue[(ix + n) % SIZE];
+  void enqueue(Action& a) {
+    queue[(ix + n) % SIZE] = a;
     n += 1;
     return act;
   }
@@ -146,10 +158,6 @@ public:
 
   // Position based control. Set position will be maintained automatically (using Timer1)
   // in Calibrated Servo.
-  static const int CIX_DUMP = 0;
-  static const int CIX_DRIVER = 1;
-  static const int CIX_ORI = 2;
-
   uint8_t servo_pos[3];
   CalibratedServo servos[3];
 
@@ -161,8 +169,7 @@ public:
   DCMotor motors[2];
   static const int PWM_NUM_PHASE = 16;
   uint8_t pwm_phase; // 0-15
-  static const int MV_TRAIN = 0;
-  static const int MV_SCREW_DRIVER = 1;
+
 
   uint8_t subaction_ix = 0;
 
@@ -217,6 +224,10 @@ public:
       }
     }
     pwm_phase = (pwm_phase + 1) % PWM_NUM_PHASE;
+  }
+
+  void enqueue(Action& a) {
+    queue.enqueue(a);
   }
 
   void clear() {

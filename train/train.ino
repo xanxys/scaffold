@@ -8,6 +8,161 @@
 
 ActionExecutorSingleton actions;
 
+// Command format:
+// To ease interactive debugging from serial monitor,
+// Command = CommandCode[a-zA-Z] CommandBody[^/]* ("\n" | "/")
+// This is useful especially for qneueuing.
+// Single action run:
+// e100d80 + Enter
+// Move & stop (2 enqueue)
+// e100t127/e16t0 + Enter
+// this is exactly same as typing e100t127+ Enter, and then e16t0 + Enter,
+// but more copy-paste friendly.
+class CommandProcessorSingleton {
+private:
+  // if 0, unavailable.
+  char buffer;
+public:
+  CommandProcessorSingleton() : prev(0) {}
+
+  void loop() {
+    while (true) {
+      while (!available()) {
+      }
+
+      char code = read();
+      switch (code) {
+        case 'x': exec_clear_actions(); break;
+        case 'p': exec_print_actions(); break;
+        case 'e': exec_enqueue(); break;
+        default:
+          Serial.println("Unknown command");
+      }
+    }
+  }
+
+private:
+  static bool is_terminator(char c) {
+    return c == '/' || c == '\n';
+  }
+
+  bool consume_terminator() {
+    char ch = read();
+    if (is_terminator(ch)) {
+      return true;
+    } else {
+      unread(ch);
+      return false;
+    }
+  }
+
+  bool available() {
+    return (buffer != 0) || (Serial.available() > 0);
+  }
+
+  char read() {
+    if (buffer != 0) {
+      char ret = buffer;
+      buffer = 0;
+      return ret;
+    } else {
+      return Serial.read();
+    }
+  }
+
+  void unread(char c) {
+    if (buffer == 0) {
+      buffer = c;
+    } else {
+      // NOT SUPPORTED; this means it encountered unparsable string.
+      Serial.println("[NEVER_HAPPEN] parse failed: unread failed for:");
+      Serial.println(c);
+    }
+  }
+
+  int16_t parse_int() {
+    bool positive = true;
+    if (read() == '-') {
+      positive = false;
+    }
+
+    int16_t v = 0;
+    while (true) {
+      char c = read();
+      if ('0' <= c && c <= '9') {
+        v = v * 10 + (c - '0');
+      } else {
+        unread(c);
+        break;
+      }
+    }
+    return positive ? v : -v;
+  }
+private: // Command Handler
+  void exec_clear_actions() {
+    actions.clear();
+  }
+
+  void exec_print_actions() {
+    actions.print();
+  }
+
+  void exec_parsing_enqueue() {
+    int16_t dur_ms = parse_int();
+    if (dur_ms < 1) {
+      dur_ms = 1;
+      Serial.println("[WARN] dur extended to 1 ms");
+    }
+    if (dur_ms > 2000) {
+      dur_ms = 2000;
+      Serial.println("[WARN] dur truncated to 2000 ms");
+    }
+
+    Action action(dur_ms);
+    // parse command body.
+    while (true) {
+      if (consume_terminator()) {
+        break;
+      }
+      char target = read();
+      int16_t value = parse_int();
+
+      if (target == 'd' || target == 'r' || target == 'o') {
+        if (value < 0) {
+          value = 0;
+          Serial.println("[WARN] pos truncated to 0")
+        } else if (value > 254) {
+          // note: 255 is reserved as SERVO_POS_KEEP.
+          value = 254;
+          Serial.println("[WARN] pos truncated to 254")
+        }
+      } else if (target == 't' || target == 's') {
+        if (value < -127) {
+          value = -127;
+          Serial.println("[WARN] vel truncated to -127");
+        } else if (value > 127) {
+          value = 127;
+          Serial.println("[WARN] vel truncated to 127");
+        }
+      } else {
+        Serial.println("[WARN] unknown command ignored");
+      }
+
+      switch (target) {
+        case 'd': action.servo_pos[CIX_DUMP] = value; break;
+        case 'r': action.servo_pos[CIX_DRIVER] = value; break;
+        case 'o': action.servo_pos[CIX_ORI] = value; break;
+        case 't': action.motor_vel[MV_TRAIN] = value; break;
+        case 's': action.motor_vel[MV_SCREW_DRIVER] = value; break;
+      }
+    }
+    actions.enqueue(action);
+  }
+};
+
+CommandProcessorSingleton command_processor;
+
+
 void action_loop() {
   actions.loop();
 }
@@ -17,84 +172,6 @@ void setup()  {
 
   MsTimer2::set(SUBSTEP_MS, action_loop);
   MsTimer2::start();
-}
 
-/*
-
-void print_calib() {
-  for (int i = 0; i < 3; i++) {
-    ServoCalib& c = calib[i];
-    Serial.print(i == curr_index ? '[' : ' ');
-    Serial.print(c.offset);
-    Serial.print(i == curr_index ? ']' : ' ');
-    Serial.print(" ");
-  }
-  Serial.println("");
-}
-*/
-
-void loop() {
-  if (Serial.available() > 0) {
-    char command = Serial.read();
-    /*
-    if (command == 'c') {
-      // Enter calibration mode.
-      Serial.println("enter:calibration");
-    } else if (command == 'w') {
-      calib[curr_index].offset += 5;
-      print_calib();
-    } else if (command == 's') {
-      calib[curr_index].offset -= 5;
-      print_calib();
-    } else if (command == 'a') {
-      if (curr_index > 0) {
-        curr_index -= 1;
-      }
-      print_calib();
-    } else if (command == 'd') {
-      if (curr_index < 2) {
-        curr_index += 1;
-      }
-      print_calib();
-    } else if (command == 'r') {
-      // fwd
-      digitalWrite(8, true);
-      digitalWrite(9, false);
-
-    } else if (command == 'f') {
-      // stop
-      digitalWrite(8, false);
-      digitalWrite(9, false);
-    } else if (command == 'v') {
-      // back
-      digitalWrite(8, false);
-      digitalWrite(9, true);
-    } else if (command == 'u') {
-      // CW* tighten
-      digitalWrite(10, true);
-      digitalWrite(11, false);
-    } else if (command == 'j') {
-      // stop
-      digitalWrite(10, false);
-      digitalWrite(11, false);
-    } else if (command == 'm') {
-      // CCW: unfasten
-      digitalWrite(10, false);
-      digitalWrite(11, true);
-    } else if (command == 't') {
-      // attach arm
-      drv_arm_pos = 120;
-      Action& a = queue.add();
-
-    } else if (command == 'y') {
-      // detach arm
-      drv_arm_pos = 0;
-  */
-    // ActionQueue
-    if (command == 'x') {
-      actions.clear();
-    } else if (command == 'p') {
-      actions.print();
-    }
-  }
+  command_processor.loop();
 }
