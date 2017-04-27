@@ -80,8 +80,9 @@ public:
 };
 
 class ActionQueue {
-private:
+public:
   const static int SIZE = 4;
+private:
   Action queue[SIZE];
   int ix = 0;
   int n = 0;
@@ -113,6 +114,27 @@ public:
 
   void clear() {
     n = 0;
+  }
+
+  void print() {
+    Serial.print("i=");
+    Serial.print(ix);
+    Serial.print(" / n=");
+    Serial.println(n);
+    for (int i = 0; i < SIZE; i++) {
+      Serial.print(i);
+      Serial.print(i == ix ? "*: " : " : ");
+
+      for (int i = 0; i < 3; i++) {
+        Serial.print(queue[i].servo_pos[i]);
+        Serial.print(", ");
+      }
+      for (int i = 0; i < 2; i++) {
+        Serial.print(queue[i].motor_vel[i]);
+        Serial.print(", ");
+      }
+      Serial.println("");
+    }
   }
 };
 
@@ -199,6 +221,12 @@ public:
 
   void clear() {
     queue.clear();
+  }
+
+  void print() {
+    Serial.println("actions>");
+    queue.print();
+    Serial.println("<actions");
   }
 private:
   static inline uint8_t vel_to_num_phases(int8_t vel) {

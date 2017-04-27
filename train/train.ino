@@ -89,8 +89,12 @@ void loop() {
     } else if (command == 'y') {
       // detach arm
       drv_arm_pos = 0;
-    } else */ if (command == 'x') {
+  */
+    // ActionQueue
+    if (command == 'x') {
       actions.clear();
+    } else if (command == 'p') {
+      actions.print();
     }
   }
 }
