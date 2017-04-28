@@ -25,7 +25,7 @@ private:
   // Actual output to add. Will be saved, reset to 0 upon entering (re-)calibration.
   int offset;
 public:
-  CalibratedServo(int pin, int rot_assy, int rot_init) : rot_assy(rot_assy), rot_init(rot_init) {
+  CalibratedServo(int pin, int rot_assy, int rot_init) : rot_assy(rot_assy), rot_init(rot_init), offset(0) {
     servo.attach(pin);
   }
 

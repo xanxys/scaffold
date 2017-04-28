@@ -51,12 +51,24 @@ public:
 
   void print() {
     for (int i = 0; i < N_SERVOS; i++) {
-      Serial.print(servo_pos[i]);
+      uint8_t v = servo_pos[i];
+      if (v == SERVO_POS_KEEP) {
+        Serial.print("KEEP");
+      } else {
+        Serial.print(v);
+      }
       Serial.print(i == N_SERVOS - 1 ? " | " : ", ");
     }
     for (int i = 0; i < N_MOTORS; i++) {
-      Serial.print(motor_vel[i]);
-      Serial.print(", ");
+      int8_t v = motor_vel[i];
+      if (v == MOTOR_VEL_KEEP) {
+        Serial.print("KEEP");
+      } else {
+        Serial.print(v);
+      }
+      if (i != N_MOTORS - 1) {
+        Serial.print(", ");
+      }
     }
   }
 };
