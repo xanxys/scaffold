@@ -1,10 +1,12 @@
 
 #include "hardware.h"
 
+const int N_SERVOS = 3;
 const int CIX_DUMP = 0;
 const int CIX_DRIVER = 1;
 const int CIX_ORI = 2;
 
+const int N_MOTORS = 2;
 const int MV_TRAIN = 0;
 const int MV_SCREW_DRIVER = 1;
 
@@ -42,6 +44,20 @@ public:
       duration_step(duration_ms / (SUBSTEP_MS * SUBSTEPS)),
       servo_pos({SERVO_POS_KEEP, SERVO_POS_KEEP, SERVO_POS_KEEP}),
       motor_vel({MOTOR_VEL_KEEP, MOTOR_VEL_KEEP}) {
+    if (duration_step == 0) {
+      duration_step = 1; // ensure action is executed at least once.
+    }
+  }
+
+  void print() {
+    for (int i = 0; i < N_SERVOS; i++) {
+      Serial.print(servo_pos[i]);
+      Serial.print(i == N_SERVOS - 1 ? " | " : ", ");
+    }
+    for (int i = 0; i < N_MOTORS; i++) {
+      Serial.print(motor_vel[i]);
+      Serial.print(", ");
+    }
   }
 };
 
@@ -49,17 +65,17 @@ public:
 class ActionExecState {
 private:
   // Nullable current action being executed.
-  Action* action;
+  const Action* action;
   // elapsed time since starting exec of current action.
   // Don't care when action is null.
   uint8_t elapsed_step;
 
-  uint8_t servo_pos_pre[3];
+  uint8_t servo_pos_pre[N_SERVOS];
 public:
   ActionExecState() : action(NULL) {}
 
-  ActionExecState(Action* action, const uint8_t* servo_pos) : elapsed_step(0), action(action) {
-    for (int i = 0; i < 3; i++) {
+  ActionExecState(const Action* action, const uint8_t* servo_pos) : elapsed_step(0), action(action) {
+    for (int i = 0; i < N_SERVOS; i++) {
       servo_pos_pre[i] = servo_pos[i];
     }
   }
@@ -70,24 +86,36 @@ public:
       return;
     }
 
-    for (int i = 0; i < 3; i++) {
-      uint8_t targ_pos = action->servo_pos[i];
+    for (int i = 0; i < N_SERVOS; i++) {
+      const uint8_t targ_pos = action->servo_pos[i];
       if (targ_pos != Action::SERVO_POS_KEEP) {
         servo_pos_out[i] = interp(servo_pos_pre[i], targ_pos, elapsed_step, action->duration_step);
       }
     }
-    for (int i = 0; i < 2; i++) {
-      int8_t targ_vel = action->motor_vel[i];
+    for (int i = 0; i < N_MOTORS; i++) {
+      const int8_t targ_vel = action->motor_vel[i];
       if (targ_vel != Action::MOTOR_VEL_KEEP) {
         motor_vel_out[i] = targ_vel;
       }
     }
-
     elapsed_step++;
   }
 
   bool is_running() {
     return action != NULL && (elapsed_step < action->duration_step);
+  }
+
+  void println() {
+    if (is_running()) {
+      Serial.print("run:");
+      Serial.print(elapsed_step);
+      Serial.print("/");
+      Serial.println(action->duration_step);
+    } else if (action != NULL) {
+      Serial.println("done");
+    } else {
+      Serial.println("idle");
+    }
   }
 };
 
@@ -127,25 +155,15 @@ public:
     n = 0;
   }
 
-  void print() {
-    Serial.print("i=");
-    Serial.print(ix);
-    Serial.print(" / n=");
-    Serial.println(n);
-    for (int i = 0; i < SIZE; i++) {
-      Serial.print(i);
-      Serial.print(i == ix ? "*: " : " : ");
-
-      for (int i = 0; i < 3; i++) {
-        Serial.print(queue[i].servo_pos[i]);
-        Serial.print(", ");
-      }
-      for (int i = 0; i < 2; i++) {
-        Serial.print(queue[i].motor_vel[i]);
-        Serial.print(", ");
-      }
+  void println() {
+    Serial.println("-- actions --");
+    for (int i = 0; i < n; i++) {
+      queue[(ix + i) % SIZE].print();
       Serial.println("");
     }
+    Serial.print("free: ");
+    Serial.println(SIZE - n);
+    Serial.println("-------------");
   }
 };
 
@@ -201,12 +219,12 @@ public:
     }
 
     // Apply servo.
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < N_SERVOS; i++) {
       servos[i].set(servo_pos[i]);
     }
 
     // Do DC motor PWM.
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < N_MOTORS; i++) {
       if (motor_vel[i] == 0) {
         motors[i].stop();
       } else {
@@ -229,14 +247,18 @@ public:
     queue.enqueue(a);
   }
 
-  void clear() {
+  void cancel_all() {
+    state = ActionExecState();
     queue.clear();
+    for (int i = 0; N_MOTORS; i++) {
+      motor_vel[i] = 0;
+    }
   }
 
   void print() {
-    Serial.println("actions>");
-    queue.print();
-    Serial.println("<actions");
+    Serial.println("== executor ==");
+    state.println();
+    queue.println();
   }
 private:
   static inline uint8_t vel_to_num_phases(int8_t vel) {

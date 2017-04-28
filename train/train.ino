@@ -34,7 +34,7 @@ public:
 
       char code = read();
       switch (code) {
-        case 'x': exec_clear_actions(); break;
+        case 'x': exec_cancel_actions(); break;
         case 'p': exec_print_actions(); break;
         case 'e': exec_enqueue(); break;
         default:
@@ -106,8 +106,8 @@ private:
     return positive ? v : -v;
   }
 private: // Command Handler
-  void exec_clear_actions() {
-    actions.clear();
+  void exec_cancel_actions() {
+    actions.cancel_all();
   }
 
   void exec_print_actions() {
@@ -135,9 +135,6 @@ private: // Command Handler
       }
       char target = read();
       int16_t value = parse_int();
-      Serial.println("[parse tok]");
-      Serial.println(target);
-      Serial.println(value);
 
       if (target == 'd' || target == 'r' || target == 'o') {
         if (value < 0) {
