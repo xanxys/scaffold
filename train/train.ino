@@ -18,12 +18,14 @@ ActionExecutorSingleton actions;
 // e100t127/e16t0 + Enter
 // this is exactly same as typing e100t127+ Enter, and then e16t0 + Enter,
 // but more copy-paste friendly.
+//
+// Set terminal to send LF only.
 class CommandProcessorSingleton {
 private:
   // if 0, unavailable.
   char buffer;
 public:
-  CommandProcessorSingleton() : prev(0) {}
+  CommandProcessorSingleton() : buffer(0) {}
 
   void loop() {
     while (true) {
@@ -38,6 +40,7 @@ public:
         default:
           Serial.println("Unknown command");
       }
+      consume_terminator();
     }
   }
 
@@ -66,6 +69,7 @@ private:
       buffer = 0;
       return ret;
     } else {
+      while(Serial.available() == 0);
       return Serial.read();
     }
   }
@@ -82,8 +86,11 @@ private:
 
   int16_t parse_int() {
     bool positive = true;
-    if (read() == '-') {
+    char maybe_sign = read();
+    if (maybe_sign == '-') {
       positive = false;
+    } else {
+      unread(maybe_sign);
     }
 
     int16_t v = 0;
@@ -107,8 +114,9 @@ private: // Command Handler
     actions.print();
   }
 
-  void exec_parsing_enqueue() {
+  void exec_enqueue() {
     int16_t dur_ms = parse_int();
+    Serial.println(dur_ms);
     if (dur_ms < 1) {
       dur_ms = 1;
       Serial.println("[WARN] dur extended to 1 ms");
@@ -118,6 +126,7 @@ private: // Command Handler
       Serial.println("[WARN] dur truncated to 2000 ms");
     }
 
+
     Action action(dur_ms);
     // parse command body.
     while (true) {
@@ -126,15 +135,18 @@ private: // Command Handler
       }
       char target = read();
       int16_t value = parse_int();
+      Serial.println("[parse tok]");
+      Serial.println(target);
+      Serial.println(value);
 
       if (target == 'd' || target == 'r' || target == 'o') {
         if (value < 0) {
           value = 0;
-          Serial.println("[WARN] pos truncated to 0")
+          Serial.println("[WARN] pos truncated to 0");
         } else if (value > 254) {
           // note: 255 is reserved as SERVO_POS_KEEP.
           value = 254;
-          Serial.println("[WARN] pos truncated to 254")
+          Serial.println("[WARN] pos truncated to 254");
         }
       } else if (target == 't' || target == 's') {
         if (value < -127) {
@@ -156,6 +168,7 @@ private: // Command Handler
         case 's': action.motor_vel[MV_SCREW_DRIVER] = value; break;
       }
     }
+    Serial.println("enqueued");
     actions.enqueue(action);
   }
 };
@@ -175,3 +188,5 @@ void setup()  {
 
   command_processor.loop();
 }
+
+void loop() {}

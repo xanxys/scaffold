@@ -41,7 +41,7 @@ public:
   Action(uint16_t duration_ms) :
       duration_step(duration_ms / (SUBSTEP_MS * SUBSTEPS)),
       servo_pos({SERVO_POS_KEEP, SERVO_POS_KEEP, SERVO_POS_KEEP}),
-      motor_vel({MOTOR_VEL_KEEP, MOTOR_VEL_KEEP, MOTOR_VEL_KEEP}) {
+      motor_vel({MOTOR_VEL_KEEP, MOTOR_VEL_KEEP}) {
   }
 };
 
@@ -99,10 +99,9 @@ private:
   int ix = 0;
   int n = 0;
 public:
-  void enqueue(Action& a) {
+  void enqueue(const Action& a) {
     queue[(ix + n) % SIZE] = a;
     n += 1;
-    return act;
   }
 
   Action* peek() {
