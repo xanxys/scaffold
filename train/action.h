@@ -213,7 +213,7 @@ public:
         DCMotor(8, 9, A0),
         DCMotor(10, 11, A1)
       }),
-      servo_pos({50, 50, 50}) {
+      servo_pos({50, 5, 20}) {
     servo_portd_mask_union = 0;
     for (int i = 0; i < 3; i++) {
       servo_portd_mask_union |= servos[i].portd_mask;
