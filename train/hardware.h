@@ -45,27 +45,21 @@ public:
   const uint8_t portb_mask;
   const uint8_t portb_mask_cw;
   const uint8_t portb_mask_ccw;
+  const uint8_t portc_mask_en;
 private:
   uint8_t pin0;
   uint8_t pin1;
 public:
-  DCMotor(int pin0, int pin1) : pin0(pin0), pin1(pin1),
+  DCMotor(int pin0, int pin1, int pin_en) : pin0(pin0), pin1(pin1),
       portb_mask_cw(1 << (pin0 - 8)),
       portb_mask_ccw(1 << (pin1 - 8)),
+      portc_mask_en(1 << (pin_en - A0)),
       portb_mask((1 << (pin0 - 8)) | (1 << (pin1 - 8))) {
     pinMode(pin0, OUTPUT);
     pinMode(pin1, OUTPUT);
+    pinMode(pin_en, OUTPUT);
     digitalWrite(pin0, false);
     digitalWrite(pin1, false);
-  }
-
-  void stop() {
-    digitalWrite(pin0, false);
-    digitalWrite(pin1, false);
-  }
-
-  void move(bool cw) {
-    digitalWrite(pin0, cw);
-    digitalWrite(pin1, !cw);
+    digitalWrite(pin_en, false); // free
   }
 };

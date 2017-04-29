@@ -210,8 +210,8 @@ public:
         CalibratedServo(5, 30, 30)
       }),
       motors({
-        DCMotor(8, 9),
-        DCMotor(10, 11)
+        DCMotor(8, 9, A0),
+        DCMotor(10, 11, A1)
       }),
       servo_pos({50, 50, 50}) {
     servo_portd_mask_union = 0;
@@ -249,19 +249,19 @@ public:
     }
 
     // DC motors.
-    // TODO
-    // Do we need to free-wheel instead of stopping?
-    // Then we need additional enable signal.
     for (int i = 0; i < N_MOTORS; i++) {
+
       if (dc_pwm_phase <= motor_pwm_phase_max[i]) {
         // NOTE: a bit nuanced.
         // When on mask = 00 (i.e. vel == 0),
         // motor_pwm_phase_max become 0, so this only get called once
         // per cycle. In the 1st cycle PORTB |= 0 has no effect.
         // In the 2nd+ cycles, else branch is executed and they'll get turned off.
+        PORTB &= ~ motors[i].portb_mask;
         PORTB |= motor_portb_on_mask[i];
+        PORTC |= motors[i].portc_mask_en;
       } else {
-        PORTB &= ~motors[i].portb_mask;
+        PORTC &= ~motors[i].portc_mask_en;
       }
     }
     dc_pwm_phase = (dc_pwm_phase + 1) % PWM_NUM_PHASE;
