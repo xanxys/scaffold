@@ -1,6 +1,6 @@
 
 #include <Arduino.h>
-#include <Servo.h>
+#include <TimerOne.h>
 #include <MsTimer2.h>
 
 #include "action.h"
@@ -116,7 +116,6 @@ private: // Command Handler
 
   void exec_enqueue() {
     int16_t dur_ms = parse_int();
-    Serial.println(dur_ms);
     if (dur_ms < 1) {
       dur_ms = 1;
       Serial.println("[WARN] dur extended to 1 ms");
@@ -125,7 +124,6 @@ private: // Command Handler
       dur_ms = 2000;
       Serial.println("[WARN] dur truncated to 2000 ms");
     }
-
 
     Action action(dur_ms);
     // parse command body.
@@ -140,10 +138,10 @@ private: // Command Handler
         if (value < 0) {
           value = 0;
           Serial.println("[WARN] pos truncated to 0");
-        } else if (value > 254) {
+        } else if (value > 100) {
           // note: 255 is reserved as SERVO_POS_KEEP.
-          value = 254;
-          Serial.println("[WARN] pos truncated to 254");
+          value = 100;
+          Serial.println("[WARN] pos truncated to 100");
         }
       } else if (target == 't' || target == 's') {
         if (value < -127) {
@@ -177,10 +175,17 @@ void action_loop() {
   actions.loop();
 }
 
+void actions_loop_pwm() {
+  actions.loop_pwm();
+}
+
 void setup()  {
   Serial.begin(9600);
 
-  MsTimer2::set(SUBSTEP_MS, action_loop);
+  Timer1.initialize(PWM_STEP_US);
+  Timer1.attachInterrupt(actions_loop_pwm);
+
+  MsTimer2::set(STEP_MS, action_loop);
   MsTimer2::start();
 
   command_processor.loop();

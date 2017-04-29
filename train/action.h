@@ -11,11 +11,8 @@ const int MV_TRAIN = 0;
 const int MV_SCREW_DRIVER = 1;
 
 
-// ms / step
-const static int SUBSTEP_MS = 1;
-
-// interpolation steps.
-const static int SUBSTEPS = 16;
+const static int PWM_STEP_US = 20;
+const static int STEP_MS = 16;
 
 // Max duration = (256*NUM_SUB_ACTIONS) ms
 
@@ -30,23 +27,21 @@ class Action {
 public:
   const static uint8_t SERVO_POS_KEEP = 0xff;
   // 20~100
-  uint8_t servo_pos[3];
+  uint8_t servo_pos[N_SERVOS];
 
   // -0x7f~0x7f (max CCW~max CW), 0x80: keep
   const static int8_t MOTOR_VEL_KEEP = 0x80;
-  int8_t motor_vel[2];
+  int8_t motor_vel[N_MOTORS];
 
+  // Note this can be 0, but action still has effect.
   uint8_t duration_step;
 
-  Action() : Action(1) {}
+  Action() : Action(0) {}
 
   Action(uint16_t duration_ms) :
-      duration_step(duration_ms / (SUBSTEP_MS * SUBSTEPS)),
+      duration_step(duration_ms / STEP_MS),
       servo_pos({SERVO_POS_KEEP, SERVO_POS_KEEP, SERVO_POS_KEEP}),
       motor_vel({MOTOR_VEL_KEEP, MOTOR_VEL_KEEP}) {
-    if (duration_step == 0) {
-      duration_step = 1; // ensure action is executed at least once.
-    }
   }
 
   void print() {
@@ -101,7 +96,7 @@ public:
     for (int i = 0; i < N_SERVOS; i++) {
       const uint8_t targ_pos = action->servo_pos[i];
       if (targ_pos != Action::SERVO_POS_KEEP) {
-        servo_pos_out[i] = interp(servo_pos_pre[i], targ_pos, elapsed_step, action->duration_step);
+        servo_pos_out[i] = interp(servo_pos_pre[i], targ_pos, elapsed_step + 1, action->duration_step + 1);
       }
     }
     for (int i = 0; i < N_MOTORS; i++) {
@@ -114,7 +109,7 @@ public:
   }
 
   bool is_running() {
-    return action != NULL && (elapsed_step < action->duration_step);
+    return action != NULL && (elapsed_step <= action->duration_step);
   }
 
   void println() {
@@ -190,18 +185,23 @@ public:
   uint8_t servo_pos[3];
   CalibratedServo servos[3];
 
+  static const uint8_t SERVO_PWM_NUM_PHASE = 200;
+  static const uint8_t SERVO_PWM_ON_PHASES = 50;
+  uint8_t servo_pwm_phase;
+  uint8_t servo_portd_mask_union;
+  uint8_t servo_pwm_offset[N_SERVOS];
+
   // Velocity based control for DC motors. This class is responsible for PWM-ing them,
   // even when no action is being executed.
   // -0x7f~0x7f (7 bit effective)
   // 16 step for each. (omit 3 bit)
-  int8_t motor_vel[2];
-  DCMotor motors[2];
+  int8_t motor_vel[N_MOTORS];
+  DCMotor motors[N_MOTORS];
+  uint8_t motor_pwm_phase_max[N_MOTORS];
+  uint8_t motor_portb_on_mask[N_MOTORS];
+
   static const int PWM_NUM_PHASE = 16;
-  uint8_t pwm_phase; // 0-15
-
-
-  uint8_t subaction_ix = 0;
-
+  uint8_t dc_pwm_phase; // 0-15
 public:
   ActionExecutorSingleton() :
       servos({
@@ -212,47 +212,59 @@ public:
       motors({
         DCMotor(8, 9),
         DCMotor(10, 11)
-      }) {
+      }),
+      servo_pos({50, 50, 50}) {
+    servo_portd_mask_union = 0;
+    for (int i = 0; i < 3; i++) {
+      servo_portd_mask_union |= servos[i].portd_mask;
+    }
+
+    commit_posvel();
   }
 
-  // Must be called periodically with ACTION_RES_MS.
   void loop() {
-    // Update values. Apply servo values.
     if (state.is_running()) {
-      // Update values using state.
-      if (subaction_ix == 0) {
         state.step(servo_pos, motor_vel);
-      }
-      subaction_ix = (subaction_ix + 1) % SUBSTEPS;
+        commit_posvel();
     } else {
       // Fetch new action.
       Action* new_action = queue.pop();
       state = ActionExecState(new_action, servo_pos);
     }
+  }
 
-    // Apply servo.
+  // Called every 10us (100kHz)
+  void loop_pwm() {
+    // Servo motors.
     for (int i = 0; i < N_SERVOS; i++) {
-      servos[i].set(servo_pos[i]);
-    }
-
-    // Do DC motor PWM.
-    for (int i = 0; i < N_MOTORS; i++) {
-      if (motor_vel[i] == 0) {
-        motors[i].stop();
-      } else {
-        bool cw = motor_vel[i] > 0;
-        uint8_t phase_max = vel_to_num_phases(motor_vel[i]);
-        if (pwm_phase <= phase_max) {
-          motors[i].move(cw);
-        } else {
-          // TODO
-          // Do we need to free-wheel instead of stopping?
-          // Then we need additional enable signal.
-          motors[i].stop();
-        }
+      if (servo_pwm_phase >= servo_pwm_offset[i]) {
+        PORTD &= ~servos[i].portd_mask;
       }
     }
-    pwm_phase = (pwm_phase + 1) % PWM_NUM_PHASE;
+    if (servo_pwm_phase == SERVO_PWM_NUM_PHASE - 1) {
+      servo_pwm_phase = 0;
+      PORTD |= servo_portd_mask_union;
+    } else {
+      servo_pwm_phase++;
+    }
+
+    // DC motors.
+    // TODO
+    // Do we need to free-wheel instead of stopping?
+    // Then we need additional enable signal.
+    for (int i = 0; i < N_MOTORS; i++) {
+      if (dc_pwm_phase <= motor_pwm_phase_max[i]) {
+        // NOTE: a bit nuanced.
+        // When on mask = 00 (i.e. vel == 0),
+        // motor_pwm_phase_max become 0, so this only get called once
+        // per cycle. In the 1st cycle PORTB |= 0 has no effect.
+        // In the 2nd+ cycles, else branch is executed and they'll get turned off.
+        PORTB |= motor_portb_on_mask[i];
+      } else {
+        PORTB &= ~motors[i].portb_mask;
+      }
+    }
+    dc_pwm_phase = (dc_pwm_phase + 1) % PWM_NUM_PHASE;
   }
 
   void enqueue(Action& a) {
@@ -265,14 +277,50 @@ public:
     for (int i = 0; N_MOTORS; i++) {
       motor_vel[i] = 0;
     }
+    commit_posvel();
   }
 
   void print() {
     Serial.println("== executor ==");
+    println_output();
     state.println();
     queue.println();
   }
 private:
+  void commit_posvel() {
+    for (int i = 0; i < N_SERVOS; i++) {
+      servo_pwm_offset[i] = servo_pos[i] + SERVO_PWM_ON_PHASES;
+    }
+
+    for (int i = 0; i < N_MOTORS; i++) {
+      motor_pwm_phase_max[i] = vel_to_num_phases(motor_vel[i]);
+
+      if (motor_vel[i] == 0) {
+        motor_portb_on_mask[i] = 0; // L
+      } else if (motor_vel[i] > 0) {
+        motor_portb_on_mask[i] = motors[i].portb_mask_cw;
+      } else {
+        motor_portb_on_mask[i] = motors[i].portb_mask_ccw;
+      }
+    }
+  }
+
+  void println_output() {
+    for (int i = 0; i < N_SERVOS; i++) {
+      uint8_t v = servo_pos[i];
+      Serial.print(v);
+      Serial.print(i == N_SERVOS - 1 ? " | " : ", ");
+    }
+    for (int i = 0; i < N_MOTORS; i++) {
+      int8_t v = motor_vel[i];
+      Serial.print(v);
+      if (i != N_MOTORS - 1) {
+        Serial.print(", ");
+      }
+    }
+    Serial.println("");
+  }
+
   static inline uint8_t vel_to_num_phases(int8_t vel) {
     if (vel < 0) {
       return (-vel) / 8;
