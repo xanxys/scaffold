@@ -37,6 +37,8 @@ public:
         case 'x': exec_cancel_actions(); break;
         case 'p': exec_print_actions(); break;
         case 'e': exec_enqueue(); break;
+        case 'f': exec_move_train(true); break;
+        case 'b': exec_move_train(false); break;
         default:
           Serial.println("[WARN] Unknown command");
       }
@@ -113,6 +115,16 @@ private: // Command Handler
 
   void exec_print_actions() {
     actions.print();
+  }
+
+  void exec_move_train(bool forward) {
+    Action move(250);
+    move.motor_vel[MV_TRAIN] = forward ? 100 : -100;
+    actions.enqueue(move);
+
+    Action stop(1);
+    stop.motor_vel[MV_TRAIN] = 0;
+    actions.enqueue(stop);
   }
 
   void exec_enqueue() {
