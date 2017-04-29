@@ -52,7 +52,7 @@ public:
   DCMotor(int pin0, int pin1) : pin0(pin0), pin1(pin1),
       portb_mask_cw(1 << (pin0 - 8)),
       portb_mask_ccw(1 << (pin1 - 8)),
-      portb_mask((1 << (pin0 - 8)) | (1 << (pin0 - 8))) {
+      portb_mask((1 << (pin0 - 8)) | (1 << (pin1 - 8))) {
     pinMode(pin0, OUTPUT);
     pinMode(pin1, OUTPUT);
     digitalWrite(pin0, false);
