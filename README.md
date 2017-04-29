@@ -7,3 +7,15 @@
   * Softawre: TBD
 * Experiments
   * TBD
+
+
+== Commands
+
+approach and unscrew
+```
+e1000s-100t100/e1000t0/e1s0
+```
+
+* R: 0 (up), 50~60 (ortho)
+* O: 30 (center)
+* D: ?
