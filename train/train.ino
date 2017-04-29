@@ -38,7 +38,7 @@ public:
         case 'p': exec_print_actions(); break;
         case 'e': exec_enqueue(); break;
         default:
-          Serial.println("Unknown command");
+          Serial.println("[WARN] Unknown command");
       }
       consume_terminator();
     }
@@ -108,6 +108,7 @@ private:
 private: // Command Handler
   void exec_cancel_actions() {
     actions.cancel_all();
+    Serial.println("cancelled");
   }
 
   void exec_print_actions() {
@@ -163,8 +164,8 @@ private: // Command Handler
         case 's': action.motor_vel[MV_SCREW_DRIVER] = value; break;
       }
     }
-    Serial.println("enqueued");
     actions.enqueue(action);
+    Serial.println("enqueued");
   }
 };
 

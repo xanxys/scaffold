@@ -274,7 +274,7 @@ public:
   void cancel_all() {
     state = ActionExecState();
     queue.clear();
-    for (int i = 0; N_MOTORS; i++) {
+    for (int i = 0; i < N_MOTORS; i++) {
       motor_vel[i] = 0;
     }
     commit_posvel();
