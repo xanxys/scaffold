@@ -162,6 +162,10 @@ public:
     n = 0;
   }
 
+  uint8_t count() {
+    return n;
+  }
+
   void println() {
     Serial.println("-- actions --");
     for (int i = 0; i < n; i++) {
@@ -251,6 +255,10 @@ public:
 
   void enqueue(Action& a) {
     queue.enqueue(a);
+  }
+
+  bool is_idle() {
+    return queue.count() == 0 && !state.is_running();
   }
 
   void cancel_all() {

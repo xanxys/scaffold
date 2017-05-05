@@ -38,9 +38,8 @@ public:
         case 'x': exec_cancel_actions(); break;
         case 'p': exec_print_actions(); break;
         case 'e': exec_enqueue(); break;
-        case 'f': exec_move_train(true); break;
-        case 'b': exec_move_train(false); break;
         case 'r': exec_read_sensor(); break;
+        case 'f': exec_find_origin(); break;
         default:
           Serial.println("[WARN] Unknown command");
       }
@@ -125,14 +124,33 @@ private: // Command Handler
     Serial.println(val);
   }
 
-  void exec_move_train(bool forward) {
-    Action move(250);
-    move.motor_vel[MV_TRAIN] = forward ? 100 : -100;
-    actions.enqueue(move);
+  void exec_find_origin() {
+    bool dir = true;
+    uint16_t dur = 250;
+    for (int i = 0; i < 5; i++) {
+      Action move(dur);
+      move.motor_vel[MV_TRAIN] = dir ? 50 : -50;
+      actions.enqueue(move);
 
-    Action stop(1);
-    stop.motor_vel[MV_TRAIN] = 0;
-    actions.enqueue(stop);
+      Action stop(1);
+      stop.motor_vel[MV_TRAIN] = 0;
+      actions.enqueue(stop);
+
+      while (!actions.is_idle()) {
+        uint16_t sv = analogRead(A6);
+
+        Serial.println(sv);
+        if (sv < 100) {
+          Serial.println("->found?");
+          actions.cancel_all();
+          break;
+        }
+        delay(50);
+      }
+
+      dir = !dir;
+      dur += 50;
+    }
   }
 
   void exec_enqueue() {
