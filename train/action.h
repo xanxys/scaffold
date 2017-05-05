@@ -195,6 +195,7 @@ public:
   // even when no action is being executed.
   // -0x7f~0x7f (7 bit effective)
   int8_t motor_vel[N_MOTORS];
+  int8_t motor_vel_prev[N_MOTORS];
   DCMotor motors[N_MOTORS];
 public:
   ActionExecutorSingleton() :
@@ -204,8 +205,8 @@ public:
         CalibratedServo(6, 30, 30)
       }),
       motors({
-        DCMotor(0b0100),
-        DCMotor(0b0011)
+        DCMotor(0xc8),
+        DCMotor(0xc6)
       }),
       servo_pos({50, 5, 20}) {
     // Init servo static cache.
@@ -216,6 +217,7 @@ public:
 
     // Init I2C bus for DC PWM motors.
     Wire.begin();
+    TWBR = 255;  // about 30kHz. (default 100kHz is too fast w/ internal pullups)
 
     commit_posvel();
   }
@@ -271,8 +273,14 @@ private:
     for (int i = 0; i < N_SERVOS; i++) {
       servo_pwm_offset[i] = servo_pos[i] + SERVO_PWM_ON_PHASES;
     }
+    // I2C takes time, need to coserve time. Otherwise MCU become
+    // unresponsive.
+    // NOTE: Adverse effect on servo jitter?
     for (int i = 0; i < N_MOTORS; i++) {
-      motors[i].set_velocity(motor_vel[i]);
+      if (motor_vel[i] != motor_vel_prev[i]) {
+        motors[i].set_velocity(motor_vel[i]);
+        motor_vel_prev[i] = motor_vel[i];
+      }
     }
   }
 

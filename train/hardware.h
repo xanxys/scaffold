@@ -42,9 +42,10 @@ public:
 
 class DCMotor {
 private:
-  const uint8_t i2c_addr_write;
+  // 7-bit address (common for read & write, MSB is 0)
+  const uint8_t i2c_addr7b;
 public:
-  DCMotor(uint8_t i2c_addr) : i2c_addr_write(i2c_addr | 1) {
+  DCMotor(uint8_t i2c_addr) : i2c_addr7b(i2c_addr >> 1) {
   }
 
   void set_velocity(int8_t speed) {
@@ -60,9 +61,11 @@ public:
       value |= ((abs_speed << 1) & 0xfc);  // adjust scale & throw away lower 2 bits
     }
 
-    Wire.beginTransmission(i2c_addr_write);
+    sei();  // w/o this, TWI gets stuck after sending start condtion.
+    Wire.beginTransmission(i2c_addr7b);
     Wire.write(0);  // CONTROL register
     Wire.write(value);
     Wire.endTransmission();
+    cli();
   }
 };
