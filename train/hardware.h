@@ -64,8 +64,13 @@ public:
     sei();  // w/o this, TWI gets stuck after sending start condtion.
     Wire.beginTransmission(i2c_addr7b);
     Wire.write(0);  // CONTROL register
-    Wire.write(value);
-    Wire.endTransmission();
+    Wire.write((byte)value);
+    uint8_t res = Wire.endTransmission();
     cli();
+
+    if (res != 0) {
+      Serial.print("[ERR] I2C failed:");
+      Serial.println((int)res);
+    }
   }
 };
