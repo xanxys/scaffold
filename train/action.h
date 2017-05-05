@@ -277,6 +277,9 @@ private:
     // unresponsive.
     // NOTE: Adverse effect on servo jitter?
     for (int i = 0; i < N_MOTORS; i++) {
+      if (i == 1) {
+        continue; // currently broken
+      }
       if (motor_vel[i] != motor_vel_prev[i]) {
         motors[i].set_velocity(motor_vel[i]);
         motor_vel_prev[i] = motor_vel[i];

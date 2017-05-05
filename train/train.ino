@@ -40,6 +40,7 @@ public:
         case 'e': exec_enqueue(); break;
         case 'f': exec_move_train(true); break;
         case 'b': exec_move_train(false); break;
+        case 'r': exec_read_sensor(); break;
         default:
           Serial.println("[WARN] Unknown command");
       }
@@ -116,6 +117,12 @@ private: // Command Handler
 
   void exec_print_actions() {
     actions.print();
+  }
+
+  void exec_read_sensor() {
+    uint16_t val = analogRead(A6);
+    Serial.print("reflector: ");
+    Serial.println(val);
   }
 
   void exec_move_train(bool forward) {
@@ -201,6 +208,8 @@ void setup()  {
 
   MsTimer2::set(STEP_MS, action_loop);
   MsTimer2::start();
+
+  pinMode(A6, INPUT);
 
   command_processor.loop();
 }
