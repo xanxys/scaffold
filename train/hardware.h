@@ -49,11 +49,11 @@ public:
   }
 
   void set_velocity(int8_t speed) {
+    uint8_t abs_speed = (speed > 0) ? speed : (-speed);
     uint8_t value;
-    if (speed == 0) {
+    if (abs_speed < 3) {  // 1,2 corresponds to RESERVED VSET value.
       value = 3;  // brake
     } else {
-      uint8_t abs_speed = (speed > 0) ? speed : (-speed);
       value = (speed > 0) ? 2 : 1;  // fwd : bwd
 
       // abs_speed: 0sss ssss
