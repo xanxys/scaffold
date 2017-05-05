@@ -205,8 +205,8 @@ public:
   ActionExecutorSingleton() :
       servos({
         CalibratedServo(4, 30, 30),
-        CalibratedServo(5, 30, 30),
-        CalibratedServo(6, 30, 30)
+        CalibratedServo(6, 30, 30),
+        CalibratedServo(5, 30, 30)
       }),
       motors({
         DCMotor(0xc8),
