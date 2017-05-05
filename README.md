@@ -9,7 +9,7 @@
   * TBD
 
 
-== Commands
+## Commands
 
 approach and unscrew
 ```
@@ -19,3 +19,25 @@ e1000s-100t100/e1000t0/e1s0
 * R: 0 (up), 50~60 (ortho)
 * O: 30 (center)
 * D: ?
+
+## Pin assigment / connections
+ATmega328P
+
+* A4 (PC4): SDA (w/ internal pull-up)
+* A5 (PC5): SCL (w/ internal pull-up)
+* A6 (PC6): reflector input
+* D4 (PD4): servo (dump)
+* D5 (PD5): servo (ori)
+* D6 (PD6): servo (arm)
+
+### I2C bus
+DRV8830 (1/2)
+
+* OUT: train motor * 2
+* Addr[3:0]: 0100 (A0: open, A1: open)
+
+
+DRV8830 (2/2)
+
+* OUT: driver motor
+* Addr[3:0]: 0011 (A0: L, A1: open)
