@@ -41,25 +41,28 @@ public:
 };
 
 class DCMotor {
-public:
-  const uint8_t portb_mask;
-  const uint8_t portb_mask_cw;
-  const uint8_t portb_mask_ccw;
-  const uint8_t portc_mask_en;
 private:
-  uint8_t pin0;
-  uint8_t pin1;
+  const uint8_t i2c_addr_write;
 public:
-  DCMotor(int pin0, int pin1, int pin_en) : pin0(pin0), pin1(pin1),
-      portb_mask_cw(1 << (pin0 - 8)),
-      portb_mask_ccw(1 << (pin1 - 8)),
-      portc_mask_en(1 << (pin_en - A0)),
-      portb_mask((1 << (pin0 - 8)) | (1 << (pin1 - 8))) {
-    pinMode(pin0, OUTPUT);
-    pinMode(pin1, OUTPUT);
-    pinMode(pin_en, OUTPUT);
-    digitalWrite(pin0, false);
-    digitalWrite(pin1, false);
-    digitalWrite(pin_en, false); // free
+  DCMotor(uint8_t i2c_addr) : i2c_addr_write(i2c_addr | 1) {
+  }
+
+  void set_velocity(int8_t speed) {
+    uint8_t value;
+    if (speed == 0) {
+      value = 3;  // brake
+    } else {
+      uint8_t abs_speed = (speed > 0) ? speed : (-speed);
+      value = (speed > 0) ? 2 : 1;  // fwd : bwd
+
+      // abs_speed: 0sss ssss
+      // value: ssss ssXX (XX=direction)
+      value |= ((abs_speed << 1) & 0xfc);  // adjust scale & throw away lower 2 bits
+    }
+
+    Wire.beginTransmission(i2c_addr_write);
+    Wire.write(0);  // CONTROL register
+    Wire.write(value);
+    Wire.endTransmission();
   }
 };

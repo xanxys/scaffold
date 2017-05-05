@@ -194,14 +194,8 @@ public:
   // Velocity based control for DC motors. This class is responsible for PWM-ing them,
   // even when no action is being executed.
   // -0x7f~0x7f (7 bit effective)
-  // 16 step for each. (omit 3 bit)
   int8_t motor_vel[N_MOTORS];
   DCMotor motors[N_MOTORS];
-  uint8_t motor_pwm_phase_max[N_MOTORS];
-  uint8_t motor_portb_on_mask[N_MOTORS];
-
-  static const int PWM_NUM_PHASE = 16;
-  uint8_t dc_pwm_phase; // 0-15
 public:
   ActionExecutorSingleton() :
       servos({
@@ -210,14 +204,18 @@ public:
         CalibratedServo(6, 30, 30)
       }),
       motors({
-        DCMotor(8, 9, A0),
-        DCMotor(10, 11, A1)
+        DCMotor(0b0100),
+        DCMotor(0b0011)
       }),
       servo_pos({50, 5, 20}) {
+    // Init servo static cache.
     servo_portd_mask_union = 0;
     for (int i = 0; i < 3; i++) {
       servo_portd_mask_union |= servos[i].portd_mask;
     }
+
+    // Init I2C bus for DC PWM motors.
+    Wire.begin();
 
     commit_posvel();
   }
@@ -247,24 +245,6 @@ public:
     } else {
       servo_pwm_phase++;
     }
-
-    // DC motors.
-    for (int i = 0; i < N_MOTORS; i++) {
-
-      if (dc_pwm_phase <= motor_pwm_phase_max[i]) {
-        // NOTE: a bit nuanced.
-        // When on mask = 00 (i.e. vel == 0),
-        // motor_pwm_phase_max become 0, so this only get called once
-        // per cycle. In the 1st cycle PORTB |= 0 has no effect.
-        // In the 2nd+ cycles, else branch is executed and they'll get turned off.
-        PORTB &= ~ motors[i].portb_mask;
-        PORTB |= motor_portb_on_mask[i];
-        PORTC |= motors[i].portc_mask_en;
-      } else {
-        PORTC &= ~motors[i].portc_mask_en;
-      }
-    }
-    dc_pwm_phase = (dc_pwm_phase + 1) % PWM_NUM_PHASE;
   }
 
   void enqueue(Action& a) {
@@ -291,17 +271,8 @@ private:
     for (int i = 0; i < N_SERVOS; i++) {
       servo_pwm_offset[i] = servo_pos[i] + SERVO_PWM_ON_PHASES;
     }
-
     for (int i = 0; i < N_MOTORS; i++) {
-      motor_pwm_phase_max[i] = vel_to_num_phases(motor_vel[i]);
-
-      if (motor_vel[i] == 0) {
-        motor_portb_on_mask[i] = 0; // L
-      } else if (motor_vel[i] > 0) {
-        motor_portb_on_mask[i] = motors[i].portb_mask_cw;
-      } else {
-        motor_portb_on_mask[i] = motors[i].portb_mask_ccw;
-      }
+      motors[i].set_velocity(motor_vel[i]);
     }
   }
 
@@ -319,13 +290,5 @@ private:
       }
     }
     Serial.println("");
-  }
-
-  static inline uint8_t vel_to_num_phases(int8_t vel) {
-    if (vel < 0) {
-      return (-vel) / 8;
-    } else {
-      return vel / 8;
-    }
   }
 };

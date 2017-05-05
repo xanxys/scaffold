@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <TimerOne.h>
 #include <MsTimer2.h>
+#include <Wire.h>
 
 #include "action.h"
 
