@@ -3,8 +3,8 @@
 
 const int N_SERVOS = 3;
 const int CIX_DUMP = 0;
-const int CIX_DRIVER = 1;
-const int CIX_ORI = 2;
+const int CIX_ORI = 1;
+const int CIX_DRIVER = 2;
 
 const int N_MOTORS = 2;
 const int MV_TRAIN = 0;
@@ -205,8 +205,8 @@ public:
   ActionExecutorSingleton() :
       servos({
         CalibratedServo(4, 30, 30),
-        CalibratedServo(6, 30, 30),
-        CalibratedServo(5, 30, 30)
+        CalibratedServo(5, 30, 30),
+        CalibratedServo(6, 30, 30)
       }),
       motors({
         DCMotor(0xc8),
