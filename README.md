@@ -21,6 +21,23 @@ Re-creating
 * PCB reflow oven
 * USBasp
 
+## Firmware writing
+
+First time only:
+```
+scons writefuse
+```
+
+First time & whenever code is changed:
+```
+scons write
+```
+
+Just compile:
+```
+scons
+```
+
 
 ## Commands
 
