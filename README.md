@@ -3,10 +3,23 @@
 * PRD: https://docs.google.com/document/d/1AyhhH3LTPeGcEkzU2smBuM1e6MzfZJXZTJ8Jl38s1jc/edit
 * Designs
   * Hardware: Autodesk Fusion360 cloud
-  * Firmware: here
+  * Firmware:
+    * Arduino Prototype: train/
+    * scaffold-worker-v1 PCB (non-arduino AVR): worker/
   * Softawre: TBD
 * Experiments
   * TBD
+
+## Requirements
+
+Re-creating
+
+* Cheap FDM 3D printing: up mini
+* Decent (SLA) 3D printing: DMM.make 3D
+* PWB manufacturer: Seeed studio
+* Electronic parts: All are sourceabe from digikey
+* PCB reflow oven
+* USBasp
 
 
 ## Commands
