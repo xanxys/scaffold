@@ -26,6 +26,9 @@ uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
 
 class Action {
 public:
+  // Note this can be 0, but action still has effect.
+  uint8_t duration_step;
+
   const static uint8_t SERVO_POS_KEEP = 0xff;
   // 20~100
   uint8_t servo_pos[N_SERVOS];
@@ -34,15 +37,12 @@ public:
   const static int8_t MOTOR_VEL_KEEP = 0x80;
   int8_t motor_vel[N_MOTORS];
 
-  // Note this can be 0, but action still has effect.
-  uint8_t duration_step;
-
   Action() : Action(0) {}
 
   Action(uint16_t duration_ms) :
       duration_step(duration_ms / STEP_MS),
-      servo_pos({SERVO_POS_KEEP, SERVO_POS_KEEP, SERVO_POS_KEEP}),
-      motor_vel({MOTOR_VEL_KEEP, MOTOR_VEL_KEEP}) {
+      servo_pos{SERVO_POS_KEEP, SERVO_POS_KEEP, SERVO_POS_KEEP},
+      motor_vel{MOTOR_VEL_KEEP, MOTOR_VEL_KEEP} {
   }
 
   void print() {
@@ -82,7 +82,7 @@ private:
 public:
   ActionExecState() : action(NULL) {}
 
-  ActionExecState(const Action* action, const uint8_t* servo_pos) : elapsed_step(0), action(action) {
+  ActionExecState(const Action* action, const uint8_t* servo_pos) : action(action), elapsed_step(0) {
     for (int i = 0; i < N_SERVOS; i++) {
       servo_pos_pre[i] = servo_pos[i];
     }
@@ -187,8 +187,8 @@ public:
 
   // Position based control. Set position will be maintained automatically (using Timer1)
   // in Calibrated Servo.
-  uint8_t servo_pos[3];
   CalibratedServo servos[3];
+  uint8_t servo_pos[3];
 
   static const uint8_t SERVO_PWM_NUM_PHASE = 200;
   static const uint8_t SERVO_PWM_ON_PHASES = 50;
@@ -199,21 +199,21 @@ public:
   // Velocity based control for DC motors. This class is responsible for PWM-ing them,
   // even when no action is being executed.
   // -0x7f~0x7f (7 bit effective)
+  DCMotor motors[N_MOTORS];
   int8_t motor_vel[N_MOTORS];
   int8_t motor_vel_prev[N_MOTORS];
-  DCMotor motors[N_MOTORS];
 public:
   ActionExecutorSingleton() :
-      servos({
+      servos{
         CalibratedServo(4, 30, 30),
         CalibratedServo(5, 30, 30),
         CalibratedServo(6, 30, 30)
-      }),
-      motors({
+      },
+      servo_pos{50, 5, 20},
+      motors{
         DCMotor(0xc8),
         DCMotor(0xc6)
-      }),
-      servo_pos({50, 5, 20}) {
+      } {
     // Init servo static cache.
     servo_portd_mask_union = 0;
     for (int i = 0; i < 3; i++) {
