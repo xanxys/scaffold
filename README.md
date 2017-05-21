@@ -64,7 +64,7 @@ ATmega328P
 * PB6: XTAL1
 * PB7: XTAL2
 
-* PC0: -
+* PC0: red indicator LED
 * PC1: -
 * PC2: -
 * PC3: -

@@ -220,6 +220,9 @@ void actions_loop_pwm() {
 }
 
 int main() {
+  // Init arduino core things (e.g. Timer0).
+  init();
+
   Serial.begin(9600);
 
   Timer1.initialize(PWM_STEP_US);
@@ -229,6 +232,15 @@ int main() {
   MsTimer2::start();
 
   pinMode(A6, INPUT);
+
+  DDRC |= _BV(PC0);
+  while(true) {
+    PORTC |= _BV(PC0);
+    delay(200);
+    PORTC &= ~_BV(PC0);
+    delay(800);
+  }
+
 
   command_processor.loop();
 }
