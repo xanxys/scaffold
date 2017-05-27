@@ -223,7 +223,7 @@ int main() {
   // Init arduino core things (e.g. Timer0).
   init();
 
-  Serial.begin(9600);
+  Serial.begin(2400);
 
   Timer1.initialize(PWM_STEP_US);
   Timer1.attachInterrupt(actions_loop_pwm);
@@ -234,11 +234,14 @@ int main() {
   pinMode(A6, INPUT);
 
   DDRC |= _BV(PC0);
+  int i = 0;
   while(true) {
     PORTC |= _BV(PC0);
     delay(200);
     PORTC &= ~_BV(PC0);
     delay(800);
+    Serial.println(i);
+    i++;
   }
 
 
