@@ -55,35 +55,40 @@ ATmega328P
 
 16MHz (ceralock) / 1:1 clock division / No watchdog
 
-* PB0: -
-* PB1: -
-* PB2: -
-* PB3: ISP MOSI
-* PB4: ISP MISO
-* PB5: ISP SCK
-* PB6: XTAL1
-* PB7: XTAL2
-
-* PC0: red indicator LED
-* PC1: -
-* PC2: -
-* PC3: -
-* PC4: -
-* PC5: -
-* PC6: #RESET
-* PC7: -
-
-* ADC6: SEN1 - rail marker detector
-* ADC7: SEN2 - RESERVED
-
-* PD0: OPT-RX
-* PD1: OPT-TX
-* PD2: -
-* PD3: -
-* PD4: SRV1 - placer arm (r)
-* PD5: SRV2 - orientor (o)
-* PD6: SRV3 - driver arm (d)
-* PD7: SRV4 - RESERVED
+|pin|usage|
+|---|---|
+|PB0| - |
+|PB1| - |
+|PB2| - |
+|PB3| ISP MOSI  |
+|PB4| ISP MISO  |
+|PB5| ISP SCK  |
+|PB6| XTAL1  |
+|PB7| XTAL2  |
+|   |  |
+|   |  |
+|PC0| red indicator LED  |
+|PC1| -  |
+|PC2| -  |
+|PC3| -  |
+|PC4| -  |
+|PC5| -  |
+|PC6| #RESET  |
+|PC7| -  |
+|   |  |
+|   |  |
+|ADC|: SEN1 - rail marker detector  |
+|ADC|: SEN2 - RESERVED  |
+|   |  |
+|   |  |
+|PD0| OPT-RX  |
+|PD1| OPT-TX  |
+|PD2| -  |
+|PD3| -  |
+|PD4| SRV1 - placer arm (r)  |
+|PD5| SRV2 - orientor (o)  |
+|PD6| SRV3 - driver arm (d)  |
+|PD7| SRV4 - RESERVED  |
 
 ### I2C bus
 DRV8830 (1/2)
