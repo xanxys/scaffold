@@ -10,6 +10,50 @@
 
 ActionExecutorSingleton actions;
 
+class Logger {
+private:
+  const static int SIZE = 128;
+  char buffer[SIZE];
+  int index;
+public:
+  Logger() : index(0) {}
+
+  template<typename T>
+  void print(const T& v) {
+    String s(v);
+    for (int i = 0; i < s.length(); i++) {
+      if (index < SIZE) {
+        buffer[index] = s.charAt(i);
+        index++;
+      }
+    }
+  }
+
+  void newline() {
+    if (index < SIZE) {
+      buffer[index] = '\n';
+      index++;
+    }
+  }
+
+  template<typename T>
+  void println(const T& v) {
+    print(v);
+    newline();
+  }
+
+  void flushToSerial() {
+    for(int i = 0; i < index; i++) {
+      Serial.write(buffer[i]);
+    }
+    index = 0;
+  }
+};
+
+// Request scoped logger.
+// Log buffer is created anew for every request.
+Logger request_log;
+
 // Command format:
 // To ease interactive debugging from serial monitor,
 // Command = CommandCode[a-zA-Z] CommandBody[^/]* ("\n" | "/")
@@ -24,16 +68,17 @@ ActionExecutorSingleton actions;
 // Set terminal to send LF only.
 class CommandProcessorSingleton {
 private:
-  // if 0, unavailable.
-  char buffer;
+  const static uint8_t BUF_SIZE = 64;
+  char buffer[BUF_SIZE];
+  int r_ix;
+  int w_ix;
 public:
-  CommandProcessorSingleton() : buffer(0) {}
+  CommandProcessorSingleton() : r_ix(0), w_ix(0) {}
 
   void loop() {
     while (true) {
-      while (!available()) {
-      }
-
+      read_line_to_buffer();
+      flash_indicator_blocking();
       char code = read();
       switch (code) {
         case 'x': exec_cancel_actions(); break;
@@ -42,9 +87,9 @@ public:
         case 'r': exec_read_sensor(); break;
         case 'f': exec_find_origin(); break;
         default:
-          Serial.println("[WARN] Unknown command");
+          request_log.println("[WARN] Unknown command");
       }
-      consume_terminator();
+      request_log.flushToSerial();
     }
   }
 
@@ -67,24 +112,45 @@ private:
     return (buffer != 0) || (Serial.available() > 0);
   }
 
+  void flash_indicator_blocking() {
+    PORTC |= _BV(PC0);
+    delay(50);
+    PORTC &= ~_BV(PC0);
+  }
+
+  // Read LF-terminated string to buffer (omitting newline).
+  void read_line_to_buffer() {
+    r_ix = 0;
+    w_ix = 0;
+    while (true) {
+        while (Serial.available() == 0);
+        char c = Serial.read();
+        if (c == '\n' || w_ix > BUF_SIZE) {
+          return;
+        }
+        buffer[w_ix] = c;
+        w_ix++;
+    }
+  }
+
   char read() {
-    if (buffer != 0) {
-      char ret = buffer;
-      buffer = 0;
+    if (r_ix < w_ix) {
+      char ret = buffer[r_ix];
+      r_ix++;
       return ret;
     } else {
-      while(Serial.available() == 0);
-      return Serial.read();
+      return 0;
     }
   }
 
   void unread(char c) {
-    if (buffer == 0) {
-      buffer = c;
+    if (r_ix > 0) {
+      r_ix--;
+      //buffer[r_ix] = c;
     } else {
       // NOT SUPPORTED; this means it encountered unparsable string.
-      Serial.println("[NEVER_HAPPEN] parse failed: unread failed for:");
-      Serial.println(c);
+      request_log.println("[NEVER_HAPPEN] parse failed: unread failed for:");
+      request_log.println(c);
     }
   }
 
@@ -112,7 +178,7 @@ private:
 private: // Command Handler
   void exec_cancel_actions() {
     actions.cancel_all();
-    Serial.println("cancelled");
+    request_log.println("cancelled");
   }
 
   void exec_print_actions() {
@@ -121,8 +187,8 @@ private: // Command Handler
 
   void exec_read_sensor() {
     uint16_t val = analogRead(A6);
-    Serial.print("reflector: ");
-    Serial.println(val);
+    request_log.print("reflector: ");
+    request_log.println(val);
   }
 
   void exec_find_origin() {
@@ -142,7 +208,7 @@ private: // Command Handler
 
         Serial.println(sv);
         if (sv < 100) {
-          Serial.println("->found?");
+          request_log.println("->found?");
           actions.cancel_all();
           break;
         }
@@ -155,44 +221,42 @@ private: // Command Handler
   }
 
   void exec_enqueue() {
+
     int16_t dur_ms = parse_int();
     if (dur_ms < 1) {
       dur_ms = 1;
-      Serial.println("[WARN] dur extended to 1 ms");
+      request_log.println("[WARN] dur extended to 1 ms");
     }
     if (dur_ms > 2000) {
       dur_ms = 2000;
-      Serial.println("[WARN] dur truncated to 2000 ms");
+      request_log.println("[WARN] dur truncated to 2000 ms");
     }
 
     Action action(dur_ms);
     // parse command body.
     while (true) {
-      if (consume_terminator()) {
-        break;
-      }
       char target = read();
       int16_t value = parse_int();
 
       if (target == 'd' || target == 'r' || target == 'o') {
         if (value < 0) {
           value = 0;
-          Serial.println("[WARN] pos truncated to 0");
+          request_log.println("[WARN] pos truncated to 0");
         } else if (value > 100) {
           // note: 255 is reserved as SERVO_POS_KEEP.
           value = 100;
-          Serial.println("[WARN] pos truncated to 100");
+          request_log.println("[WARN] pos truncated to 100");
         }
       } else if (target == 't' || target == 's') {
         if (value < -127) {
           value = -127;
-          Serial.println("[WARN] vel truncated to -127");
+          request_log.println("[WARN] vel truncated to -127");
         } else if (value > 127) {
           value = 127;
-          Serial.println("[WARN] vel truncated to 127");
+          request_log.println("[WARN] vel truncated to 127");
         }
       } else {
-        Serial.println("[WARN] unknown command ignored");
+        request_log.println("[WARN] unknown command ignored");
       }
 
       switch (target) {
@@ -202,9 +266,10 @@ private: // Command Handler
         case 't': action.motor_vel[MV_TRAIN] = value; break;
         case 's': action.motor_vel[MV_SCREW_DRIVER] = value; break;
       }
+      break;
     }
     actions.enqueue(action);
-    Serial.println("enqueued");
+    request_log.println("enqueued");
   }
 };
 
@@ -233,17 +298,8 @@ int main() {
 
   pinMode(A6, INPUT);
 
+  // indicator LED as output.
   DDRC |= _BV(PC0);
-  int i = 0;
-  while(true) {
-    PORTC |= _BV(PC0);
-    delay(200);
-    PORTC &= ~_BV(PC0);
-    delay(800);
-    Serial.println(i);
-    i++;
-  }
-
 
   command_processor.loop();
 }

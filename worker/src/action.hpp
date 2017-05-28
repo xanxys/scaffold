@@ -211,8 +211,8 @@ public:
       },
       servo_pos{50, 5, 20},
       motors{
-        DCMotor(0xc8),
-        DCMotor(0xc6)
+        DCMotor(0xc0),
+        DCMotor(0xc2)
       } {
     // Init servo static cache.
     servo_portd_mask_union = 0;
@@ -286,9 +286,6 @@ private:
     // unresponsive.
     // NOTE: Adverse effect on servo jitter?
     for (int i = 0; i < N_MOTORS; i++) {
-      if (i == 1) {
-        continue; // currently broken
-      }
       if (motor_vel[i] != motor_vel_prev[i]) {
         motors[i].set_velocity(motor_vel[i]);
         motor_vel_prev[i] = motor_vel[i];
