@@ -301,5 +301,23 @@ int main() {
   // indicator LED as output.
   DDRC |= _BV(PC0);
 
+  // Hack to supress servo vibration.
+  // This is GWServo HW issue.
+  {
+    Action action(1 /* dur_ms */);
+    action.servo_pos[CIX_DUMP] = 40;
+    action.servo_pos[CIX_DRIVER] = 40;
+    action.servo_pos[CIX_ORI] = 40;
+    actions.enqueue(action);
+  }
+  delay(250);
+  {
+    Action action(1 /* dur_ms */);
+    action.servo_pos[CIX_DUMP] = 30;
+    action.servo_pos[CIX_DRIVER] = 30;
+    action.servo_pos[CIX_ORI] = 30;
+    actions.enqueue(action);
+  }
+
   command_processor.loop();
 }

@@ -14,6 +14,10 @@
 
 #include <stdint.h>
 
+void enable_error_indicator() {
+    PORTC |= _BV(PC0);
+}
+
 class CalibratedServo {
 public:
   const uint8_t portd_mask;
@@ -71,8 +75,11 @@ public:
     cli();
 
     if (res != 0) {
+      enable_error_indicator();
+      /*
       Serial.print("[ERR] I2C failed:");
       Serial.println((int)res);
+      */
     }
   }
 };

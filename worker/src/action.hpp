@@ -218,7 +218,9 @@ public:
     servo_portd_mask_union = 0;
     for (int i = 0; i < 3; i++) {
       servo_portd_mask_union |= servos[i].portd_mask;
+      servo_pwm_offset[i] = 30;
     }
+
 
     // Init I2C bus for DC PWM motors.
     Wire.begin();
