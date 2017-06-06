@@ -190,7 +190,11 @@ public:
   CalibratedServo servos[3];
   uint8_t servo_pos[3];
 
-  static const uint8_t SERVO_PWM_NUM_PHASE = 200;
+  // This is very important cnstant.
+  // In GWS PICO+ F BB, if you make it 200 (2ms, for example)
+  // they randomly vibrate when set to some pulse width.
+  // Apparently this needs to be longer than that.
+  static const uint8_t SERVO_PWM_NUM_PHASE = 250;
   static const uint8_t SERVO_PWM_ON_PHASES = 50;
   uint8_t servo_pwm_phase;
   uint8_t servo_portd_mask_union;
@@ -218,9 +222,7 @@ public:
     servo_portd_mask_union = 0;
     for (int i = 0; i < 3; i++) {
       servo_portd_mask_union |= servos[i].portd_mask;
-      servo_pwm_offset[i] = 30;
     }
-
 
     // Init I2C bus for DC PWM motors.
     Wire.begin();
