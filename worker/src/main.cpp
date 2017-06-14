@@ -46,6 +46,7 @@ public:
     for(int i = 0; i < index; i++) {
       Serial.write(buffer[i]);
     }
+    Serial.flush();
     index = 0;
   }
 };
@@ -90,6 +91,10 @@ public:
           request_log.println("[WARN] Unknown command");
       }
       request_log.flushToSerial();
+      // Delete any command that is probably caused by reflection of log.
+      while(Serial.available() > 0) {
+        Serial.read();
+      }
     }
   }
 
