@@ -86,6 +86,8 @@ public:
         case 'p': exec_print_actions(); break;
         case 'e': exec_enqueue(); break;
         case 'z': exec_step_commamd(); break;
+        case 't': exec_move(false); break;
+        case 'T': exec_move(true); break;
         case 'r': exec_read_sensor(); break;
         case 'f': exec_find_origin(); break;
         default:
@@ -223,6 +225,42 @@ private: // Command Handler
 
       dir = !dir;
       dur += 50;
+    }
+  }
+
+  void exec_move(bool fast) {
+    const int8_t mv_train_fwd_fast = -120;
+    const int8_t mv_train_fwd_slow = -50;
+
+    int16_t dist = parse_int();
+    bool forward = dist > 0;
+    int16_t dur_ms = dist > 0 ? dist : -dist;
+    if (dur_ms < 1) {
+      dur_ms = 1;
+      request_log.println("[WARN] dur extended to 1 ms");
+    }
+    if (dur_ms > 2000) {
+      dur_ms = 2000;
+      request_log.println("[WARN] dur truncated to 2000 ms");
+    }
+
+    {
+      Action action(1);
+      if (fast) {
+        action.motor_vel[MV_TRAIN] = forward ? mv_train_fwd_fast : -mv_train_fwd_fast;
+      } else {
+        action.motor_vel[MV_TRAIN] = forward ? mv_train_fwd_slow : -mv_train_fwd_slow;
+      }
+      actions.enqueue(action);
+    }
+    {
+      Action action(dur_ms);
+      actions.enqueue(action);
+    }
+    {
+      Action action(1);
+      action.motor_vel[MV_TRAIN] = 0;
+      actions.enqueue(action);
     }
   }
 
