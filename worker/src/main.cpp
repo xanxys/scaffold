@@ -85,6 +85,7 @@ public:
         case 'x': exec_cancel_actions(); break;
         case 'p': exec_print_actions(); break;
         case 'e': exec_enqueue(); break;
+        case 'z': exec_step_commamd(); break;
         case 'r': exec_read_sensor(); break;
         case 'f': exec_find_origin(); break;
         default:
@@ -225,8 +226,129 @@ private: // Command Handler
     }
   }
 
-  void exec_enqueue() {
+  void exec_step_commamd() {
+    // See
+    // https://docs.google.com/document/d/1cOG_my0yuHraR4mLnnvdF-L59cT0mOKswFOCROyn79I/edit#
+    const uint8_t srv_dump_home = 15;
+    const uint8_t srv_dump_down = 50;
+    const uint8_t srv_driver_home = 90;
+    const uint8_t srv_driver_hole = 26;
+    const int8_t mv_train_fwd_normal = -80;
+    const int8_t mv_train_fwd_slow = -50;
+    const int8_t mv_train_fwd_very_slow = -30;
 
+    char command = read();
+    switch (command) {
+      // micro move forward
+      case '1':
+        {
+          Action action(1);
+          action.motor_vel[MV_TRAIN] = mv_train_fwd_normal;
+          actions.enqueue(action);
+        }
+        {
+          Action action(250);
+          actions.enqueue(action);
+        }
+        {
+          Action action(1);
+          action.motor_vel[MV_TRAIN] = 0;
+          actions.enqueue(action);
+        }
+        break;
+      // Prepare screw and start approaching to end.
+      // (condition: middle of rail)
+      case '2':
+        {
+          Action action(400);
+          action.servo_pos[CIX_DRIVER] = srv_driver_hole;
+          actions.enqueue(action);
+        }
+        {
+          Action action(1);
+          action.motor_vel[MV_TRAIN] = mv_train_fwd_slow;
+          actions.enqueue(action);
+        }
+        {
+          Action action(400);
+          actions.enqueue(action);
+        }
+        {
+          Action action(1);
+          action.motor_vel[MV_TRAIN] = 0;
+          actions.enqueue(action);
+        }
+        break;
+      // Put down rail and fasten screw.
+      // (condition screw & driver inserted to rail end succesfully)
+      case '3':
+        {
+          Action action(50);
+          action.motor_vel[MV_SCREW_DRIVER] = 50;
+          actions.enqueue(action);
+        }
+        {
+          Action action(750);
+          action.servo_pos[CIX_DUMP] = srv_dump_down;
+          action.motor_vel[MV_TRAIN] = mv_train_fwd_very_slow;
+          actions.enqueue(action);
+        }
+        {
+          // NOOP
+          // Wait and hope screw fastens.
+          Action action(2000);
+          actions.enqueue(action);
+        }
+        {
+          Action action(50);
+          action.motor_vel[MV_SCREW_DRIVER] = 0;
+          action.motor_vel[MV_TRAIN] = 0;
+          actions.enqueue(action);
+        }
+        break;
+      // (condition 1: screw fastened correctly after 3) -> pull dump arm
+      // (condition 2: screw unfastened correctly) -> pull up rail
+      // Disengage rail dump
+      case '4':
+        {
+          Action action(750);
+          action.servo_pos[CIX_DUMP] = srv_dump_home;
+          actions.enqueue(action);
+        }
+        break;
+      // (condition: dump disengaged, driver inserted to rail end)
+      // Disengae screw driver
+      case '5':
+        {
+          Action action(50);
+          // Need high torque to remove driver.
+          action.motor_vel[MV_TRAIN] = -mv_train_fwd_normal;
+          actions.enqueue(action);
+        }
+        {
+          // Wait train to go back slightly until driver is removed from hole.
+          Action action(250);
+          actions.enqueue(action);
+        }
+        {
+          Action action(50);
+          action.motor_vel[MV_TRAIN] = 0;
+          actions.enqueue(action);
+        }
+        {
+          Action action(500);
+          action.motor_vel[CIX_DRIVER] = srv_driver_home;
+          actions.enqueue(action);
+        }
+        break;
+      default:
+        request_log.println("[WARN] unknown command");
+        return;
+    }
+    request_log.println("ack");
+  }
+
+  void exec_enqueue() {
     int16_t dur_ms = parse_int();
     if (dur_ms < 1) {
       dur_ms = 1;
