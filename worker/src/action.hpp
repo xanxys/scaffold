@@ -195,7 +195,7 @@ public:
   // they randomly vibrate when set to some pulse width.
   // Apparently this needs to be longer than that.
   static const uint8_t SERVO_PWM_NUM_PHASE = 250;
-  static const uint8_t SERVO_PWM_ON_PHASES = 50;
+  static const uint8_t SERVO_PWM_ON_PHASES = 20;
   uint8_t servo_pwm_phase;
   uint8_t servo_portd_mask_union;
   uint8_t servo_pwm_offset[N_SERVOS];

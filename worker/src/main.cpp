@@ -309,8 +309,8 @@ int main() {
   // Initialize servo pos.
   {
     Action action(1 /* dur_ms */);
-    action.servo_pos[CIX_DUMP] = 30;
-    action.servo_pos[CIX_DRIVER] = 30;
+    action.servo_pos[CIX_DUMP] = 25;
+    action.servo_pos[CIX_DRIVER] = 80;
     action.servo_pos[CIX_ORI] = 30;
     actions.enqueue(action);
   }
