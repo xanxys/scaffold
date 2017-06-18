@@ -23,26 +23,11 @@ public:
   const uint8_t portd_mask;
 private:
   int pin;
-
-  // Initial angle for assembly.
-  // There will be a hardware marker, rotation error will be corrected by offset.
-  int rot_assy;
-
-  // Initial angle after reset in normal operation.
-  int rot_init;
-
-  // Actual output to add. Will be saved, reset to 0 upon entering (re-)calibration.
-  int offset;
 public:
   // pin must be in [0, 8) (i.e. PORTD).
-  CalibratedServo(int pin, int rot_assy, int rot_init) :
-    portd_mask(1 << pin), pin(pin), rot_assy(rot_assy), rot_init(rot_init), offset(0) {
+  CalibratedServo(int pin) :
+    portd_mask(1 << pin), pin(pin) {
     pinMode(pin, OUTPUT);
-  }
-
-  void raw_set(bool bit) {
-
-    digitalWrite(pin, bit);
   }
 };
 
