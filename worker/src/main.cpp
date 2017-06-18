@@ -354,7 +354,8 @@ private: // Command Handler
           actions.enqueue(action);
         }
         break;
-      // (condition: dump disengaged, driver inserted to rail end)
+      // (condition: dump disengaged, driver inserted to rail end,
+      // with or without screw.
       // Disengae screw driver
       case '5':
         {
@@ -375,7 +376,49 @@ private: // Command Handler
         }
         {
           Action action(500);
-          action.motor_vel[CIX_DRIVER] = srv_driver_home;
+          action.servo_pos[CIX_DRIVER] = srv_driver_home;
+          actions.enqueue(action);
+        }
+        break;
+      // (condition: screw down, not inserted)
+      // Approach end and engage drver.
+      case '6':
+        {
+          Action action(100);
+          action.motor_vel[MV_SCREW_DRIVER] = -20;
+          action.motor_vel[MV_TRAIN] = mv_train_fwd_normal;
+          actions.enqueue(action);
+        }
+        {
+          Action action(1000);
+          actions.enqueue(action);
+        }
+        {
+          Action action(5);
+          action.motor_vel[MV_TRAIN] = 0;
+          action.motor_vel[MV_SCREW_DRIVER] = 0;
+        }
+        break;
+      // (condition: screw inserted)
+      // Engage dump arm and unfasten.
+      case '7':
+        {
+          Action action(500);
+          action.servo_pos[CIX_DUMP] = srv_dump_down;
+          actions.enqueue(action);
+        }
+        {
+          Action action(1);
+          action.motor_vel[MV_SCREW_DRIVER] = -100;
+          actions.enqueue(action);
+        }
+        {
+          Action action(2000);
+          actions.enqueue(action);
+        }
+        {
+          Action action(1);
+          action.motor_vel[MV_SCREW_DRIVER] = 0;
           actions.enqueue(action);
         }
         break;
