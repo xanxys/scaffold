@@ -278,10 +278,36 @@ public:
   void print() {
     Serial.println("== executor ==");
     println_output();
+    print_worker_status();
     state.println();
     queue.println();
   }
 private:
+  void print_worker_status() {
+    uint16_t vcc = measure_vcc();
+    Serial.print("pwr: "); // 🔋
+    Serial.print(vcc);
+    Serial.print("mV / uptime ");
+
+    uint32_t temp = millis() / 1000;
+    uint8_t uptime_sec = temp % 60;
+    temp /= 60;
+
+    uint8_t uptime_min = temp % 60;
+    temp /= 60;
+
+    if (temp > 0) {
+      Serial.print(temp);
+      Serial.print("h");
+    }
+    if (temp > 0 || uptime_min > 0) {
+      Serial.print(uptime_min);
+      Serial.print("m");
+    }
+    Serial.print(uptime_sec);
+    Serial.println("s");
+  }
+
   void commit_posvel() {
     for (int i = 0; i < N_SERVOS; i++) {
       servo_pwm_offset[i] = servo_pos[i] + SERVO_PWM_ON_PHASES;

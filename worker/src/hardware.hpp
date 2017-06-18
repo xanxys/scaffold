@@ -18,6 +18,19 @@ void enable_error_indicator() {
     PORTC |= _BV(PC0);
 }
 
+// Get Vcc voltage in millivolt.
+uint16_t measure_vcc() {
+  // Read 1.1V reference against AVcc
+  ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  delay(2); // Wait for Vref to settle
+  ADCSRA |= _BV(ADSC); // Convert
+  while (bit_is_set(ADCSRA,ADSC));
+  uint32_t result = ADCL;
+  result |= ADCH<<8;
+  result = (1024L * 1100L) / result; // Back-calculate AVcc in mV
+  return result;
+}
+
 class CalibratedServo {
 public:
   const uint8_t portd_mask;
