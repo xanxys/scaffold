@@ -206,6 +206,10 @@ public:
   DCMotor motors[N_MOTORS];
   int8_t motor_vel[N_MOTORS];
   int8_t motor_vel_prev[N_MOTORS];
+
+  static const uint8_t I_SEN_LIGHT_R = 3;
+  static const uint8_t I_SEN_LIGHT_L = 7;
+  bool sensor_r;
 public:
   ActionExecutorSingleton() :
       servos{
@@ -229,9 +233,21 @@ public:
     TWBR = 255;  // about 30kHz. (default 100kHz is too fast w/ internal pullups)
 
     commit_posvel();
+
+    // Init sensor illuminator.
+    DDRD |= _BV(I_SEN_LIGHT_R) | _BV(I_SEN_LIGHT_L);
   }
 
   void loop() {
+    if (sensor_r) {
+      PORTD &= ~_BV(I_SEN_LIGHT_L);
+      PORTD |= _BV(I_SEN_LIGHT_R);
+    } else {
+      PORTD &= ~_BV(I_SEN_LIGHT_R);
+      PORTD |= _BV(I_SEN_LIGHT_L);
+    }
+    sensor_r = !sensor_r;
+
     if (state.is_running()) {
         state.step(servo_pos, motor_vel);
         commit_posvel();
