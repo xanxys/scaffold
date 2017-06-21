@@ -85,11 +85,11 @@ ATmega328P
 |PD0| OPT-RX  |
 |PD1| OPT-TX  |
 |PD2| -  |
-|PD3| -  |
+|PD3| SEN-LIGHT-R  |
 |PD4| SRV1 - placer arm (r)  |
 |PD5| SRV2 - orientor (o)  |
 |PD6| SRV3 - driver arm (d)  |
-|PD7| SRV4 - RESERVED  |
+|PD7| SEN-LIGHT-L  |
 
 ### I2C bus
 DRV8830 (1/2)
