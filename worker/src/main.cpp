@@ -485,7 +485,7 @@ CommandProcessorSingleton command_processor;
 
 
 void action_loop() {
-  actions.loop();
+  actions.loop1ms();
 }
 
 void actions_loop_pwm() {

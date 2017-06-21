@@ -78,8 +78,8 @@ ATmega328P
 |PC7| -  |
 |   |  |
 |   |  |
-|ADC|: SEN1 - rail marker detector  |
-|ADC|: SEN2 - RESERVED  |
+|ADC6|: SEN1 - rail marker detector  |
+|ADC7|: SEN2 - RESERVED  |
 |   |  |
 |   |  |
 |PD0| OPT-RX  |

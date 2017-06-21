@@ -207,9 +207,7 @@ public:
   int8_t motor_vel[N_MOTORS];
   int8_t motor_vel_prev[N_MOTORS];
 
-  static const uint8_t I_SEN_LIGHT_R = 3;
-  static const uint8_t I_SEN_LIGHT_L = 7;
-  bool sensor_r;
+  MultiplexedSensor sensor;
 public:
   ActionExecutorSingleton() :
       servos{
@@ -233,20 +231,10 @@ public:
     TWBR = 255;  // about 30kHz. (default 100kHz is too fast w/ internal pullups)
 
     commit_posvel();
-
-    // Init sensor illuminator.
-    DDRD |= _BV(I_SEN_LIGHT_R) | _BV(I_SEN_LIGHT_L);
   }
 
-  void loop() {
-    if (sensor_r) {
-      PORTD &= ~_BV(I_SEN_LIGHT_L);
-      PORTD |= _BV(I_SEN_LIGHT_R);
-    } else {
-      PORTD &= ~_BV(I_SEN_LIGHT_R);
-      PORTD |= _BV(I_SEN_LIGHT_L);
-    }
-    sensor_r = !sensor_r;
+  void loop1ms() {
+    sensor.loop1ms();
 
     if (state.is_running()) {
         state.step(servo_pos, motor_vel);
@@ -295,12 +283,13 @@ public:
     Serial.println("== executor ==");
     println_output();
     print_worker_status();
+    print_sensor_status();
     state.println();
     queue.println();
   }
 private:
   void print_worker_status() {
-    uint16_t vcc = measure_vcc();
+    uint16_t vcc = sensor.get_vcc_mv();
     Serial.print("pwr: "); // 🔋
     Serial.print(vcc);
     Serial.print("mV / uptime ");
@@ -322,6 +311,12 @@ private:
     }
     Serial.print(uptime_sec);
     Serial.println("s");
+  }
+
+  void print_sensor_status() {
+    Serial.print(sensor.get_sensor_l());
+    Serial.print(" ->|  ||  |<- ");
+    Serial.println(sensor.get_sensor_r());
   }
 
   void commit_posvel() {

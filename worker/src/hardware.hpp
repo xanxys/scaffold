@@ -18,18 +18,115 @@ void enable_error_indicator() {
     PORTC |= _BV(PC0);
 }
 
-// Get Vcc voltage in millivolt.
-uint16_t measure_vcc() {
-  // Read 1.1V reference against AVcc
-  ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-  delay(2); // Wait for Vref to settle
-  ADCSRA |= _BV(ADSC); // Convert
-  while (bit_is_set(ADCSRA,ADSC));
-  uint32_t result = ADCL;
-  result |= ADCH<<8;
-  result = (1024L * 1100L) / result; // Back-calculate AVcc in mV
-  return result;
-}
+// Perodically measure fixed number of ADC inputs & controls sensor multiplexing.
+// Currently:
+// 1. Sensor-R
+// 2. Sensor-L
+// 3. AVcc
+// Each phase is 2ms.
+//
+class MultiplexedSensor {
+private:
+  // Sensor illuminators.
+  static const uint8_t I_SEN_LIGHT_L = 3;
+  static const uint8_t I_SEN_LIGHT_R = 7;
+
+  // Sensor channels.
+  static const uint8_t I_SEN_ADC = 6;
+  static const uint8_t I_INTERNAL_1V1REF = _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+
+  // Phase definitions.
+  const static uint8_t PHASE_SEN_R = 0;
+  const static uint8_t PHASE_SEN_L = 1;
+  const static uint8_t PHASE_AVCC = 2;
+  const static uint8_t NUM_PHASES = 3;
+
+  uint8_t current_phase;
+  uint8_t phase_index;
+  const static uint8_t phase_length = 2;
+
+  uint16_t value_cache[NUM_PHASES];
+public:
+  MultiplexedSensor() : current_phase(PHASE_SEN_R), phase_index(0) {
+    // Init sensor illuminator.
+    DDRD |= _BV(I_SEN_LIGHT_R) | _BV(I_SEN_LIGHT_L);
+
+    // Bogus result that reads as 123 | 45 when unitialized.
+    value_cache[PHASE_SEN_L] = 123 << 2;
+    value_cache[PHASE_SEN_R] = 45 << 2;
+  }
+
+  void loop1ms() {
+    phase_index++;
+    if (phase_index == 1) {
+      on_phase_middle();
+    } else if (phase_index >= phase_length) {
+      on_phase_end();
+
+      phase_index = 0;
+      current_phase = (current_phase + 1) % NUM_PHASES;
+      on_phase_begin();
+    }
+  }
+
+  // 0: 0V, 255: 5V ("max")
+  uint8_t get_sensor_r() {
+    return value_cache[PHASE_SEN_R] >> 2;
+  }
+
+  uint8_t get_sensor_l() {
+    return value_cache[PHASE_SEN_L] >> 2;
+  }
+
+  uint16_t get_vcc_mv() {
+    uint32_t result = value_cache[PHASE_AVCC];
+    result = (1024L * 1100L) / result; // Back-calculate AVcc in mV
+    return result;
+  }
+private:
+  void on_phase_begin() {
+    // Connect AVcc to Vref.
+    ADMUX = _BV(REFS0);
+
+    switch (current_phase) {
+      case PHASE_SEN_R:
+        ADMUX |= I_SEN_ADC;
+        PORTD |= _BV(I_SEN_LIGHT_R);
+        break;
+      case PHASE_SEN_L:
+        ADMUX |= I_SEN_ADC;
+        PORTD |= _BV(I_SEN_LIGHT_L);
+        break;
+      case PHASE_AVCC:
+        ADMUX |= I_INTERNAL_1V1REF;
+        break;
+    }
+  }
+
+  void on_phase_middle() {
+    // Start AD conversion.
+    ADCSRA |= _BV(ADSC);
+  }
+
+  void on_phase_end() {
+    if (!bit_is_set(ADCSRA, ADSC)) {
+      // ADCL needs to be read first to ensure consistency.
+      value_cache[current_phase] = ADCL;
+      value_cache[current_phase] |= ADCH << 8;
+    }
+
+    switch (current_phase) {
+      case PHASE_SEN_R:
+        PORTD &= ~_BV(I_SEN_LIGHT_R);
+        break;
+      case PHASE_SEN_L:
+        PORTD &= ~_BV(I_SEN_LIGHT_L);
+        break;
+      default:
+        break;
+    }
+  }
+};
 
 class CalibratedServo {
 public:
