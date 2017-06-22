@@ -88,7 +88,6 @@ public:
         case 'z': exec_step_commamd(); break;
         case 't': exec_move(false); break;
         case 'T': exec_move(true); break;
-        case 'r': exec_read_sensor(); break;
         case 'f': exec_find_origin(); break;
         default:
           request_log.println("[WARN] Unknown command");
@@ -191,12 +190,6 @@ private: // Command Handler
 
   void exec_print_actions() {
     actions.print();
-  }
-
-  void exec_read_sensor() {
-    uint16_t val = analogRead(A6);
-    request_log.print("reflector: ");
-    request_log.println(val);
   }
 
   void exec_find_origin() {
