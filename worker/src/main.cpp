@@ -12,16 +12,16 @@ ActionExecutorSingleton actions;
 
 class Logger {
 private:
-  const static int SIZE = 128;
+  const static uint8_t SIZE = 128;
   char buffer[SIZE];
-  int index;
+  uint8_t index;
 public:
   Logger() : index(0) {}
 
   template<typename T>
   void print(const T& v) {
     String s(v);
-    for (int i = 0; i < s.length(); i++) {
+    for (uint8_t i = 0; i < s.length(); i++) {
       if (index < SIZE) {
         buffer[index] = s.charAt(i);
         index++;
