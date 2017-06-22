@@ -86,9 +86,10 @@ public:
         case 'p': exec_print_actions(); break;
         case 'e': exec_enqueue(); break;
         case 'z': exec_step_commamd(); break;
+        // Move commands.
         case 't': exec_move(false); break;
         case 'T': exec_move(true); break;
-        case 'f': exec_find_origin(); break;
+        case 'o': exec_find_origin(); break;
         default:
           request_log.println("[WARN] Unknown command");
       }
@@ -192,32 +193,34 @@ private: // Command Handler
     actions.print();
   }
 
+  // Move slowly for given msec until it reaches R-origin.
   void exec_find_origin() {
-    bool dir = true;
-    uint16_t dur = 250;
-    for (int i = 0; i < 5; i++) {
-      Action move(dur);
-      move.motor_vel[MV_TRAIN] = dir ? 50 : -50;
-      actions.enqueue(move);
+    const int8_t mv_train_fwd_slow = -50;
+    int16_t dist = parse_int();
+    bool forward = dist > 0;
+    int16_t dur_ms = dist > 0 ? dist : -dist;
 
-      Action stop(1);
-      stop.motor_vel[MV_TRAIN] = 0;
-      actions.enqueue(stop);
+    {
+      Action action(1);
+      action.motor_vel[MV_TRAIN] = forward ? mv_train_fwd_slow : -mv_train_fwd_slow;
+      actions.enqueue(action);
+    }
 
-      while (!actions.is_idle()) {
-        uint16_t sv = analogRead(A6);
-
-        Serial.println(sv);
-        if (sv < 100) {
-          request_log.println("->found?");
-          actions.cancel_all();
-          break;
-        }
-        delay(50);
+    uint32_t t0 = millis();
+    uint32_t tend = t0 + dur_ms;
+    request_log.println("ack");
+    // NOTE: This will break after 50days of uptime.
+    while (millis() < tend) {
+      if (actions.sensor.get_sensor_r() < 50 && actions.sensor.get_sensor_l() > 100) {
+        break;
       }
+    }
 
-      dir = !dir;
-      dur += 50;
+    // stop
+    {
+      Action action(1);
+      action.motor_vel[MV_TRAIN] = 0;
+      actions.enqueue(action);
     }
   }
 
@@ -255,6 +258,7 @@ private: // Command Handler
       action.motor_vel[MV_TRAIN] = 0;
       actions.enqueue(action);
     }
+    request_log.println("ack");
   }
 
   void exec_step_commamd() {
