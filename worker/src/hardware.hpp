@@ -15,8 +15,21 @@
 #include <stdint.h>
 
 void enable_error_indicator() {
-    PORTC |= _BV(PC0);
+
 }
+
+class Indicator {
+public:
+  Indicator() {
+    PORTC |= _BV(PC0);
+  }
+
+  void flash_blocking() {
+    PORTC |= _BV(PC0);
+    delay(50);
+    PORTC &= ~_BV(PC0);
+  }
+};
 
 // Perodically measure fixed number of ADC inputs & controls sensor multiplexing.
 // Currently:

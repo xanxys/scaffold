@@ -8,6 +8,7 @@
 #include "action.hpp"
 
 
+Indicator indicator;
 ActionExecutorSingleton actions;
 
 class Logger {
@@ -79,7 +80,7 @@ public:
   void loop() {
     while (true) {
       read_line_to_buffer();
-      flash_indicator_blocking();
+      indicator.flash_blocking();
       char code = read();
       switch (code) {
         case 'x': exec_cancel_actions(); break;
@@ -118,12 +119,6 @@ private:
 
   bool available() {
     return (buffer != 0) || (Serial.available() > 0);
-  }
-
-  void flash_indicator_blocking() {
-    PORTC |= _BV(PC0);
-    delay(50);
-    PORTC &= ~_BV(PC0);
   }
 
   // Read LF-terminated string to buffer (omitting newline).
@@ -276,6 +271,7 @@ private: // Command Handler
     const uint8_t srv_dump_down = 50;
     const uint8_t srv_driver_home = 90;
     const uint8_t srv_driver_hole = 26;
+    const int8_t mv_train_fwd_max = -120;
     const int8_t mv_train_fwd_normal = -80;
     const int8_t mv_train_fwd_slow = -50;
     const int8_t mv_train_fwd_very_slow = -30;
@@ -366,7 +362,7 @@ private: // Command Handler
         {
           Action action(50);
           // Need high torque to remove driver.
-          action.motor_vel[MV_TRAIN] = -mv_train_fwd_normal;
+          action.motor_vel[MV_TRAIN] = -mv_train_fwd_max;
           actions.enqueue(action);
         }
         {
@@ -523,5 +519,6 @@ int main() {
     actions.enqueue(action);
   }
 
+  indicator.flash_blocking();
   command_processor.loop();
 }
