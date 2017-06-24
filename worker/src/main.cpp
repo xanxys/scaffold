@@ -209,11 +209,19 @@ private: // Command Handler
     uint32_t t0 = millis();
     uint32_t tend = t0 + dur_ms;
     request_log.println("ack");
+
     // NOTE: This will break after 50days of uptime.
+    bool found = false;
     while (millis() < tend) {
       if (actions.sensor.get_sensor_r() < 50 && actions.sensor.get_sensor_l() > 100) {
+        found = true;
+        request_log.print(millis() - t0);
+        request_log.println("ms: found");
         break;
       }
+    }
+    if (!found) {
+      request_log.println("not found");
     }
 
     // stop

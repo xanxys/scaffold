@@ -27,6 +27,11 @@ void loop() {
     w_ix++;
   }
 
+  uint32_t timeout_ms = 100;
+  if (buffer[0] == 'o') {
+    timeout_ms = 10 * 1000;
+  }
+
   // proxy command to worker
   for (int i = 0; i < w_ix; i++) {
     workerSerial.write(buffer[i]);
@@ -45,7 +50,7 @@ void loop() {
       recv_bytes++;
       t_last = millis();
     } else {
-      if (millis() - t_last > 100) {
+      if (millis() - t_last > timeout_ms) {
         if (recv_bytes == 0) {
           Serial.println("Worker didn't respond in 100 msec");
         } else {
