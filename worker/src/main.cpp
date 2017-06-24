@@ -12,7 +12,7 @@ ActionExecutorSingleton actions;
 
 class Logger {
 private:
-  const static uint8_t SIZE = 128;
+  const static uint8_t SIZE = 200;
   char buffer[SIZE];
   uint8_t index;
 public:
