@@ -129,7 +129,7 @@ public:
 
 class ActionQueue {
 public:
-  const static int SIZE = 4;
+  const static int SIZE = 6;
 private:
   Action queue[SIZE];
   int ix = 0;

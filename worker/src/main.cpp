@@ -365,9 +365,10 @@ private: // Command Handler
           action.motor_vel[MV_TRAIN] = -mv_train_fwd_max;
           actions.enqueue(action);
         }
+        // Do this twice to induce shock
         {
           // Wait train to go back slightly until driver is removed from hole.
-          Action action(250);
+          Action action(200);
           actions.enqueue(action);
         }
         {
@@ -376,14 +377,27 @@ private: // Command Handler
           actions.enqueue(action);
         }
         {
-          Action action(500);
-          action.servo_pos[CIX_DRIVER] = srv_driver_home;
+          // Wait train to go back slightly until driver is removed from hole.
+          Action action(200);
+          actions.enqueue(action);
+        }
+        {
+          Action action(50);
+          action.motor_vel[MV_TRAIN] = 0;
           actions.enqueue(action);
         }
         break;
+        // (condition: screw driver inserrted, dump disengaged)
+      case '6':
+          {
+            Action action(500);
+            action.servo_pos[CIX_DRIVER] = srv_driver_home;
+            actions.enqueue(action);
+          }
+          break;
       // (condition: screw down, not inserted)
       // Approach end and engage drver.
-      case '6':
+      case '7':
         {
           Action action(100);
           action.motor_vel[MV_SCREW_DRIVER] = -20;
@@ -402,7 +416,7 @@ private: // Command Handler
         break;
       // (condition: screw inserted)
       // Engage dump arm and unfasten.
-      case '7':
+      case '8':
         {
           Action action(500);
           action.servo_pos[CIX_DUMP] = srv_dump_down;
