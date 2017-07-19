@@ -127,6 +127,8 @@ class View3DClient {
             _this.update_projection();
         });
 
+        let add_rs = false;
+
         let prev_hover_object = null;
         $('#viewport').mousemove(ev => {
           let ev_pos_normalized = new THREE.Vector2(
@@ -163,7 +165,23 @@ class View3DClient {
                 return;
             }
 
-            console.log('click', isects[0].object);
+            let obj = isects[0].object;
+
+            if (add_rs) {
+              // obj.
+              _this.model.rails.push({
+                type: "RS",
+                center: new THREE.Vector3(0, 0.12, 0.03),
+                ori: new THREE.Vector3(0, 0, 1),
+                id: 2,
+              });
+              _this.regen_scaffold_view();
+            }
+            add_rs = false;
+        });
+
+        $('#add_rs').click(ev => {
+          add_rs = true;
         });
 
         this.update_projection();
@@ -194,6 +212,8 @@ class View3DClient {
             }
             let mesh = new THREE.Mesh();
             mesh.name = 'ui';
+            mesh.userData = {
+            };
             mesh.geometry = this.cache_point_geom;
             mesh.material = new THREE.MeshBasicMaterial({
                 color: PRIM_COLOR,
