@@ -195,7 +195,7 @@ class View3DClient {
 }
 
 let model = new ScaffoldModel();
-let client = new View3DClient();
+let client = new View3DClient(model);
 client.animate();
 
 new Vue({
