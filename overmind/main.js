@@ -1,4 +1,5 @@
-const prim_color = 0x3498db;
+const PRIM_COLOR = 0x3498db;
+const PRIM_COLOR_HOVER = 0x286090;
 
 // Scaffold inferred / target world model.
 // Assumes z=0 is floor.
@@ -47,7 +48,7 @@ class ScaffoldModel {
             pos: new THREE.Vector3(0, 0.06 * 2, 0.03),
             normal: new THREE.Vector3(0, 0, 1)
         }];
-      }
+    }
 }
 
 // ViewModel / View.
@@ -112,6 +113,8 @@ class View3DClient {
 
         this.renderer.setSize(800, 600);
         this.renderer.setClearColor('#aac');
+        $('#viewport').width(800);
+        $('#viewport').height(600);
         $('#viewport').append(this.renderer.domElement);
 
         this.controls = new THREE.TrackballControls(this.camera, this.renderer.domElement);
@@ -122,6 +125,45 @@ class View3DClient {
 
         $(window).resize(() => {
             _this.update_projection();
+        });
+
+        let prev_hover_object = null;
+        $('#viewport').mousemove(ev => {
+          let ev_pos_normalized = new THREE.Vector2(
+              ev.offsetX / $('#viewport').width() * 2 - 1, -(ev.offsetY / $('#viewport').height() * 2 - 1));
+
+          let raycaster = new THREE.Raycaster();
+          raycaster.setFromCamera(ev_pos_normalized, this.camera);
+          let isects = raycaster.intersectObject(this.scene, true);
+          let curr_hover_object = null;
+          if (isects.length > 0 && isects[0].object.name === 'ui') {
+            curr_hover_object = isects[0].object;
+          }
+
+          if (curr_hover_object !== prev_hover_object) {
+            if (curr_hover_object !== null) {
+              // on enter
+              curr_hover_object.material.color.set(PRIM_COLOR_HOVER);
+            } else {
+              // on leave
+              prev_hover_object.material.color.set(PRIM_COLOR);
+            }
+          }
+          prev_hover_object = curr_hover_object;
+        });
+
+        $('#viewport').click(ev => {
+            let ev_pos_normalized = new THREE.Vector2(
+                ev.offsetX / $('#viewport').width() * 2 - 1, -(ev.offsetY / $('#viewport').height() * 2 - 1));
+
+            let raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(ev_pos_normalized, this.camera);
+            let isects = raycaster.intersectObject(this.scene, true);
+            if (isects.length === 0 || isects[0].object.name !== 'ui') {
+                return;
+            }
+
+            console.log('click', isects[0].object);
         });
 
         this.update_projection();
@@ -139,7 +181,7 @@ class View3DClient {
         _.each(this.model.workers, worker => {
             let mesh = new THREE.Mesh(this.cad_models['S60C-T']);
             mesh.material = new THREE.MeshLambertMaterial({
-                color: prim_color
+                color: PRIM_COLOR
             });
             mesh.position.z = this.model.zofs;
             this.scene.add(mesh);
@@ -151,9 +193,10 @@ class View3DClient {
                 return;
             }
             let mesh = new THREE.Mesh();
+            mesh.name = 'ui';
             mesh.geometry = this.cache_point_geom;
             mesh.material = new THREE.MeshBasicMaterial({
-                color: 'red',
+                color: PRIM_COLOR,
                 opacity: 0.5,
                 transparent: true,
             });
@@ -200,6 +243,6 @@ let client = new View3DClient(model);
 client.animate();
 
 new Vue({
-  el: '#workers',
-  data: model,
+    el: '#workers',
+    data: model,
 });
