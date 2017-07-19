@@ -1,66 +1,3 @@
-// These filepath specification are so incoherent. Probably physi.js's bug.
-Physijs.scripts.worker = './3p/physijs_worker.js';
-Physijs.scripts.ammo = './ammo.js';
-
-class ImmutableCubeEdge {
-    constructor(p0, p1) {
-        let corner_margin = 1e-3;
-        let seg = new THREE.Line3(p0, p1);
-
-        let margin_dparam = corner_margin / seg.distance();
-        this.p0 = seg.at(margin_dparam);
-        this.p1 = seg.at(1 - margin_dparam);
-        this._segment = new THREE.Line3(this.p0, this.p1);
-    }
-
-    touches(edge) {
-        // TODO: current impl sucks. Use analytically closed form, maybe.
-        let n = 0.02 / 0.001;
-        let ds = _.map(_.range(n), (ix) => {
-            let target = edge._segment.at(ix / n);
-            let on_seg = this._segment.closestPointToPoint(target, true);
-            return target.distanceTo(on_seg);
-        });
-        return Math.min.apply(null, ds) <= 0.001;
-    }
-}
-
-// A cube in 3D space frozen in time, which bunch of methods to query spatial
-// properties.
-class ImmutableCube {
-    constructor(mesh) {
-        this.position = mesh.position.clone();
-        this.rotation = mesh.quaternion.clone();
-        this.size = mesh.userData.size;
-    }
-
-    get_edges() {
-        let p = _.map(_.range(0, 8), (ix) => this.transform_vertex((ix & 4) / 4, (ix & 2) / 2, ix & 1));
-        return [
-            // z = 0
-            new ImmutableCubeEdge(p[0b000], p[0b100]),
-            new ImmutableCubeEdge(p[0b100], p[0b110]),
-            new ImmutableCubeEdge(p[0b110], p[0b010]),
-            new ImmutableCubeEdge(p[0b010], p[0b000]),
-            // z: 0 - 1
-            new ImmutableCubeEdge(p[0b000], p[0b001]),
-            new ImmutableCubeEdge(p[0b100], p[0b101]),
-            new ImmutableCubeEdge(p[0b110], p[0b111]),
-            new ImmutableCubeEdge(p[0b010], p[0b011]),
-            // z = 1
-            new ImmutableCubeEdge(p[0b001], p[0b101]),
-            new ImmutableCubeEdge(p[0b101], p[0b111]),
-            new ImmutableCubeEdge(p[0b111], p[0b011]),
-            new ImmutableCubeEdge(p[0b011], p[0b001]),
-        ];
-    }
-
-    transform_vertex(x, y, z) {
-        return new THREE.Vector3(x - 0.5, y - 0.5, z - 0.5)
-            .multiplyScalar(this.size).applyQuaternion(this.rotation).add(this.position);
-    }
-}
-
 class View3DClient {
     // TODO: Might be better to use CGS unit system instead of SI, since
     // 1. physijs doc is poor
@@ -75,16 +12,7 @@ class View3DClient {
         this.camera.position.z = 0.3;
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-        this.scene = new Physijs.Scene({
-            fixedTimestamp: 1 / 120
-        });
-        this.scene.setGravity(new THREE.Vector3(0, 0, -0.3));
-        this.scene.addEventListener(
-            'update',
-            function() {
-                _this.scene.simulate(undefined, 1);
-            }
-        );
+        this.scene = new THREE.Scene();
 
         let sunlight = new THREE.DirectionalLight(0xcccccc);
         sunlight.position.set(0, 0, 1).normalize();
@@ -103,18 +31,6 @@ class View3DClient {
         this.texture_loader = new THREE.TextureLoader();
 
         this.add_table();
-
-        _.each(_.range(50), (i) => {
-            let tile = _this.create_tile();
-            tile.rotation.x = Math.random() * Math.PI;
-            tile.rotation.y = Math.random() * Math.PI;
-            tile.rotation.z = Math.random() * Math.PI;
-
-            tile.position.x = (Math.random() - 0.5) * 0.05 + (i % 7) / 7 * 0.1;
-            tile.position.y = (Math.random() - 0.5) * 0.05 + (i % 5) / 5 * 0.1;
-            tile.position.z = 0.003 * i + 0.01;
-            _this.scene.add(tile);
-        });
 
         // start canvas
         this.renderer = new THREE.WebGLRenderer({
@@ -225,52 +141,18 @@ class View3DClient {
     }
 
     add_table() {
-        let table_material = Physijs.createMaterial(
-            new THREE.MeshLambertMaterial({
-                map: this.texture_loader.load('texture/wood.jpg')
-            }),
-            .9, // high friction
-            .2 // low restitution
-        );
+        let table_material = new THREE.MeshLambertMaterial({
+            map: this.texture_loader.load('texture/wood.jpg')
+        });
+
         table_material.map.wrapS = table_material.map.wrapT = THREE.RepeatWrapping;
         table_material.map.repeat.set(2, 2);
 
         const table_thickness = 0.03;
-        let table = new Physijs.BoxMesh(
-            new THREE.BoxGeometry(1, 1, table_thickness),
-            table_material,
-            0, // mass
-            {
-                restitution: .2,
-                friction: .8
-            }
-        );
+        let table = new THREE.Mesh(new THREE.BoxGeometry(1, 1, table_thickness), table_material);
         table.position.z = -table_thickness / 2;
         table.receiveShadow = true;
         this.scene.add(table);
-    }
-
-    // Create a tile with center at (0, 0, 0), and parallel to XY plane.
-    //   /|
-    // /  |
-    // \  |
-    //  \|
-    // --------->X
-    create_tile() {
-        let tile_material = Physijs.createMaterial(
-            new THREE.MeshLambertMaterial({
-                map: this.texture_loader.load('texture/plastic.jpg')
-            }),
-            .7 /* friction */ ,
-            .3 /* restitution */
-        );
-        let core_geom = new THREE.BoxGeometry(0.02, 0.02, 0.02);
-        let core = new Physijs.BoxMesh(core_geom, tile_material);
-        core.userData = {
-            "cube": true,
-            "size": 0.02,
-        };
-        return core;
     }
 
     update_projection() {
@@ -286,7 +168,6 @@ class View3DClient {
         requestAnimationFrame(function() {
             _this.animate();
         });
-        this.scene.simulate();
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
