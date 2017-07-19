@@ -13,11 +13,13 @@ class ScaffoldModel {
             center: new THREE.Vector3(0, 0, 0.03),
             ori: new THREE.Vector3(0, 0, 1),
             id: 0,
+            support: true,
         }, {
             type: "RS",
             center: new THREE.Vector3(0, unit, 0.03),
             ori: new THREE.Vector3(0, 0, 1),
             id: 1,
+            support: false,
         }];
 
         this.workers = [{
