@@ -241,6 +241,32 @@ class View3DClient {
     this.controls.zoomSpeed = 0.1;
     this.controls.maxDistance = 2;
 
+    let loader = new THREE.STLLoader();
+    loader.load('./models/S60C-T.stl', (geom) => {
+      console.log("loaded", geom);
+      geom.scale(1e-3, 1e-3, 1e-3);
+      let mesh = new THREE.Mesh( geom );
+      const prim_color = 0x3498db;
+      mesh.material = new THREE.MeshLambertMaterial({color: prim_color});
+      mesh.position.z = 0.1;
+      this.scene.add(mesh);
+    });
+    loader.load('./models/S60C-RS.stl', (geom) => {
+      console.log("loaded", geom);
+      geom.scale(1e-3, 1e-3, 1e-3);
+      let mesh = new THREE.Mesh( geom );
+      mesh.material = new THREE.MeshLambertMaterial({});
+      mesh.position.z = 0.1;
+      this.scene.add(mesh);
+
+      let mesh2 = new THREE.Mesh(geom);
+      mesh2.material = new THREE.MeshLambertMaterial({});
+      mesh2.position.z = 0.1;
+      mesh2.position.y = 0.06;
+      this.scene.add(mesh2);
+    });
+
+
     $(window).resize(() => {
       _this.update_projection();
     });
