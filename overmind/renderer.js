@@ -1,3 +1,41 @@
+const prim_color = 0x3498db;
+
+// Scaffold inferred / target world model.
+// Assumes z=0 is floor.
+class ScaffoldModel {
+    constructor() {
+        const unit = 0.06;
+        this.zofs = 0.03;
+
+        this.rails = [{
+            type: "RS",
+            center: new THREE.Vector3(0, 0, 0),
+            ori: new THREE.Vector3(0, 0, 1),
+            id: 0,
+        }, {
+            type: "RS",
+            center: new THREE.Vector3(0, unit, 0),
+            ori: new THREE.Vector3(0, 0, 1),
+            id: 1,
+        }];
+
+        this.workers = [{
+            type: 'builder',
+            locom: {
+                sensor: 123,
+                on_rail: 0,
+                pos: 0.3,
+            },
+            builder: {
+                dump: 'RH',
+                driver: false,
+            }
+        }];
+    }
+}
+
+// ViewModel / View.
+// Since we update all frame all the time, we don't care about MVVM framework / bindings etc.
 class View3DClient {
     // TODO: Might be better to use CGS unit system instead of SI, since
     // 1. physijs doc is poor
@@ -29,8 +67,27 @@ class View3DClient {
         this.scene.add(bg);
 
         this.texture_loader = new THREE.TextureLoader();
+        this.stl_loader = new THREE.STLLoader();
 
+        // Model derived things.
+        this.model = new ScaffoldModel();
         this.add_table();
+
+        this.cad_models = {};
+        let load_state = {total: 4, loaded: 0};
+        _.each(['S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH'], (name) => {
+            _this.stl_loader.load('./models/' + name + '.stl', (geom) => {
+                geom.scale(1e-3, 1e-3, 1e-3);
+                this.cad_models[name] = geom;
+                load_state.loaded++;
+                if (load_state.loaded === load_state.total) {
+                  this.regen_scaffold_view();
+                }
+            });
+        });
+
+        this.scaffold_view = new THREE.Object3D();
+        this.scene.add(this.scaffold_view);
 
         // start canvas
         this.renderer = new THREE.WebGLRenderer({
@@ -47,39 +104,30 @@ class View3DClient {
         this.controls.zoomSpeed = 0.1;
         this.controls.maxDistance = 2;
 
-        let loader = new THREE.STLLoader();
-        loader.load('./models/S60C-T.stl', (geom) => {
-            console.log("loaded", geom);
-            geom.scale(1e-3, 1e-3, 1e-3);
-            let mesh = new THREE.Mesh(geom);
-            const prim_color = 0x3498db;
-            mesh.material = new THREE.MeshLambertMaterial({
-                color: prim_color
-            });
-            mesh.position.z = 0.1;
-            this.scene.add(mesh);
-        });
-        loader.load('./models/S60C-RS.stl', (geom) => {
-            console.log("loaded", geom);
-            geom.scale(1e-3, 1e-3, 1e-3);
-            let mesh = new THREE.Mesh(geom);
-            mesh.material = new THREE.MeshLambertMaterial({});
-            mesh.position.z = 0.1;
-            this.scene.add(mesh);
-
-            let mesh2 = new THREE.Mesh(geom);
-            mesh2.material = new THREE.MeshLambertMaterial({});
-            mesh2.position.z = 0.1;
-            mesh2.position.y = 0.06;
-            this.scene.add(mesh2);
-        });
-
-
         $(window).resize(() => {
             _this.update_projection();
         });
 
         this.update_projection();
+    }
+
+    regen_scaffold_view() {
+        this.scaffold_view.remove(this.scaffold_view.children);
+
+        _.each(this.model.rails, rail => {
+            let mesh = new THREE.Mesh(this.cad_models['S60C-' + rail.type]);
+            mesh.material = new THREE.MeshLambertMaterial({});
+            mesh.position.copy(rail.center.clone().add(new THREE.Vector3(0, 0, this.model.zofs)));
+            this.scene.add(mesh);
+        });
+        _.each(this.model.workers, worker => {
+            let mesh = new THREE.Mesh(this.cad_models['S60C-T']);
+            mesh.material = new THREE.MeshLambertMaterial({
+                color: prim_color
+            });
+            mesh.position.z = this.model.zofs;
+            this.scene.add(mesh);
+        });
     }
 
     calc_power_net() {
