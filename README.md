@@ -10,12 +10,17 @@
   * TBD
 * Documents: https://drive.google.com/drive/folders/0B6zCoyeuDn-pVGp6S2Y4Tmo1dEE
 
+## Components
+
+* base: legacy arduino optical bridge between worker and arduino IDE
+* worker: AVR firmware for worker PCB
+* overmind: controls everything, via TWELITE monostick. Written in electron (desktop webapp platform).
+
 ## Requirements
 
 Re-creating
 
-* Cheap FDM 3D printing: up mini
-* Decent (SLA) 3D printing: DMM.make 3D
+* SLA 3d printing: Form2
 * PWB manufacturer: Seeed studio
 * Electronic parts: All are sourceabe from digikey
 * PCB reflow oven
