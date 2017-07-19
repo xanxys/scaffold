@@ -145,12 +145,13 @@ class View3DClient {
             this.scene.add(mesh);
         });
 
+        this.cache_point_geom = new THREE.SphereBufferGeometry(0.006, 16, 12);
         _.each(this.model.get_points(), point => {
             if (!point.open) {
                 return;
             }
             let mesh = new THREE.Mesh();
-            mesh.geometry = new THREE.SphereBufferGeometry(0.006);
+            mesh.geometry = this.cache_point_geom;
             mesh.material = new THREE.MeshBasicMaterial({
                 color: 'red',
                 opacity: 0.5,
