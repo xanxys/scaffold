@@ -177,7 +177,6 @@ class View3DClient {
   // 2. official examples assume cgs-like unit system, and exhibts slightly stable behavior
   constructor() {
     var _this = this;
-    $('#calc_power_net').click(()=>_this.calc_power_net());
 
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 7);
     this.camera.up = new THREE.Vector3(0, 0, 1);
@@ -232,7 +231,7 @@ class View3DClient {
       antialias: true
     });
 
-    this.renderer.setSize(400, 600);
+    this.renderer.setSize(800, 600);
     this.renderer.setClearColor('#aac');
     $('#viewport').append(this.renderer.domElement);
 
@@ -358,7 +357,7 @@ class View3DClient {
 
   update_projection() {
     //this.renderer.setSize($('#viewport').width(), $('#viewport').height());
-    this.camera.aspect = 400 / 600; // $('#viewport').width() / $('#viewport').height();
+    this.camera.aspect = 800 / 600; // $('#viewport').width() / $('#viewport').height();
     this.camera.updateProjectionMatrix();
   }
 

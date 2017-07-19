@@ -2,65 +2,84 @@
 <html>
 
 <head>
-  <meta charset="UTF-8">
-  <title>Simplex Inspector</title>
-  <link href="bootstrap.min.css" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <title>Scaffold Overmind</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet" />
 </head>
 
 <body>
-<style>
+    <div class="container">
+        <div class="row" style="background-color: #444">
+            <div class="col-md-12">
+                Connected
+                <span class="text-warning">● NO</span> device: /dev/ttyUSB0
+                <button class="btn btn-default">reset</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <table class="table">
+                    <tr>
+                        <th></th>
+                        <th>free</th>
+                        <th>in transit</th>
+                        <th>fixed</th>
+                    </tr>
+                    <tr>
+                        <td>RS</td>
+                        <td>3</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>RH</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>RR</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>screw</td>
+                        <td>10</td>
+                        <td>1</td>
+                        <td>0</td>
+                    </tr>
+                </table>
 
-.links line {
-stroke: #999;
-stroke-opacity: 0.6;
-}
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Worker #1 <span style="font-size:80%; color: lightgray">1afc38a</span></h3>
+                    </div>
+                    <div class="panel-body">
+                        Working Carrying: RS, screw
+                        <button class="btn btn-default" title="Go to home position">
+                          <span class="glyphicon glyphicon-home"></span>
+                        </button>
+                    </div>
+                </div>
 
-.nodes circle {
-stroke: #fff;
-stroke-width: 1.5px;
-}
+            </div>
 
-</style>
-
-  <div class="container">
-    Connected
-    <span class="text-warning">● NO</span> | Planner
-    <span class="text-info">DISABLED</span>
-    <div class="row">
-      <div class="col-md-4">
-        <h2>Connection</h2> Connect to controller:
-        <ul>
-          <li>Dummy controller
-            <button class="btn btn-default">connect</button>
-          </li>
-          <li>Controller (123.45.1.2):
-            <button class="btn btn-default">connect</button>
-          </li>
-        </ul>
-      </div>
-
-      <div class="col-md-4">
-        <h2>Swarm</h2>
-        <svg width="390" height="600"></svg>
-      </div>
-
-      <div class="col-md-4">
-        <h2>3D View</h2>
-        <button class="btn btn-default" id="calc_power_net">power net</button>
-        <div id="viewport"></div>
-      </div>
+            <div class="col-md-8">
+                <div id="viewport"></div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script src="./3p/underscore.js"></script>
-  <script src="./3p/jquery-3.1.1.js"></script>
+    <script src="./3p/underscore.js"></script>
+    <script src="./3p/jquery-3.1.1.js"></script>
 
-  <script src="./3p/d3.v4.min.js"></script>
+    <script src="./3p/d3.v4.min.js"></script>
 
-  <script src="./3p/three.js"></script>
-  <script src="./3p/physi.js"></script>
-  <script src="./3p/trackball.js"></script>
-  <script src="./renderer.js"></script>
+    <script src="./3p/three.js"></script>
+    <script src="./3p/physi.js"></script>
+    <script src="./3p/trackball.js"></script>
+    <script src="./renderer.js"></script>
 </body>
 
 </html>
