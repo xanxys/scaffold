@@ -16,6 +16,12 @@
 * worker: AVR firmware for worker PCB
 * overmind: controls everything, via TWELITE monostick. Written in electron (desktop webapp platform).
 
+To run overmind,
+```
+cd ./overmind
+npm start
+```
+
 ## Requirements
 
 Re-creating
