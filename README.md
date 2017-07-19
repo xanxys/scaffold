@@ -4,9 +4,8 @@
 * Designs
   * Hardware: Autodesk Fusion360 cloud
   * Firmware:
-    * Arduino Prototype: train/
     * scaffold-worker-v1 PCB (non-arduino AVR): worker/
-  * Softawre: TBD
+  * Softawre: overmind/
 * Experiments
   * TBD
 * Documents: https://drive.google.com/drive/folders/0B6zCoyeuDn-pVGp6S2Y4Tmo1dEE

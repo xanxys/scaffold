@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Simplex Inspector</title>
+  <link href="bootstrap.min.css" rel="stylesheet" />
+</head>
+
+<body>
+<style>
+
+.links line {
+stroke: #999;
+stroke-opacity: 0.6;
+}
+
+.nodes circle {
+stroke: #fff;
+stroke-width: 1.5px;
+}
+
+</style>
+
+  <div class="container">
+    Connected
+    <span class="text-warning">● NO</span> | Planner
+    <span class="text-info">DISABLED</span>
+    <div class="row">
+      <div class="col-md-4">
+        <h2>Connection</h2> Connect to controller:
+        <ul>
+          <li>Dummy controller
+            <button class="btn btn-default">connect</button>
+          </li>
+          <li>Controller (123.45.1.2):
+            <button class="btn btn-default">connect</button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-md-4">
+        <h2>Swarm</h2>
+        <svg width="390" height="600"></svg>
+      </div>
+
+      <div class="col-md-4">
+        <h2>3D View</h2>
+        <button class="btn btn-default" id="calc_power_net">power net</button>
+        <div id="viewport"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./3p/underscore.js"></script>
+  <script src="./3p/jquery-3.1.1.js"></script>
+
+  <script src="./3p/d3.v4.min.js"></script>
+
+  <script src="./3p/three.js"></script>
+  <script src="./3p/physi.js"></script>
+  <script src="./3p/trackball.js"></script>
+  <script src="./renderer.js"></script>
+</body>
+
+</html>
