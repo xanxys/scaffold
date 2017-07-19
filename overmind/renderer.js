@@ -21,7 +21,7 @@ class ScaffoldModel {
 
         this.workers = [{
             type: 'builder',
-            locom: {
+            loco: {
                 sensor: 123,
                 on_rail: 0,
                 pos: 0.3,
@@ -30,7 +30,8 @@ class ScaffoldModel {
                 dump: 'RH',
                 driver: false,
             },
-            id: 1,
+            human_id: 1,
+            hw_id: "a343fd"
         }];
     }
 
@@ -52,8 +53,9 @@ class ScaffoldModel {
 // ViewModel / View.
 // Since we update all frame all the time, we don't care about MVVM framework / bindings etc.
 class View3DClient {
-    constructor() {
+    constructor(model) {
         var _this = this;
+        this.model = model;
 
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 7);
         this.camera.up = new THREE.Vector3(0, 0, 1);
@@ -82,7 +84,6 @@ class View3DClient {
         this.stl_loader = new THREE.STLLoader();
 
         // Model derived things.
-        this.model = new ScaffoldModel();
         this.add_table();
 
         this.cad_models = {};
@@ -193,5 +194,11 @@ class View3DClient {
     }
 }
 
+let model = new ScaffoldModel();
 let client = new View3DClient();
 client.animate();
+
+new Vue({
+  el: '#workers',
+  data: model,
+});

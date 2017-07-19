@@ -51,15 +51,17 @@
                     </tr>
                 </table>
 
-                <div class="panel panel-info">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Worker #1 <span style="font-size:80%; color: lightgray">1afc38a</span></h3>
-                    </div>
-                    <div class="panel-body">
-                        Working Carrying: RS, screw
-                        <button class="btn btn-default" title="Go to home position">
+                <div id="workers">
+                    <div class="panel panel-info" v-for="worker in workers">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Worker #{{worker.human_id}} <span style="font-size:80%; color: lightgray">#{{worker.hw_id}}</span></h3>
+                        </div>
+                        <div class="panel-body">
+                            {{worker.loco}} Working Carrying: RS, screw
+                            <button class="btn btn-default" title="Go to home position">
                           <span class="glyphicon glyphicon-home"></span>
                         </button>
+                        </div>
                     </div>
                 </div>
 
@@ -72,11 +74,14 @@
     </div>
 
     <script>
-    window.nodeRequire = require;
-    delete window.require; delete window.exports; delete window.module;
+        window.nodeRequire = require;
+        delete window.require;
+        delete window.exports;
+        delete window.module;
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.1/vue.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/86/three.min.js"></script>
     <script src="./3p/trackball.js"></script>
     <script src="./3p/STLLoader.js"></script>
