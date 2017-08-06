@@ -508,7 +508,15 @@ int main() {
   // Init arduino core things (e.g. Timer0).
   init();
 
-  Serial.begin(2400);
+  Serial.begin(38400);
+  indicator.flash_blocking();
+  while(1) {
+    // say hello to parent
+    Serial.write(":000168656C6C6F0AX\r\n");
+
+    delay(3000);
+  }
+
 
   Timer1.initialize(1000L * 1000L);
   Timer1.attachInterrupt(actions_loop1ms);
