@@ -61,7 +61,7 @@ e1000s-100t100/e1000t0/e1s0
 * O: 30 (center)
 * D: ?
 
-## Pin assigment / connections
+## Pin assigment / connections (V2)
 ATmega328P
 
 16MHz (ceralock) / 1:1 clock division / No watchdog
@@ -71,7 +71,7 @@ ATmega328P
 |PB0| - |
 |PB1| - |
 |PB2| - |
-|PB3| ISP MOSI  |
+|PB3/OC2A| ISP MOSI / PWMA  |
 |PB4| ISP MISO  |
 |PB5| ISP SCK  |
 |PB6| XTAL1  |
@@ -79,7 +79,7 @@ ATmega328P
 |   |  |
 |   |  |
 |PC0| red indicator LED  |
-|PC1| -  |
+|PC1/ADC1| SEN-T  |
 |PC2| -  |
 |PC3| -  |
 |PC4| -  |
@@ -88,27 +88,32 @@ ATmega328P
 |PC7| -  |
 |   |  |
 |   |  |
-|ADC6|: SEN1 - rail marker detector  |
-|ADC7|: SEN2 - RESERVED  |
+|ADC6| SEN-O (rail marker)  |
+|ADC7| SEN-X (extension)  |
 |   |  |
 |   |  |
-|PD0| OPT-RX  |
-|PD1| OPT-TX  |
+|PD0| TWELITE-RX  |
+|PD1| TWELITE-TX  |
 |PD2| -  |
-|PD3| SEN-LIGHT-R  |
-|PD4| SRV1 - placer arm (r)  |
-|PD5| SRV2 - orientor (o)  |
-|PD6| SRV3 - driver arm (d)  |
-|PD7| SEN-LIGHT-L  |
+|PD3/OC2B| PWMB  |
+|PD4| - |
+|PD5| - |
+|PD6| - |
+|PD7| - |
 
 ### I2C bus
-DRV8830 (1/2)
 
-* OUT: train motor * 2
-* Addr[3:0]: 0100 (A0: open, A1: open)
+DRV8830 (1/3)
 
+* OUT: Train motor
+* Addr[3:0]: 0000 (A0: L, A1: L)
 
-DRV8830 (2/2)
+DRV8830 (2/3)
 
-* OUT: driver motor
-* Addr[3:0]: 0011 (A0: L, A1: open)
+* OUT: Orientor motor
+* Addr[3:0]: 0001 (A0: open, A1: L)
+
+DRV8830 (3/3)
+
+* OUT: Extension motor (screw)
+* Addr[3:0]: 0010 (A0: H, A1: L)
