@@ -13,7 +13,7 @@ env=Environment(
     AS="avr-as",
     CC='avr-gcc',
     CXX="avr-gcc",
-    CCFLAGS ="-D F_CPU=16000000L -mmcu=%s -std=c++11 -Wall -O2 -I./lib -I%s -fdata-sections -ffunction-sections"%(arch, "/usr/share/arduino/hardware/arduino/variants/standard"),
+    CCFLAGS ="-D F_CPU=16000000L -mmcu=%s -std=c++11 -Wall -O2 -I./lib -I%s -fdata-sections -ffunction-sections"%(arch, "/usr/share/arduino/hardware/arduino/avr/variants/standard"),
     LINKFLAGS="-mmcu=%s -Wl,--gc-sections"%arch)
 
 env.Append(BUILDERS=
