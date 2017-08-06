@@ -14,20 +14,21 @@
 
 #include <stdint.h>
 
-void enable_error_indicator() {
-
-}
 
 class Indicator {
 public:
   Indicator() {
-    PORTC |= _BV(PC0);
+    DDRC |= _BV(PC0);
   }
 
   void flash_blocking() {
     PORTC |= _BV(PC0);
     delay(50);
     PORTC &= ~_BV(PC0);
+  }
+
+  static void on() {
+    PORTC |= _BV(PC0);
   }
 };
 
@@ -183,7 +184,7 @@ public:
     cli();
 
     if (res != 0) {
-      enable_error_indicator();
+      Indicator::on();
       /*
       Serial.print("[ERR] I2C failed:");
       Serial.println((int)res);

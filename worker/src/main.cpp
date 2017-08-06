@@ -485,7 +485,8 @@ private: // Command Handler
       switch (target) {
         case 'd': action.servo_pos[CIX_DUMP] = value; break;
         case 'r': action.servo_pos[CIX_DRIVER] = value; break;
-        case 'o': action.servo_pos[CIX_ORI] = value; break;
+        case 'o': //action.servo_pos[CIX_ORI] = value; break;
+          break;
         case 't': action.motor_vel[MV_TRAIN] = value; break;
         case 's': action.motor_vel[MV_SCREW_DRIVER] = value; break;
       }
@@ -499,12 +500,8 @@ private: // Command Handler
 CommandProcessorSingleton command_processor;
 
 
-void action_loop() {
+void actions_loop1ms() {
   actions.loop1ms();
-}
-
-void actions_loop_pwm() {
-  actions.loop_pwm();
 }
 
 int main() {
@@ -513,23 +510,16 @@ int main() {
 
   Serial.begin(2400);
 
-  Timer1.initialize(PWM_STEP_US);
-  Timer1.attachInterrupt(actions_loop_pwm);
-
-  MsTimer2::set(STEP_MS, action_loop);
-  MsTimer2::start();
+  Timer1.initialize(1000L * 1000L);
+  Timer1.attachInterrupt(actions_loop1ms);
 
   pinMode(A6, INPUT);
-
-  // indicator LED as output.
-  DDRC |= _BV(PC0);
 
   // Initialize servo pos.
   {
     Action action(1 /* dur_ms */);
     action.servo_pos[CIX_DUMP] = 25;
     action.servo_pos[CIX_DRIVER] = 80;
-    action.servo_pos[CIX_ORI] = 30;
     actions.enqueue(action);
   }
 

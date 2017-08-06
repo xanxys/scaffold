@@ -2,14 +2,14 @@
 
 #include "hardware.hpp"
 
-const int N_SERVOS = 3;
+const int N_SERVOS = 2;
 const int CIX_DUMP = 0;
-const int CIX_ORI = 1;
-const int CIX_DRIVER = 2;
+const int CIX_DRIVER = 1;
 
-const int N_MOTORS = 2;
+const int N_MOTORS = 3;
 const int MV_TRAIN = 0;
-const int MV_SCREW_DRIVER = 1;
+const int MV_ORI = 1;
+const int MV_SCREW_DRIVER = 2;
 
 
 const static int PWM_STEP_US = 20;
@@ -41,8 +41,8 @@ public:
 
   Action(uint16_t duration_ms) :
       duration_step(duration_ms / STEP_MS),
-      servo_pos{SERVO_POS_KEEP, SERVO_POS_KEEP, SERVO_POS_KEEP},
-      motor_vel{MOTOR_VEL_KEEP, MOTOR_VEL_KEEP} {
+      servo_pos{SERVO_POS_KEEP, SERVO_POS_KEEP},
+      motor_vel{MOTOR_VEL_KEEP, MOTOR_VEL_KEEP, MOTOR_VEL_KEEP} {
   }
 
   void print() {
@@ -187,8 +187,8 @@ public:
 
   // Position based control. Set position will be maintained automatically (using Timer1)
   // in Calibrated Servo.
-  CalibratedServo servos[3];
-  uint8_t servo_pos[3];
+  CalibratedServo servos[N_SERVOS];
+  uint8_t servo_pos[N_SERVOS];
 
   // This is very important cnstant.
   // In GWS PICO+ F BB, if you make it 200 (2ms, for example)
@@ -208,27 +208,33 @@ public:
   int8_t motor_vel_prev[N_MOTORS];
 
   MultiplexedSensor sensor;
+
+  static const uint8_t TCCR2A_FAST_PWM = _BV(WGM21) | _BV(WGM20);
+  static const uint8_t TCCR2A_A_NON_INVERT = _BV(COM2A1);
+  static const uint8_t TCCR2A_B_NON_INVERT = _BV(COM2B1);
+  static const uint8_t TCCR2B_PRESCALER_256 = _BV(CS22) | _BV(CS21);
 public:
   ActionExecutorSingleton() :
       servos{
         CalibratedServo(4),
-        CalibratedServo(5),
-        CalibratedServo(6)
+        CalibratedServo(5)
       },
-      servo_pos{50, 5, 20},
+      servo_pos{50, 5},
       motors{
+        // train
         DCMotor(0xc0),
-        DCMotor(0xc2)
+        // ori
+        DCMotor(0xc2),
+        // screw
+        DCMotor(0xc4)
       } {
-    // Init servo static cache.
-    servo_portd_mask_union = 0;
-    for (int i = 0; i < 3; i++) {
-      servo_portd_mask_union |= servos[i].portd_mask;
-    }
+    // Init servo PWM (freq_pwm=244.1Hz, dur=4.096 ms)
+    TCCR2A = TCCR2A_FAST_PWM | TCCR2A_A_NON_INVERT | TCCR2A_B_NON_INVERT;
+    TCCR2B = TCCR2B_PRESCALER_256;
 
     // Init I2C bus for DC PWM motors.
     Wire.begin();
-    TWBR = 255;  // about 30kHz. (default 100kHz is too fast w/ internal pullups)
+    // TWBR = 255;  // about 30kHz. (default 100kHz is too fast w/ internal pullups)
 
     commit_posvel();
   }
@@ -243,22 +249,6 @@ public:
       // Fetch new action.
       Action* new_action = queue.pop();
       state = ActionExecState(new_action, servo_pos);
-    }
-  }
-
-  // Called every 10us (100kHz)
-  void loop_pwm() {
-    // Servo motors.
-    for (int i = 0; i < N_SERVOS; i++) {
-      if (servo_pwm_phase >= servo_pwm_offset[i]) {
-        PORTD &= ~servos[i].portd_mask;
-      }
-    }
-    if (servo_pwm_phase == SERVO_PWM_NUM_PHASE - 1) {
-      servo_pwm_phase = 0;
-      PORTD |= servo_portd_mask_union;
-    } else {
-      servo_pwm_phase++;
     }
   }
 
@@ -320,12 +310,12 @@ private:
   }
 
   void commit_posvel() {
-    for (int i = 0; i < N_SERVOS; i++) {
-      servo_pwm_offset[i] = servo_pos[i] + SERVO_PWM_ON_PHASES;
-    }
-    // I2C takes time, need to coserve time. Otherwise MCU become
+    // Set PWM
+    OCR2A = servo_pos[0];
+    OCR2B = servo_pos[1];
+
+    // I2C takes time, need to conserve time. Otherwise MCU become
     // unresponsive.
-    // NOTE: Adverse effect on servo jitter?
     for (int i = 0; i < N_MOTORS; i++) {
       if (motor_vel[i] != motor_vel_prev[i]) {
         motors[i].set_velocity(motor_vel[i]);
