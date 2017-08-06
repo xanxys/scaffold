@@ -1,0 +1,21 @@
+{
+  "name": "scaffold-overmind",
+  "version": "0.1.0",
+  "description": "Scaffold controller; communicates with workers and visualizes / executes planning.",
+  "main": "app.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": "https://github.com/electron/electron-quick-start",
+  "keywords": [
+    "visualizer",
+    "3d",
+    "robot",
+    "demo"
+  ],
+  "author": "eqsan",
+  "license": "CC-BY",
+  "devDependencies": {
+    "electron": "^1.4.1"
+  }
+}
