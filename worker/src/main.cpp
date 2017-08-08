@@ -8,8 +8,6 @@
 #include "logger.hpp"
 #include "action.hpp"
 
-
-Indicator indicator;
 ActionExecutorSingleton actions;
 
 // Parse ":..." ASCII messages from standard TWELITE MWAPP.
@@ -29,8 +27,9 @@ public:
         Logger::warn("too small packet");
         continue;
       }
-      if (memcmp(buffer, "7801", 4) != 0) {
-        Logger::warn("non-7801");
+      if (memcmp(buffer, "0001", 4) != 0) {
+        // There are so many noisy packets (e.g. auto-local echo), we shouldn't
+        // treat them as warning.
         continue;
       }
       break;
@@ -53,7 +52,7 @@ private:
     } else if ('A' <= c && c <= 'F'){
       return (c - 'A') + 10;
     } else {
-      // WARN
+      Logger::warn("corrupt hex from TWELITE");
       return 0;
     }
   }
@@ -65,13 +64,17 @@ private:
     size = 0;
     while (true) {
       char c = getch();
-      if (c != '\r' || c != '\n') {
+      if (c == '\r' || c == '\n') {
+        return;
+      } else if (c == ':') {
+        Logger::warn("unexpected':'");
+      } else if (c == '!') {
+        Logger::warn("unexpected'!");
+      } else {
         if (size < BUF_SIZE) {
           buffer[size] = c;
           size++;
         }
-      } else {
-        return;
       }
     }
   }
@@ -513,7 +516,7 @@ int main() {
   indicator.flash_blocking();
   Logger::send_short("worker:init1");
 
-  Timer1.initialize(1000L * 1000L);
+  Timer1.initialize(1000L * 1000L /* usec */);
   Timer1.attachInterrupt(actions_loop1ms);
 
   // pinMode(A6, INPUT);

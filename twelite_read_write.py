@@ -150,7 +150,7 @@ def serialize_uart_command(txt, target=0x78):
     returns: str
     """
     header = bytes([target, 0x01])  # TARGET(1B) 0x01(SEND-UART)
-    body = txt.encode('ascii')  # LF-only
+    body = txt.encode('ascii')
     csum = -sum(header + body) % 256
 
     binary_command = header + body + bytes([csum])

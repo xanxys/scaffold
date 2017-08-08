@@ -16,6 +16,8 @@
 
 
 class Indicator {
+private:
+  bool error;
 public:
   Indicator() {
     DDRC |= _BV(PC0);
@@ -25,12 +27,24 @@ public:
     PORTC |= _BV(PC0);
     delay(50);
     PORTC &= ~_BV(PC0);
+    apply_error();
   }
 
-  static void on() {
-    PORTC |= _BV(PC0);
+  void enter_error() {
+    error = true;
+    apply_error();
+  }
+private:
+  void apply_error() {
+    if (error) {
+      PORTC |= _BV(PC0);
+    } else {
+      PORTC &= ~_BV(PC0);
+    }
   }
 };
+
+Indicator indicator;
 
 // Perodically measure fixed number of ADC inputs & controls sensor multiplexing.
 // Currently:
@@ -184,11 +198,8 @@ public:
     cli();
 
     if (res != 0) {
-      Indicator::on();
-      /*
-      request_log.print("[ERR] I2C failed:");
-      request_log.println((int)res);
-      */
+      indicator.enter_error();
+      Logger::warn("I2C failed");
     }
   }
 };
