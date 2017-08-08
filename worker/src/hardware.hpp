@@ -186,8 +186,8 @@ public:
     if (res != 0) {
       Indicator::on();
       /*
-      Serial.print("[ERR] I2C failed:");
-      Serial.println((int)res);
+      request_log.print("[ERR] I2C failed:");
+      request_log.println((int)res);
       */
     }
   }

@@ -5,71 +5,90 @@
 #include <MsTimer2.h>
 #include <Wire.h>
 
+#include "logger.hpp"
 #include "action.hpp"
 
 
 Indicator indicator;
 ActionExecutorSingleton actions;
 
-class Logger {
+// Parse ":..." ASCII messages from standard TWELITE MWAPP.
+class TweliteParser {
 private:
-  const static uint8_t SIZE = 200;
-  char buffer[SIZE];
-  uint8_t index;
+  // Command without ":" or newlines.
+  const static uint8_t BUF_SIZE = 64;
+  char buffer[BUF_SIZE];
+  uint8_t size;
 public:
-  Logger() : index(0) {}
+  uint8_t get_datagram(uint8_t* data_ptr, uint8_t data_size) {
+    while (true) {
+      receive_command();
 
-  template<typename T>
-  void print(const T& v) {
-    String s(v);
-    for (uint8_t i = 0; i < s.length(); i++) {
-      if (index < SIZE) {
-        buffer[index] = s.charAt(i);
-        index++;
+      // Filter / validate.
+      if (size < 4 || size % 2 != 0) {
+        Logger::warn("too small packet");
+        continue;
+      }
+      if (memcmp(buffer, "7801", 4) != 0) {
+        Logger::warn("non-7801");
+        continue;
+      }
+      break;
+    }
+
+    uint8_t data_ix = 0;
+    for (int i = 4; i < size; i += 2) {
+      if (data_ix < data_size) {
+        data_ptr[data_ix] =
+          (decode_nibble(buffer[i]) << 4) | decode_nibble(buffer[i+1]);
+        data_ix++;
+      }
+    }
+    return data_ix;
+  }
+private:
+  uint8_t decode_nibble(char c) {
+    if ('0' <= c && c <= '9') {
+      return c - '0';
+    } else if ('A' <= c && c <= 'F'){
+      return (c - 'A') + 10;
+    } else {
+      // WARN
+      return 0;
+    }
+  }
+
+  void receive_command() {
+    // Accept ":"
+    while (getch() != ':');
+
+    size = 0;
+    while (true) {
+      char c = getch();
+      if (c != '\r' || c != '\n') {
+        if (size < BUF_SIZE) {
+          buffer[size] = c;
+          size++;
+        }
+      } else {
+        return;
       }
     }
   }
 
-  void newline() {
-    if (index < SIZE) {
-      buffer[index] = '\n';
-      index++;
-    }
-  }
-
-  template<typename T>
-  void println(const T& v) {
-    print(v);
-    newline();
-  }
-
-  void flushToSerial() {
-    for(int i = 0; i < index; i++) {
-      Serial.write(buffer[i]);
-    }
-    Serial.flush();
-    index = 0;
+  char getch() {
+    while (Serial.available() == 0);
+    return Serial.read();
   }
 };
 
-// Request scoped logger.
-// Log buffer is created anew for every request.
-Logger request_log;
-
 // Command format:
-// To ease interactive debugging from serial monitor,
+// To ensure enqueue correctness,
 // Command = CommandCode[a-zA-Z] CommandBody[^/]* ("\n" | "/")
-// This is useful especially for qneueuing.
-// Single action run:
-// e100d80 + Enter
-// Move & stop (2 enqueue)
-// e100t127/e16t0 + Enter
-// this is exactly same as typing e100t127+ Enter, and then e16t0 + Enter,
-// but more copy-paste friendly.
 //
-// Set terminal to send LF only.
 class CommandProcessorSingleton {
 private:
+  TweliteParser parser;
   const static uint8_t BUF_SIZE = 64;
   char buffer[BUF_SIZE];
   int r_ix;
@@ -79,7 +98,8 @@ public:
 
   void loop() {
     while (true) {
-      read_line_to_buffer();
+      r_ix = 0;
+      w_ix = parser.get_datagram(reinterpret_cast<uint8_t*>(buffer), BUF_SIZE);
       indicator.flash_blocking();
       char code = read();
       switch (code) {
@@ -94,11 +114,7 @@ public:
         default:
           request_log.println("[WARN] Unknown command");
       }
-      request_log.flushToSerial();
-      // Delete any command that is probably caused by reflection of log.
-      while(Serial.available() > 0) {
-        Serial.read();
-      }
+      request_log.send_normal();
     }
   }
 
@@ -119,21 +135,6 @@ private:
 
   bool available() {
     return (buffer != 0) || (Serial.available() > 0);
-  }
-
-  // Read LF-terminated string to buffer (omitting newline).
-  void read_line_to_buffer() {
-    r_ix = 0;
-    w_ix = 0;
-    while (true) {
-        while (Serial.available() == 0);
-        char c = Serial.read();
-        if (c == '\n' || w_ix > BUF_SIZE) {
-          return;
-        }
-        buffer[w_ix] = c;
-        w_ix++;
-    }
   }
 
   char read() {
@@ -510,18 +511,12 @@ int main() {
 
   Serial.begin(38400);
   indicator.flash_blocking();
-  while(1) {
-    // say hello to parent
-    Serial.write(":000168656C6C6F0AX\r\n");
-
-    delay(3000);
-  }
-
+  Logger::send_short("worker:init1");
 
   Timer1.initialize(1000L * 1000L);
   Timer1.attachInterrupt(actions_loop1ms);
 
-  pinMode(A6, INPUT);
+  // pinMode(A6, INPUT);
 
   // Initialize servo pos.
   {
@@ -532,5 +527,6 @@ int main() {
   }
 
   indicator.flash_blocking();
+  Logger::send_short("worker:init2");
   command_processor.loop();
 }

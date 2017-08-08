@@ -49,21 +49,21 @@ public:
     for (int i = 0; i < N_SERVOS; i++) {
       uint8_t v = servo_pos[i];
       if (v == SERVO_POS_KEEP) {
-        Serial.print("KEEP");
+        request_log.print("KEEP");
       } else {
-        Serial.print(v);
+        request_log.print(v);
       }
-      Serial.print(i == N_SERVOS - 1 ? " | " : ", ");
+      request_log.print(i == N_SERVOS - 1 ? " | " : ", ");
     }
     for (int i = 0; i < N_MOTORS; i++) {
       int8_t v = motor_vel[i];
       if (v == MOTOR_VEL_KEEP) {
-        Serial.print("KEEP");
+        request_log.print("KEEP");
       } else {
-        Serial.print(v);
+        request_log.print(v);
       }
       if (i != N_MOTORS - 1) {
-        Serial.print(", ");
+        request_log.print(", ");
       }
     }
   }
@@ -115,14 +115,14 @@ public:
 
   void println() {
     if (is_running()) {
-      Serial.print("run:");
-      Serial.print(elapsed_step);
-      Serial.print("/");
-      Serial.println(action->duration_step);
+      request_log.print("run:");
+      request_log.print(elapsed_step);
+      request_log.print("/");
+      request_log.println(action->duration_step);
     } else if (action != NULL) {
-      Serial.println("done");
+      request_log.println("done");
     } else {
-      Serial.println("idle");
+      request_log.println("idle");
     }
   }
 };
@@ -168,14 +168,14 @@ public:
   }
 
   void println() {
-    Serial.println("-- actions --");
+    request_log.println("-- actions --");
     for (int i = 0; i < n; i++) {
       queue[(ix + i) % SIZE].print();
-      Serial.println("");
+      request_log.println("");
     }
-    Serial.print("free: ");
-    Serial.println(SIZE - n);
-    Serial.println("-------------");
+    request_log.print("free: ");
+    request_log.println(SIZE - n);
+    request_log.println("-------------");
   }
 };
 
@@ -270,7 +270,7 @@ public:
   }
 
   void print() {
-    Serial.println("== executor ==");
+    request_log.println("== executor ==");
     println_output();
     print_worker_status();
     print_sensor_status();
@@ -280,9 +280,9 @@ public:
 private:
   void print_worker_status() {
     uint16_t vcc = sensor.get_vcc_mv();
-    Serial.print("pwr: "); // 🔋
-    Serial.print(vcc);
-    Serial.print("mV / uptime ");
+    request_log.print("pwr: "); // 🔋
+    request_log.print(vcc);
+    request_log.print("mV / uptime ");
 
     uint32_t temp = millis() / 1000;
     uint8_t uptime_sec = temp % 60;
@@ -292,21 +292,21 @@ private:
     temp /= 60;
 
     if (temp > 0) {
-      Serial.print(temp);
-      Serial.print("h");
+      request_log.print(temp);
+      request_log.print("h");
     }
     if (temp > 0 || uptime_min > 0) {
-      Serial.print(uptime_min);
-      Serial.print("m");
+      request_log.print(uptime_min);
+      request_log.print("m");
     }
-    Serial.print(uptime_sec);
-    Serial.println("s");
+    request_log.print(uptime_sec);
+    request_log.println("s");
   }
 
   void print_sensor_status() {
-    Serial.print(sensor.get_sensor_l());
-    Serial.print(" ->|  ||  |<- ");
-    Serial.println(sensor.get_sensor_r());
+    request_log.print(sensor.get_sensor_l());
+    request_log.print(" ->|  ||  |<- ");
+    request_log.println(sensor.get_sensor_r());
   }
 
   void commit_posvel() {
@@ -327,16 +327,16 @@ private:
   void println_output() {
     for (int i = 0; i < N_SERVOS; i++) {
       uint8_t v = servo_pos[i];
-      Serial.print(v);
-      Serial.print(i == N_SERVOS - 1 ? " | " : ", ");
+      request_log.print(v);
+      request_log.print(i == N_SERVOS - 1 ? " | " : ", ");
     }
     for (int i = 0; i < N_MOTORS; i++) {
       int8_t v = motor_vel[i];
-      Serial.print(v);
+      request_log.print(v);
       if (i != N_MOTORS - 1) {
-        Serial.print(", ");
+        request_log.print(", ");
       }
     }
-    Serial.println("");
+    request_log.println("");
   }
 };

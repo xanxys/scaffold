@@ -119,7 +119,8 @@ def readThread():
             lst = lst[0:-1] # チェックサムをリストから削除 (python3ではpopが使えない)
             if csum == 0:
                 if lst[1] == 0x81:
-                    printPayload_0x81(lst) # IO関連のデータの受信
+                    print('0x81 command')
+                    # printPayload_0x81(lst) # IO関連のデータの受信
                 else:
                     printPayload(lst) # その他のデータ受信
             else:
@@ -149,7 +150,7 @@ def serialize_uart_command(txt, target=0x78):
     returns: str
     """
     header = bytes([target, 0x01])  # TARGET(1B) 0x01(SEND-UART)
-    body = (txt + '\n').encode('ascii')  # LF-only
+    body = txt.encode('ascii')  # LF-only
     csum = -sum(header + body) % 256
 
     binary_command = header + body + bytes([csum])
