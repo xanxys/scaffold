@@ -4,7 +4,7 @@
 * Designs
   * Hardware: Autodesk Fusion360 cloud
   * Firmware:
-    * scaffold-worker-v1 PCB (non-arduino AVR): worker/
+    * scaffold-worker-v2 PCB (non-arduino AVR): worker/
   * Softawre: overmind/
 * Experiments
   * TBD
@@ -12,7 +12,6 @@
 
 ## Components
 
-* base: legacy arduino optical bridge between worker and arduino IDE
 * worker: AVR firmware for worker PCB
 * overmind: controls everything, via TWELITE monostick. Written in electron (desktop webapp platform).
 
