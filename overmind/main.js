@@ -1,6 +1,23 @@
 const PRIM_COLOR = 0x3498db;
 const PRIM_COLOR_HOVER = 0x286090;
 
+const $ = require('jquery');
+const _ = require('underscore');
+const SerialPort = require('serialport');
+
+let port = new SerialPort('/dev/ttyUSB0', {baudRate: 115200}, err => {
+  if (err !== null) {
+    console.log('serial port error', err);
+  } else {
+    console.log('serial port ok');
+  }
+});
+
+port.on('data', data => {
+  console.log('serial ', data);
+});
+
+
 // Scaffold inferred / target world model.
 // Assumes z=0 is floor.
 class ScaffoldModel {

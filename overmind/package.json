@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron ."
   },
-  "repository": "https://github.com/electron/electron-quick-start",
+  "repository": "https://github.com/xanxys/scaffold",
   "keywords": [
     "visualizer",
     "3d",
@@ -14,8 +14,14 @@
     "demo"
   ],
   "author": "eqsan",
-  "license": "CC-BY",
+  "license": "Apache-2.0",
   "devDependencies": {
-    "electron": "^1.4.1"
+    "electron": "^1.4.1",
+    "electron-rebuild": "^1.6.0"
+  },
+  "dependencies": {
+    "jquery": "^3.2.1",
+    "serialport": "^5.0.0",
+    "underscore": "^1.8.3"
   }
 }
