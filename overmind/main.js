@@ -5,11 +5,17 @@ const $ = require('jquery');
 const _ = require('underscore');
 const SerialPort = require('serialport');
 
-let port = new SerialPort('/dev/ttyUSB0', {baudRate: 115200}, err => {
+let port_model = {isOpen: false};
+
+// We need port_model indirection to notify changes to vue.js
+const sp_path = '/dev/ttyUSB0';
+port_model.path = sp_path;
+let port = new SerialPort(sp_path, {baudRate: 115200}, err => {
   if (err !== null) {
     console.log('serial port error', err);
   } else {
     console.log('serial port ok');
+    port_model.isOpen = true;
   }
 });
 
@@ -284,4 +290,31 @@ client.animate();
 new Vue({
     el: '#workers',
     data: model,
+});
+
+
+new Vue({
+  el: '#conn-status',
+  data: {
+    port: port_model,
+  },
+  computed: {
+    status() {
+      if (this.port.isOpen) {
+        return 'connected';
+      } else {
+        return 'cutoff'
+      }
+    },
+    status_class() {
+      if (this.port.isOpen) {
+        return 'text-success';
+      } else {
+        return 'text-muted';
+      }
+    },
+    path() {
+      return this.port.path;
+    }
+  }
 });
