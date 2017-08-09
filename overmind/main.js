@@ -18,10 +18,45 @@ let port = new SerialPort(sp_path, {baudRate: 115200}, err => {
     port_model.isOpen = true;
   }
 });
-
-port.on('data', data => {
-  console.log('serial ', data);
+const parser = new SerialPort.parsers.Readline();
+port.pipe(parser);
+parser.on('data', data => {
+  flash_status();
+  if (data.startsWith(':7801')) {
+    let payload_hex = data.slice(':7801'.length, -2 /* csum */);
+    let payload = decode_hex(payload_hex);
+    model.workers[0].messages.push(payload);
+  }
 });
+
+function flash_status() {
+  let el = $('#conn-icon');
+  el.addClass('text-muted');
+  setTimeout(() => {
+    el.removeClass('text-muted');
+  }, 100);
+}
+
+function decode_hex(hex) {
+  let result = '';
+  for (let ix = 0; ix < hex.length; ix += 2) {
+    result += String.fromCharCode(parseInt(hex.substr(ix, 2), 16));
+  }
+  return result;
+}
+
+function encode_hex(bytes) {
+  return _.map(bytes, b => (b >> 4).toString(16) + (b & 0xf).toString(16)).join('').toUpperCase();
+}
+
+function send_command(command) {
+  let twelite_command =
+    [0x78, 0x01].concat(_.map(command, ch => ch.charCodeAt(0)));
+
+  let final_command = ':' + encode_hex(twelite_command) + 'X\r\n';
+  console.log('send', final_command);
+  port.write(final_command);
+}
 
 
 // Scaffold inferred / target world model.
@@ -57,7 +92,8 @@ class ScaffoldModel {
                 driver: false,
             },
             human_id: 1,
-            hw_id: "a343fd"
+            hw_id: "a343fd",
+            messages: [],
         }];
     }
 
@@ -290,6 +326,11 @@ client.animate();
 new Vue({
     el: '#workers',
     data: model,
+    methods: {
+      update_info() {
+        send_command('p');
+      }
+    }
 });
 
 
