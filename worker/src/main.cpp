@@ -467,7 +467,7 @@ private: // Command Handler
       char target = read();
       int16_t value = parse_int();
 
-      if (target == 'd' || target == 'r' || target == 'o') {
+      if (target == 'a' || target == 'b') {
         if (value < 0) {
           value = 0;
           request_log.println("[WARN] pos truncated to 0");
@@ -476,7 +476,7 @@ private: // Command Handler
           value = 100;
           request_log.println("[WARN] pos truncated to 100");
         }
-      } else if (target == 't' || target == 's') {
+      } else if (target == 't' || target == 'o' || target == 's') {
         if (value < -127) {
           value = -127;
           request_log.println("[WARN] vel truncated to -127");

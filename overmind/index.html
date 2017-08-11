@@ -67,6 +67,9 @@
                             <button v-on:click='scr_up()' class="btn btn-default" title="update">
                               SCR↑
                             </button>
+                            <button v-on:click='scr_down()' class="btn btn-default" title="update">
+                              SCR↓
+                            </button>
 
                             <pre v-for="msg in worker.messages">{{msg}}</pre>
                         </div>

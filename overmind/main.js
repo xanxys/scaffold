@@ -21,11 +21,12 @@ let port = new SerialPort(sp_path, {baudRate: 115200}, err => {
 const parser = new SerialPort.parsers.Readline();
 port.pipe(parser);
 parser.on('data', data => {
+  data = data.trim();
   flash_status();
   if (data.startsWith(':7801')) {
     let payload_hex = data.slice(':7801'.length, -2 /* csum */);
     let payload = decode_hex(payload_hex);
-    model.workers[0].messages.push(payload);
+    model.workers[0].messages.unshift(payload);
   }
 });
 
@@ -329,6 +330,14 @@ new Vue({
     methods: {
       update_info() {
         send_command('p');
+      },
+
+      scr_up() {
+        send_command('e1b40');
+      },
+
+      scr_down() {
+        send_command('e1b20');
       }
     }
 });
