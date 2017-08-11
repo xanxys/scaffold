@@ -100,6 +100,13 @@ ATmega328P
 |PD6| - |
 |PD7| - |
 
+### Extension head
+
+A(right): screw rack
+
+B(left): dump
+
+
 ### I2C bus
 
 DRV8830 (1/3)

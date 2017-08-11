@@ -3,8 +3,8 @@
 #include "hardware.hpp"
 
 const int N_SERVOS = 2;
-const int CIX_DUMP = 0;
-const int CIX_DRIVER = 1;
+const int CIX_A = 0;
+const int CIX_B = 1;
 
 const int N_MOTORS = 3;
 const int MV_TRAIN = 0;
@@ -187,7 +187,6 @@ public:
 
   // Position based control. Set position will be maintained automatically (using Timer1)
   // in Calibrated Servo.
-  CalibratedServo servos[N_SERVOS];
   uint8_t servo_pos[N_SERVOS];
 
   // This is very important cnstant.
@@ -215,10 +214,6 @@ public:
   static const uint8_t TCCR2B_PRESCALER_256 = _BV(CS22) | _BV(CS21);
 public:
   ActionExecutorSingleton() :
-      servos{
-        CalibratedServo(4),
-        CalibratedServo(5)
-      },
       servo_pos{50, 5},
       motors{
         // train
@@ -311,8 +306,8 @@ private:
 
   void commit_posvel() {
     // Set PWM
-    OCR2A = servo_pos[0];
-    OCR2B = servo_pos[1];
+    OCR2A = servo_pos[CIX_A];
+    OCR2B = servo_pos[CIX_B];
 
     // I2C takes time, need to conserve time. Otherwise MCU become
     // unresponsive.

@@ -156,19 +156,6 @@ private:
   }
 };
 
-class CalibratedServo {
-public:
-  const uint8_t portd_mask;
-private:
-  int pin;
-public:
-  // pin must be in [0, 8) (i.e. PORTD).
-  CalibratedServo(int pin) :
-    portd_mask(1 << pin), pin(pin) {
-    pinMode(pin, OUTPUT);
-  }
-};
-
 class DCMotor {
 private:
   // 7-bit address (common for read & write, MSB is 0)

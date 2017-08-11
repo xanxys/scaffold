@@ -269,6 +269,7 @@ private: // Command Handler
   }
 
   void exec_step_commamd() {
+    /*
     // See
     // https://docs.google.com/document/d/1cOG_my0yuHraR4mLnnvdF-L59cT0mOKswFOCROyn79I/edit#
     const uint8_t srv_dump_home = 15;
@@ -445,6 +446,7 @@ private: // Command Handler
         request_log.println("[WARN] unknown command");
         return;
     }
+    */
     request_log.println("ack");
   }
 
@@ -487,11 +489,10 @@ private: // Command Handler
       }
 
       switch (target) {
-        case 'd': action.servo_pos[CIX_DUMP] = value; break;
-        case 'r': action.servo_pos[CIX_DRIVER] = value; break;
-        case 'o': //action.servo_pos[CIX_ORI] = value; break;
-          break;
+        case 'a': action.servo_pos[CIX_A] = value; break;
+        case 'b': action.servo_pos[CIX_B] = value; break;
         case 't': action.motor_vel[MV_TRAIN] = value; break;
+        case 'o': action.motor_vel[MV_SCREW_DRIVER] = value; break;
         case 's': action.motor_vel[MV_SCREW_DRIVER] = value; break;
       }
       break;
@@ -524,8 +525,8 @@ int main() {
   // Initialize servo pos.
   {
     Action action(1 /* dur_ms */);
-    action.servo_pos[CIX_DUMP] = 25;
-    action.servo_pos[CIX_DRIVER] = 80;
+    action.servo_pos[CIX_A] = 30;
+    action.servo_pos[CIX_B] = 30;
     actions.enqueue(action);
   }
 
