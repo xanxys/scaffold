@@ -227,6 +227,10 @@ public:
     TCCR2A = TCCR2A_FAST_PWM | TCCR2A_A_NON_INVERT | TCCR2A_B_NON_INVERT;
     TCCR2B = TCCR2B_PRESCALER_256;
 
+    // Set PWM ports as output.
+    DDRB |= _BV(3); // PWMA
+    DDRD |= _BV(3); // PWMB
+
     // Init I2C bus for DC PWM motors.
     Wire.begin();
     // TWBR = 255;  // about 30kHz. (default 100kHz is too fast w/ internal pullups)

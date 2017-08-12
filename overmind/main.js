@@ -333,7 +333,8 @@ new Vue({
       },
 
       scr_up() {
-        send_command('e1b40');
+        send_command('e1b250');
+        send_command('e1a50');
       },
 
       scr_down() {
