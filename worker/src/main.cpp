@@ -472,11 +472,11 @@ private: // Command Handler
       if (target == 'a' || target == 'b') {
         if (value < 10) {
           value = 10;
-          request_log.println("[WARN] pos truncated to 45");
+          request_log.println("[WARN] pos truncated to 10");
         } else if (value > 33) {
           // note: 255 is reserved as SERVO_POS_KEEP.
           value = 33;
-          request_log.println("[WARN] pos truncated to 125");
+          request_log.println("[WARN] pos truncated to 33");
         }
       } else if (target == 't' || target == 'o' || target == 's') {
         if (value < -127) {
