@@ -26,6 +26,10 @@ parser.on('data', data => {
   if (data.startsWith(':7801')) {
     let payload_hex = data.slice(':7801'.length, -2 /* csum */);
     let payload = decode_hex(payload_hex);
+    try {
+      payload = JSON.stringify(JSON.parse(payload), null, 2);
+    } catch (e) {
+    }
     model.workers[0].messages.unshift(payload);
   }
 });

@@ -45,27 +45,39 @@ public:
       motor_vel{MOTOR_VEL_KEEP, MOTOR_VEL_KEEP, MOTOR_VEL_KEEP} {
   }
 
-  void print() {
+  void print_json() {
+    request_log.print('[');
+
+    request_log.print('[');
     for (int i = 0; i < N_SERVOS; i++) {
       uint8_t v = servo_pos[i];
       if (v == SERVO_POS_KEEP) {
-        request_log.print("KEEP");
+        request_log.print_str("KEEP");
       } else {
         request_log.print(v);
       }
-      request_log.print(i == N_SERVOS - 1 ? " | " : ", ");
+      if (i != N_SERVOS - 1) {
+        request_log.print(',');
+      }
     }
+    request_log.print(']');
+    request_log.print(',');
+
+    request_log.print('[');
     for (int i = 0; i < N_MOTORS; i++) {
       int8_t v = motor_vel[i];
       if (v == MOTOR_VEL_KEEP) {
-        request_log.print("KEEP");
+        request_log.print_str("KEEP");
       } else {
         request_log.print(v);
       }
       if (i != N_MOTORS - 1) {
-        request_log.print(", ");
+        request_log.print(",");
       }
     }
+    request_log.print(']');
+
+    request_log.print(']');
   }
 };
 
@@ -113,17 +125,27 @@ public:
     return action != NULL && (elapsed_step <= action->duration_step);
   }
 
-  void println() {
+  void print_json() {
+    request_log.print('{');
+
+    request_log.print_dict_key("type");
     if (is_running()) {
-      request_log.print("run:");
+      request_log.print_str("run");
+      request_log.print(',');
+
+      request_log.print_dict_key("elapsed/step");
       request_log.print(elapsed_step);
-      request_log.print("/");
-      request_log.println(action->duration_step);
+      request_log.print(',');
+
+      request_log.print_dict_key("duration/step");
+      request_log.print(action->duration_step);
     } else if (action != NULL) {
-      request_log.println("done");
+      request_log.print_str("done");
     } else {
-      request_log.println("idle");
+      request_log.print_str("idle");
     }
+
+    request_log.print('}');
   }
 };
 
@@ -167,15 +189,24 @@ public:
     return n;
   }
 
-  void println() {
-    request_log.println("-- actions --");
+  void print_json() {
+    request_log.print('{');
+
+    request_log.print_dict_key("actions");
+    request_log.print('[');
     for (int i = 0; i < n; i++) {
-      queue[(ix + i) % SIZE].print();
-      request_log.println("");
+      queue[(ix + i) % SIZE].print_json();
+      if (i != n -1) {
+        request_log.print(',');
+      }
     }
-    request_log.print("free: ");
-    request_log.println(SIZE - n);
-    request_log.println("-------------");
+    request_log.print(']');
+    request_log.print(',');
+
+    request_log.print_dict_key("free");
+    request_log.print(SIZE - n);
+
+    request_log.print('}');
   }
 };
 
@@ -270,43 +301,55 @@ public:
   }
 
   void print() {
-    request_log.println("== executor ==");
-    println_output();
-    print_worker_status();
+    request_log.print('{');
+
+    request_log.print_dict_key("out");
+    print_output_json();
+    request_log.print(',');
+
+    request_log.print_dict_key("system");
+    print_system_status();
+    request_log.print(',');
+
+    request_log.print_dict_key("sensor");
     print_sensor_status();
-    state.println();
-    queue.println();
+    request_log.print(',');
+
+    request_log.print_dict_key("state");
+    state.print_json();
+    request_log.print(',');
+
+    request_log.print_dict_key("queue");
+    queue.print_json();
+
+    request_log.print('}');
   }
 private:
-  void print_worker_status() {
-    uint16_t vcc = sensor.get_vcc_mv();
-    request_log.print("pwr: "); // 🔋
-    request_log.print(vcc);
-    request_log.print("mV / uptime ");
+  void print_system_status() {
+    request_log.print('{');
 
-    uint32_t temp = millis() / 1000;
-    uint8_t uptime_sec = temp % 60;
-    temp /= 60;
+    request_log.print_dict_key("pwr/mV");
+    request_log.print((uint16_t) sensor.get_vcc_mv());
+    request_log.print(',');
 
-    uint8_t uptime_min = temp % 60;
-    temp /= 60;
-
-    if (temp > 0) {
-      request_log.print(temp);
-      request_log.print("h");
-    }
-    if (temp > 0 || uptime_min > 0) {
-      request_log.print(uptime_min);
-      request_log.print("m");
-    }
+    request_log.print_dict_key("uptime/s");
+    uint32_t uptime_sec = millis() / 1000;
     request_log.print(uptime_sec);
-    request_log.println("s");
+
+    request_log.print('}');
   }
 
   void print_sensor_status() {
+    request_log.print('{');
+
+    request_log.print_dict_key("L");
     request_log.print(sensor.get_sensor_l());
-    request_log.print(" ->|  ||  |<- ");
-    request_log.println(sensor.get_sensor_r());
+    request_log.print(',');
+
+    request_log.print_dict_key("R");
+    request_log.print(sensor.get_sensor_r());
+
+    request_log.print('}');
   }
 
   void commit_posvel() {
@@ -324,19 +367,31 @@ private:
     }
   }
 
-  void println_output() {
+  void print_output_json() {
+    request_log.print('[');
+
+    request_log.print('[');
     for (int i = 0; i < N_SERVOS; i++) {
       uint8_t v = servo_pos[i];
       request_log.print(v);
-      request_log.print(i == N_SERVOS - 1 ? " | " : ", ");
+      if (i != N_SERVOS - 1) {
+        request_log.print(',');
+      }
     }
+    request_log.print(']');
+
+    request_log.print(',');
+
+    request_log.print('[');
     for (int i = 0; i < N_MOTORS; i++) {
       int8_t v = motor_vel[i];
       request_log.print(v);
       if (i != N_MOTORS - 1) {
-        request_log.print(", ");
+        request_log.print(",");
       }
     }
-    request_log.println("");
+    request_log.print(']');
+
+    request_log.print(']');
   }
 };

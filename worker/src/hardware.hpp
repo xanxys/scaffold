@@ -1,16 +1,9 @@
 #pragma once
 /* Hardware usage
-
 * Timer0: system clock
-* Timer1: Servo
-* Timer2: <custom, action executor / PWM>
-
+* Timer1: action loop
+* Timer2: Servo PWM
 */
-
-
-// GWServo PICO
-// 10-150: active range
-// +: CW (top view), -: CCW
 
 #include <stdint.h>
 

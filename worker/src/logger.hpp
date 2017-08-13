@@ -19,6 +19,27 @@ public:
     }
   }
 
+  void print_dict_key(const char* s) {
+    print_str(s);
+    print(':');
+  }
+
+  void print_str(const char* s) {
+    print('"');
+    while(*s != 0) {
+      char c = *s;
+      if (c == '"') {
+        print("\\\"");
+      } else if (c == '\n') {
+        print("\\n");
+      } else {
+        print(c);
+      }
+      s++;
+    }
+    print('"');
+  }
+
   void newline() {
     if (index < SIZE) {
       buffer[index] = '\n';
