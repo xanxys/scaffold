@@ -194,6 +194,7 @@ private: // Command Handler
 
   // Move slowly for given msec until it reaches R-origin.
   void exec_find_origin() {
+    /*
     const int8_t mv_train_fwd_slow = -50;
     int16_t dist = parse_int();
     bool forward = dist > 0;
@@ -229,6 +230,7 @@ private: // Command Handler
       action.motor_vel[MV_TRAIN] = 0;
       actions.enqueue(action);
     }
+    */
   }
 
   void exec_move(bool fast) {

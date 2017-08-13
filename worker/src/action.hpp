@@ -328,8 +328,12 @@ private:
   void print_system_status() {
     request_log.print('{');
 
-    request_log.print_dict_key("pwr/mV");
+    request_log.print_dict_key("vcc/mV");
     request_log.print((uint16_t) sensor.get_vcc_mv());
+    request_log.print(',');
+
+    request_log.print_dict_key("bat/mV");
+    request_log.print((uint16_t) sensor.get_bat_mv());
     request_log.print(',');
 
     request_log.print_dict_key("uptime/s");
@@ -342,12 +346,16 @@ private:
   void print_sensor_status() {
     request_log.print('{');
 
-    request_log.print_dict_key("L");
-    request_log.print(sensor.get_sensor_l());
+    request_log.print_dict_key("T");
+    request_log.print(sensor.get_sensor_t());
     request_log.print(',');
 
-    request_log.print_dict_key("R");
-    request_log.print(sensor.get_sensor_r());
+    request_log.print_dict_key("O");
+    request_log.print(sensor.get_sensor_o());
+    request_log.print(',');
+
+    request_log.print_dict_key("X");
+    request_log.print(sensor.get_sensor_x());
 
     request_log.print('}');
   }

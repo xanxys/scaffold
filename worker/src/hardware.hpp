@@ -40,27 +40,24 @@ private:
 Indicator indicator;
 
 // Perodically measure fixed number of ADC inputs & controls sensor multiplexing.
-// Currently:
-// 1. Sensor-R
-// 2. Sensor-L
-// 3. AVcc
 // Each phase is 2ms.
 //
 class MultiplexedSensor {
 private:
-  // Sensor illuminators.
-  static const uint8_t I_SEN_LIGHT_L = 3;
-  static const uint8_t I_SEN_LIGHT_R = 7;
-
   // Sensor channels.
-  static const uint8_t I_SEN_ADC = 6;
+  static const uint8_t I_BAT = 2;
+  static const uint8_t I_SEN_T = 1;
+  static const uint8_t I_SEN_O = 6;
+  static const uint8_t I_SEN_X = 7;
   static const uint8_t I_INTERNAL_1V1REF = _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
 
   // Phase definitions.
-  const static uint8_t PHASE_SEN_R = 0;
-  const static uint8_t PHASE_SEN_L = 1;
-  const static uint8_t PHASE_AVCC = 2;
-  const static uint8_t NUM_PHASES = 3;
+  const static uint8_t PHASE_SEN_T = 0;
+  const static uint8_t PHASE_SEN_O = 1;
+  const static uint8_t PHASE_SEN_X = 2;
+  const static uint8_t PHASE_AVCC = 3;
+  const static uint8_t PHASE_BAT = 4;
+  const static uint8_t NUM_PHASES = 5;
 
   uint8_t current_phase;
   uint8_t phase_index;
@@ -68,13 +65,7 @@ private:
 
   uint16_t value_cache[NUM_PHASES];
 public:
-  MultiplexedSensor() : current_phase(PHASE_SEN_R), phase_index(0) {
-    // Init sensor illuminator.
-    DDRD |= _BV(I_SEN_LIGHT_R) | _BV(I_SEN_LIGHT_L);
-
-    // Bogus result that reads as 123 | 45 when unitialized.
-    value_cache[PHASE_SEN_L] = 123 << 2;
-    value_cache[PHASE_SEN_R] = 45 << 2;
+  MultiplexedSensor() : current_phase(PHASE_SEN_T), phase_index(0) {
   }
 
   void loop1ms() {
@@ -91,12 +82,22 @@ public:
   }
 
   // 0: 0V, 255: 5V ("max")
-  uint8_t get_sensor_r() {
-    return value_cache[PHASE_SEN_R] >> 2;
+  uint8_t get_sensor_t() {
+    return value_cache[PHASE_SEN_T] >> 2;
   }
 
-  uint8_t get_sensor_l() {
-    return value_cache[PHASE_SEN_L] >> 2;
+  uint8_t get_sensor_o() {
+    return value_cache[PHASE_SEN_O] >> 2;
+  }
+
+  uint8_t get_sensor_x() {
+    return value_cache[PHASE_SEN_X] >> 2;
+  }
+
+  uint16_t get_bat_mv() {
+    uint32_t t = value_cache[PHASE_BAT] * 5000L;
+    t /= 1024L;
+    return t;
   }
 
   uint16_t get_vcc_mv() {
@@ -110,16 +111,19 @@ private:
     ADMUX = _BV(REFS0);
 
     switch (current_phase) {
-      case PHASE_SEN_R:
-        ADMUX |= I_SEN_ADC;
-        PORTD |= _BV(I_SEN_LIGHT_R);
+      case PHASE_SEN_T:
+        ADMUX |= I_SEN_T;
         break;
-      case PHASE_SEN_L:
-        ADMUX |= I_SEN_ADC;
-        PORTD |= _BV(I_SEN_LIGHT_L);
+      case PHASE_SEN_O:
+        ADMUX |= I_SEN_O;
+        break;
+      case PHASE_SEN_X:
+        ADMUX |= I_SEN_X;
         break;
       case PHASE_AVCC:
         ADMUX |= I_INTERNAL_1V1REF;
+      case PHASE_BAT:
+        ADMUX |= I_BAT;
         break;
     }
   }
@@ -134,17 +138,6 @@ private:
       // ADCL needs to be read first to ensure consistency.
       value_cache[current_phase] = ADCL;
       value_cache[current_phase] |= ADCH << 8;
-    }
-
-    switch (current_phase) {
-      case PHASE_SEN_R:
-        PORTD &= ~_BV(I_SEN_LIGHT_R);
-        break;
-      case PHASE_SEN_L:
-        PORTD &= ~_BV(I_SEN_LIGHT_L);
-        break;
-      default:
-        break;
     }
   }
 };
