@@ -212,6 +212,7 @@ public:
   static const uint8_t TCCR2A_A_NON_INVERT = _BV(COM2A1);
   static const uint8_t TCCR2A_B_NON_INVERT = _BV(COM2B1);
   static const uint8_t TCCR2B_PRESCALER_256 = _BV(CS22) | _BV(CS21);
+  static const uint8_t TCCR2B_PRESCALER_1024 = _BV(CS22) | _BV(CS21) | _BV(CS20);
 public:
   ActionExecutorSingleton() :
       servo_pos{50, 5},
@@ -223,9 +224,9 @@ public:
         // screw
         DCMotor(0xc4)
       } {
-    // Init servo PWM (freq_pwm=244.1Hz, dur=4.096 ms)
+    // Init servo PWM (freq_pwm=61.0Hz, dur=16.4 ms)
     TCCR2A = TCCR2A_FAST_PWM | TCCR2A_A_NON_INVERT | TCCR2A_B_NON_INVERT;
-    TCCR2B = TCCR2B_PRESCALER_256;
+    TCCR2B = TCCR2B_PRESCALER_1024;
 
     // Set PWM ports as output.
     DDRB |= _BV(3); // PWMA

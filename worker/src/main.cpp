@@ -468,12 +468,12 @@ private: // Command Handler
       int16_t value = parse_int();
 
       if (target == 'a' || target == 'b') {
-        if (value < 45) {
-          value = 45;
+        if (value < 10) {
+          value = 10;
           request_log.println("[WARN] pos truncated to 45");
-        } else if (value > 125) {
+        } else if (value > 33) {
           // note: 255 is reserved as SERVO_POS_KEEP.
-          value = 125;
+          value = 33;
           request_log.println("[WARN] pos truncated to 125");
         }
       } else if (target == 't' || target == 'o' || target == 's') {
@@ -525,8 +525,8 @@ int main() {
   // Initialize servo pos.
   {
     Action action(1 /* dur_ms */);
-    action.servo_pos[CIX_A] = 50;
-    action.servo_pos[CIX_B] = 50;
+    action.servo_pos[CIX_A] = 20;
+    action.servo_pos[CIX_B] = 20;
     actions.enqueue(action);
   }
 
