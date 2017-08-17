@@ -494,7 +494,7 @@ private: // Command Handler
         case 'a': action.servo_pos[CIX_A] = value; break;
         case 'b': action.servo_pos[CIX_B] = value; break;
         case 't': action.motor_vel[MV_TRAIN] = value; break;
-        case 'o': action.motor_vel[MV_SCREW_DRIVER] = value; break;
+        case 'o': action.motor_vel[MV_ORI] = value; break;
         case 's': action.motor_vel[MV_SCREW_DRIVER] = value; break;
       }
       break;
@@ -519,7 +519,7 @@ int main() {
   indicator.flash_blocking();
   Logger::send_short("worker:init1");
 
-  Timer1.initialize(1000L * 1000L /* usec */);
+  Timer1.initialize(1000L /* usec */);
   Timer1.attachInterrupt(actions_loop1ms);
 
   // pinMode(A6, INPUT);
@@ -527,8 +527,8 @@ int main() {
   // Initialize servo pos.
   {
     Action action(1 /* dur_ms */);
-    action.servo_pos[CIX_A] = 20;
-    action.servo_pos[CIX_B] = 20;
+    action.servo_pos[CIX_A] = 13;
+    action.servo_pos[CIX_B] = 11;
     actions.enqueue(action);
   }
 
