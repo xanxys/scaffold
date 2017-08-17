@@ -253,7 +253,7 @@ public:
         // ori
         DCMotor(0xc2),
         // screw
-        DCMotor(0xc4)
+        DCMotor(0xc8)
       } {
     // Init servo PWM (freq_pwm=61.0Hz, dur=16.4 ms)
     TCCR2A = TCCR2A_FAST_PWM | TCCR2A_A_NON_INVERT | TCCR2A_B_NON_INVERT;
