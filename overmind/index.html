@@ -64,11 +64,25 @@
                               <span class="glyphicon glyphicon-refresh"></span>
                             </button>
 
+                            <button v-on:click='t_step_f()' class="btn btn-default" title="update">
+                              ↑
+                            </button>
+                            <button v-on:click='t_step_b()' class="btn btn-default" title="update">
+                              ↓
+                            </button>
+
                             <button v-on:click='scr_up()' class="btn btn-default" title="update">
                               SCR↑
                             </button>
                             <button v-on:click='scr_down()' class="btn btn-default" title="update">
                               SCR↓
+                            </button>
+
+                            <button v-on:click='d_up()' class="btn btn-default" title="update">
+                              D↑
+                            </button>
+                            <button v-on:click='d_down()' class="btn btn-default" title="update">
+                              D↓
                             </button>
 
                             <pre v-for="msg in worker.messages">{{msg}}</pre>

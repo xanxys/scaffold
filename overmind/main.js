@@ -337,12 +337,33 @@ new Vue({
       },
 
       scr_up() {
-        send_command('e1b250');
-        send_command('e1a50');
+        send_command('e80a11');
       },
 
       scr_down() {
-        send_command('e1b20');
+        send_command('e80a29');
+      },
+
+      d_up() {
+        send_command('e80b10');
+      },
+
+      d_down() {
+        send_command('e80b20');
+      },
+
+      t_step_f() {
+        send_command('e1t70');
+        setTimeout(() => {
+          send_command('e1t0');
+        }, 250);
+      },
+
+      t_step_b() {
+        send_command('e1t-70');
+        setTimeout(() => {
+          send_command('e1t0');
+        }, 250);
       }
     }
 });
