@@ -23,7 +23,8 @@ public:
       receive_command();
 
       // Filter / validate.
-      if (size < 4 || size % 2 != 0) {
+      // 6 = target(2) + command(2) + data(N) + checksum(2)
+      if (size < 6 || size % 2 != 0) {
         Logger::warn("too small packet");
         continue;
       }
@@ -36,7 +37,7 @@ public:
     }
 
     uint8_t data_ix = 0;
-    for (int i = 4; i < size; i += 2) {
+    for (int i = 4; i < size - 2; i += 2) {
       if (data_ix < data_size) {
         data_ptr[data_ix] =
           (decode_nibble(buffer[i]) << 4) | decode_nibble(buffer[i+1]);
