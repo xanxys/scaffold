@@ -26,6 +26,10 @@ uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
 
 class Action {
 public:
+  // At the beginning of this action, report sensor cache.
+  // Note that reporting can cause some jankiness (a few ms) in command execution.
+  bool report;
+
   // Note this can be 0, but action still has effect.
   uint8_t duration_step;
 
@@ -40,6 +44,7 @@ public:
   Action() : Action(0) {}
 
   Action(uint16_t duration_ms) :
+      report(false),
       duration_step(duration_ms / STEP_MS),
       servo_pos{SERVO_POS_KEEP, SERVO_POS_KEEP},
       motor_vel{MOTOR_VEL_KEEP, MOTOR_VEL_KEEP, MOTOR_VEL_KEEP} {
@@ -100,7 +105,6 @@ public:
     }
   }
 
-  // Somehow heavy because of u16/u8 3 divisions.
   void step(uint8_t* servo_pos_out, int8_t* motor_vel_out) {
     if (action == NULL) {
       return;
@@ -244,6 +248,10 @@ public:
   static const uint8_t TCCR2A_B_NON_INVERT = _BV(COM2B1);
   static const uint8_t TCCR2B_PRESCALER_256 = _BV(CS22) | _BV(CS21);
   static const uint8_t TCCR2B_PRESCALER_1024 = _BV(CS22) | _BV(CS21) | _BV(CS20);
+
+  static const uint8_t T_SEN_CACHE_SIZE = 100;
+  uint8_t tr_sensor_cache[T_SEN_CACHE_SIZE];
+  uint8_t tr_sensor_cache_ix;
 public:
   ActionExecutorSingleton() :
       servo_pos{50, 5},
@@ -275,11 +283,23 @@ public:
 
     if (state.is_running()) {
         state.step(servo_pos, motor_vel);
+        if (sensor.is_start()) {
+          if (tr_sensor_cache_ix < T_SEN_CACHE_SIZE) {
+            tr_sensor_cache[tr_sensor_cache_ix] = sensor.get_sensor_t();
+            tr_sensor_cache_ix++;
+          }
+        }
         commit_posvel();
     } else {
       // Fetch new action.
       Action* new_action = queue.pop();
       state = ActionExecState(new_action, servo_pos);
+      if (new_action != NULL) {
+        if (new_action->report) {
+          report_cache();
+        }
+        tr_sensor_cache_ix = 0;
+      }
     }
   }
 
@@ -325,6 +345,26 @@ public:
     request_log.print('}');
   }
 private:
+  void report_cache() {
+    request_log.print("{");
+
+    request_log.print_dict_key("rate/ms");
+    request_log.print(sensor.get_rate_ms());
+    request_log.print(',');
+
+    request_log.print_dict_key("val");
+    request_log.print('[');
+    for (uint8_t i = 0; i < tr_sensor_cache_ix; i++) {
+      request_log.print(tr_sensor_cache[i]);
+      if (i != tr_sensor_cache_ix - 1) {
+        request_log.print(',');
+      }
+    }
+    request_log.print(']');
+
+    request_log.print('}');
+  }
+
   void print_system_status() {
     request_log.print('{');
 

@@ -358,7 +358,7 @@ new Vue({
         send_command('e1t-70');
         setTimeout(() => {
           send_command('e1t0');
-        }, 250);
+        }, 20);
       },
 
       t_step_b() {

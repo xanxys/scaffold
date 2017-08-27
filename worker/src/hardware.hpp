@@ -105,6 +105,14 @@ public:
     result = (1024L * 1100L) / result; // Back-calculate AVcc in mV
     return result;
   }
+
+  uint8_t get_rate_ms() {
+    return NUM_PHASES * phase_length;
+  }
+
+  bool is_start() {
+    return phase_index == 0 && current_phase == 0;
+  }
 private:
   void on_phase_begin() {
     // Connect AVcc to Vref.
