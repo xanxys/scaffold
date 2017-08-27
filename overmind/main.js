@@ -355,17 +355,11 @@ new Vue({
         send_command('e800b22');
       },
       t_step_f() {
-        send_command('e1t-70');
-        setTimeout(() => {
-          send_command('e1t0');
-        }, 20);
+        send_command('e1000t-70,e1t0');
       },
 
       t_step_b() {
-        send_command('e1t70');
-        setTimeout(() => {
-          send_command('e1t0');
-        }, 250);
+        send_command('e1000t70,e1t0');
       },
 
       s_lock() {
