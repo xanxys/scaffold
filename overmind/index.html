@@ -84,6 +84,19 @@
                             <button v-on:click='d_down()' class="btn btn-default" title="update">
                               D↓
                             </button>
+                            <button v-on:click='d_downdown()' class="btn btn-default" title="update">
+                              D↓↓
+                            </button>
+
+                            <button v-on:click='s_lock()' class="btn btn-default" title="update">
+                              Slock
+                            </button>
+                            <button v-on:click='s_unlock()' class="btn btn-default" title="update">
+                              Sunlock
+                            </button>
+                            <button v-on:click='s_stop()' class="btn btn-default" title="update">
+                              Sstop
+                            </button>
 
                             <pre v-for="msg in worker.messages">{{msg}}</pre>
                         </div>

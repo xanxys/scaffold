@@ -337,34 +337,49 @@ new Vue({
       },
 
       scr_up() {
-        send_command('e80a11');
+        send_command('e150a11');
       },
 
       scr_down() {
-        send_command('e80a29');
+        send_command('e1500a29');
       },
 
       d_up() {
-        send_command('e80b10');
+        send_command('e800b10');
       },
 
       d_down() {
-        send_command('e80b20');
+        send_command('e800b20');
       },
-
+      d_downdown() {
+        send_command('e800b22');
+      },
       t_step_f() {
-        send_command('e1t70');
+        send_command('e1t-70');
         setTimeout(() => {
           send_command('e1t0');
         }, 250);
       },
 
       t_step_b() {
-        send_command('e1t-70');
+        send_command('e1t70');
         setTimeout(() => {
           send_command('e1t0');
         }, 250);
+      },
+
+      s_lock() {
+        send_command('e1s-100');
+      },
+
+      s_unlock() {
+        send_command('e1s100');
+      },
+
+      s_stop() {
+        send_command('e1s0');
       }
+
     }
 });
 
