@@ -56,7 +56,8 @@
                             <h3 class="panel-title">Worker #{{worker.human_id}} <span style="font-size:80%; color: lightgray">#{{worker.hw_id}}</span></h3>
                         </div>
                         <div class="panel-body">
-                            {{worker.loco}} Working Carrying: RS, screw
+                            {{worker.loco}} Working Carrying: RS, screw<br/>
+                            
                             <button class="btn btn-default" title="Go to home position">
                               <span class="glyphicon glyphicon-home"></span>
                             </button>
@@ -70,28 +71,28 @@
                               <div style="float:left">
                                 <h4>D</h4>
                                 <button v-on:click='d_up()' class="btn btn-default" title="update">
-                                  ↑
+                                  <span class="glyphicon glyphicon-arrow-up"></span>
                                 </button>
                                 <br/>
 
                                 <button v-on:click='d_down()' class="btn btn-default" title="update">
-                                  ↓
+                                  <span class="glyphicon glyphicon-arrow-down"></span>
                                 </button>
                                 {{worker.out[0][1]}}
                                 <br/>
-                                <button v-on:click='d_downdown()' class="btn btn-default" title="update">
-                                  ↓↓
+                                <button v-on:click='d_downdown()' class="btn btn-warning" title="update">
+                                  <span class="glyphicon glyphicon-arrow-down"></span>
                                 </button>
                               </div>
 
                               <div style="float:left">
                                 <h4>SCR</h4>
                                 <button v-on:click='scr_up()' class="btn btn-default" title="update">
-                                  ↑
+                                  <span class="glyphicon glyphicon-arrow-up"></span>
                                 </button>
                                 <br/>
                                 <button v-on:click='scr_down()' class="btn btn-default" title="update">
-                                  ↓
+                                  <span class="glyphicon glyphicon-arrow-down"></span>
                                 </button>
                                 {{worker.out[0][0]}}
                               </div>
@@ -117,12 +118,12 @@
                             <div>
                               <h4>T</h4>
                               <button v-on:click='t_step_f()' class="btn btn-default" title="update">
-                                ↑
+                                <span class="glyphicon glyphicon-arrow-up"></span>
                               </button>
                               {{worker.out[1][0]}}
                               <br/>
                               <button v-on:click='t_step_b()' class="btn btn-default" title="update">
-                                ↓
+                                <span class="glyphicon glyphicon-arrow-down"></span>
                               </button>
                               O:{{worker.out[1][1]}}
 
