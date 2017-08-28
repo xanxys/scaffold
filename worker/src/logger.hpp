@@ -5,7 +5,11 @@ private:
   const static uint8_t SIZE = 200;
   char buffer[SIZE];
   uint8_t index;
+
+
 public:
+  volatile bool send;
+  
   Logger() : index(0) {}
 
   template<typename T>
@@ -89,6 +93,10 @@ public:
     Serial.write("X\r\n");
     Serial.flush();
     index = 0;
+  }
+
+  void send_soon() {
+    send = true;
   }
 
 private:

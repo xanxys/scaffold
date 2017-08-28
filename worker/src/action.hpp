@@ -11,12 +11,6 @@ const int MV_TRAIN = 0;
 const int MV_ORI = 1;
 const int MV_SCREW_DRIVER = 2;
 
-
-const static int PWM_STEP_US = 20;
-const static int STEP_MS = 16;
-
-// Max duration = (256*NUM_SUB_ACTIONS) ms
-
 // Safely calculate va + (vb - va) * (ix / num)
 uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
   uint8_t delta = (vb > va) ? vb - va : va - vb;
@@ -31,7 +25,7 @@ public:
   bool report;
 
   // Note this can be 0, but action still has effect.
-  uint8_t duration_step;
+  uint16_t duration_step;
 
   const static uint8_t SERVO_POS_KEEP = 0xff;
   // 20~100
@@ -45,7 +39,7 @@ public:
 
   Action(uint16_t duration_ms) :
       report(false),
-      duration_step(duration_ms / STEP_MS),
+      duration_step(duration_ms),
       servo_pos{SERVO_POS_KEEP, SERVO_POS_KEEP},
       motor_vel{MOTOR_VEL_KEEP, MOTOR_VEL_KEEP, MOTOR_VEL_KEEP} {
   }
@@ -93,7 +87,7 @@ private:
   const Action* action;
   // elapsed time since starting exec of current action.
   // Don't care when action is null.
-  uint8_t elapsed_step;
+  uint16_t elapsed_step;
 
   uint8_t servo_pos_pre[N_SERVOS];
 public:
@@ -273,7 +267,6 @@ public:
 
     // Init I2C bus for DC PWM motors.
     Wire.begin();
-    // TWBR = 255;  // about 30kHz. (default 100kHz is too fast w/ internal pullups)
 
     commit_posvel();
   }
@@ -363,6 +356,10 @@ private:
     request_log.print(']');
 
     request_log.print('}');
+
+    // We cannot send directly, probably because timer interrupt disables Serial
+    // interrupts and get stuck?
+    request_log.send_soon();
   }
 
   void print_system_status() {

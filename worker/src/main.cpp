@@ -81,7 +81,12 @@ private:
   }
 
   char getch() {
-    while (Serial.available() == 0);
+    while (Serial.available() == 0) {
+      if (request_log.send) {
+        request_log.send_normal();
+        request_log.send = false;
+      }
+    }
     return Serial.read();
   }
 };
@@ -127,10 +132,24 @@ private:
     char ch = read();
     if (ch == ',') {
       return true;
-    } else {
-      unread(ch);
-      return false;
     }
+
+    if (ch != 0) {
+      unread(ch);
+    }
+    return false;
+  }
+
+  bool consume_report_flag() {
+    char ch = read();
+    if (ch == '!') {
+      return true;
+    }
+
+    if (ch != 0) {
+      unread(ch);
+    }
+    return false;
   }
 
   bool available() {
@@ -190,6 +209,7 @@ private: // Command Handler
   }
 
   void exec_enqueue() {
+    bool report_flag = consume_report_flag();
     int16_t dur_ms = parse_int();
     if (dur_ms < 1) {
       dur_ms = 1;
@@ -201,6 +221,7 @@ private: // Command Handler
     }
 
     Action action(dur_ms);
+    action.report = report_flag;
     // parse command body.
     while (true) {
       char target = read();
