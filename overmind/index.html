@@ -73,10 +73,11 @@
                                   ↑
                                 </button>
                                 <br/>
-                                {{worker.pos_d}}
+
                                 <button v-on:click='d_down()' class="btn btn-default" title="update">
                                   ↓
                                 </button>
+                                {{worker.out[0][1]}}
                                 <br/>
                                 <button v-on:click='d_downdown()' class="btn btn-default" title="update">
                                   ↓↓
@@ -92,10 +93,14 @@
                                 <button v-on:click='scr_down()' class="btn btn-default" title="update">
                                   ↓
                                 </button>
+                                {{worker.out[0][0]}}
                               </div>
 
                               <div style="float:left">
                                 <h4>S</h4>
+
+                                {{worker.out[1][2]}}
+                                <br/>
 
                                 <button v-on:click='s_unlock()' class="btn btn-default" title="update">
                                   unlock
@@ -114,10 +119,12 @@
                               <button v-on:click='t_step_f()' class="btn btn-default" title="update">
                                 ↑
                               </button>
+                              {{worker.out[1][0]}}
                               <br/>
                               <button v-on:click='t_step_b()' class="btn btn-default" title="update">
                                 ↓
                               </button>
+                              O:{{worker.out[1][1]}}
                             </div>
 
                             <pre v-for="msg in worker.messages">{{msg}}</pre>

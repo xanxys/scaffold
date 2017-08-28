@@ -28,7 +28,7 @@ parser.on('data', data => {
     let payload = decode_hex(payload_hex);
     try {
       let payload_json = JSON.parse(payload);
-      handle_payload(payload_json);
+      model.handle_payload(payload_json);
       payload = JSON.stringify(payload_json, null, 2);
     } catch (e) {
     }
@@ -98,6 +98,7 @@ class ScaffoldModel {
                 dump: 'RH',
                 driver: false,
             },
+            out: [[0,0],[0,0,0]],
             human_id: 1,
             hw_id: "a343fd",
             messages: [],
@@ -116,6 +117,13 @@ class ScaffoldModel {
             pos: new THREE.Vector3(0, 0.06 * 2, 0.03),
             normal: new THREE.Vector3(0, 0, 1)
         }];
+    }
+
+    handle_payload(payload) {
+      if (payload.out !== undefined) {
+        this.workers[0].out = payload.out;
+      }
+
     }
 }
 
