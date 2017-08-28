@@ -10,133 +10,12 @@
 
 ActionExecutorSingleton actions;
 
-// Parse ":..." ASCII messages from standard TWELITE MWAPP.
-class TweliteInterface {
-private:
-  // Command without ":" or newlines.
-  const static uint8_t BUF_SIZE = 64;
-  char buffer[BUF_SIZE];
-  uint8_t size;
-public:
-  uint8_t get_datagram(uint8_t* data_ptr, uint8_t data_size) {
-    while (true) {
-      receive_command();
-
-      // Filter / validate.
-      // 6 = target(2) + command(2) + data(N) + checksum(2)
-      if (size < 6 || size % 2 != 0) {
-        Logger::warn("too small packet");
-        continue;
-      }
-      if (memcmp(buffer, "0001", 4) != 0) {
-        // There are so many noisy packets (e.g. auto-local echo), we shouldn't
-        // treat them as warning.
-        continue;
-      }
-      break;
-    }
-
-    uint8_t data_ix = 0;
-    for (int i = 4; i < size - 2; i += 2) {
-      if (data_ix < data_size) {
-        data_ptr[data_ix] =
-          (decode_nibble(buffer[i]) << 4) | decode_nibble(buffer[i+1]);
-        data_ix++;
-      }
-    }
-    return data_ix;
-  }
-
-  // Send current log as normal priority data. Total size must be <=800 bytes.
-  // Ideally <=80 bytes to fit in one packet.
-  void send_normal(Logger& log) {
-    // Parent, Send
-    Serial.write(":0001");
-    // Data in hex.
-    for(int i = 0; i < log.index; i++) {
-      send_byte(log.buffer[i]);
-    }
-    // csum (omitted) + CRLF
-    Serial.write("X\r\n");
-    Serial.flush();
-    log.index = 0;
-  }
-private:
-  uint8_t decode_nibble(char c) {
-    if ('0' <= c && c <= '9') {
-      return c - '0';
-    } else if ('A' <= c && c <= 'F'){
-      return (c - 'A') + 10;
-    } else {
-      Logger::warn("corrupt hex from TWELITE");
-      return 0;
-    }
-  }
-
-  void receive_command() {
-    // Accept ":"
-    while (getch() != ':');
-
-    size = 0;
-    while (true) {
-      char c = getch();
-      if (c == '\r' || c == '\n') {
-        return;
-      } else if (c == ':') {
-        Logger::warn("unexpected':'");
-      } else if (c == '!') {
-        Logger::warn("unexpected'!");
-      } else {
-        if (size < BUF_SIZE) {
-          buffer[size] = c;
-          size++;
-        }
-      }
-    }
-  }
-
-  char getch() {
-    while (Serial.available() == 0) {
-      if (request_log.send) {
-        send_normal(request_log);
-        request_log.send = false;
-      }
-    }
-    return Serial.read();
-  }
-
-  static void send_cstr(const char* ptr) {
-    while (true) {
-      uint8_t v = *ptr;
-      if (v == 0) {
-        break;
-      }
-      send_byte(v);
-      ptr++;
-    }
-  }
-
-  inline static void send_byte(uint8_t v) {
-    Serial.write(format_half_byte(v >> 4));
-    Serial.write(format_half_byte(v & 0xf));
-  }
-
-  inline static char format_half_byte(uint8_t v) {
-    if (v < 10) {
-      return '0' + v;
-    } else {
-      return 'A' + (v - 10);
-    }
-  }
-};
-
 // Command format:
 // To ensure enqueue correctness,
 // Command = CommandCode[a-zA-Z] CommandBody[^/]* ("\n" | "/")
 //
 class CommandProcessorSingleton {
 private:
-  TweliteInterface twelite;
   const static uint8_t BUF_SIZE = 64;
   char buffer[BUF_SIZE];
   int r_ix;
@@ -328,7 +207,7 @@ int main() {
 
   Serial.begin(38400);
   indicator.flash_blocking();
-  Logger::send_short("worker:init1");
+  twelite.send_short("worker:init1");
 
   Timer1.initialize(1000L /* usec */);
   Timer1.attachInterrupt(actions_loop1ms);
@@ -342,6 +221,6 @@ int main() {
   }
 
   indicator.flash_blocking();
-  Logger::send_short("worker:init2");
+  twelite.send_short("worker:init2");
   command_processor.loop();
 }

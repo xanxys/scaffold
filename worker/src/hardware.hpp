@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#include "hardware_twelite.hpp"
+
 
 class Indicator {
 private:
@@ -180,7 +182,7 @@ public:
 
     if (res != 0) {
       indicator.enter_error();
-      Logger::warn("I2C failed");
+      twelite.warn("I2C failed");
     }
   }
 };

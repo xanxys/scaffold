@@ -376,6 +376,14 @@ private:
     request_log.print_dict_key("uptime/s");
     uint32_t uptime_sec = millis() / 1000;
     request_log.print(uptime_sec);
+    request_log.print(',');
+
+    request_log.print_dict_key("data_recv/B");
+    request_log.print(twelite.get_data_bytes_recv());
+    request_log.print(',');
+
+    request_log.print_dict_key("data_sent/B");
+    request_log.print(twelite.get_data_bytes_sent());
 
     request_log.print('}');
   }
