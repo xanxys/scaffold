@@ -110,18 +110,14 @@ public:
       r_ix = 0;
       w_ix = parser.get_datagram(reinterpret_cast<uint8_t*>(buffer), BUF_SIZE);
       indicator.flash_blocking();
-      while (true) {
-        char code = read();
-        switch (code) {
-          case 'x': exec_cancel_actions(); break;
-          case 'p': exec_print_actions(); break;
-          case 'e': exec_enqueue(); break;
-          default:
-            request_log.println("[WARN] Unknown command");
-        }
-        if (!consume_separator()) {
-          break;
-        }
+
+      char code = read();
+      switch (code) {
+        case 'x': exec_cancel_actions(); break;
+        case 'p': exec_print_actions(); break;
+        case 'e': exec_enqueue(); break;
+        default:
+          request_log.println("[WARN] Unknown command");
       }
       request_log.send_normal();
     }
@@ -209,6 +205,25 @@ private: // Command Handler
   }
 
   void exec_enqueue() {
+    while (true) {
+      enqueue_single_action();
+      if (!consume_separator()) {
+        break;
+      }
+    }
+    request_log.print('{');
+
+    request_log.print_dict_key("time/ms");
+    request_log.print(millis());
+    request_log.print(',');
+
+    request_log.print_dict_key("queue");
+    actions.queue.print_json();
+
+    request_log.print('}');
+  }
+
+  void enqueue_single_action() {
     bool report_flag = consume_report_flag();
     int16_t dur_ms = parse_int();
     if (dur_ms < 1) {
@@ -258,7 +273,6 @@ private: // Command Handler
       break;
     }
     actions.enqueue(action);
-    request_log.println("enqueued");
   }
 };
 

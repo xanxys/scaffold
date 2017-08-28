@@ -355,11 +355,11 @@ new Vue({
         send_command('e800b22');
       },
       t_step_f() {
-        send_command('e100t-70,e!1t0');
+        send_command('e100t-70,!1t0');
       },
 
       t_step_b() {
-        send_command('e100t70,e!1t0');
+        send_command('e100t70,!1t0');
       },
 
       s_lock() {
