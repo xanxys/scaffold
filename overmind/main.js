@@ -337,25 +337,25 @@ new Vue({
       },
 
       scr_up() {
-        send_command('e150a11');
+        send_command('e300a11');
       },
 
       scr_down() {
-        send_command('e1500a29');
+        send_command('e300a29');
       },
 
       d_up() {
-        send_command('e800b10');
+        send_command('e400b10');
       },
 
       d_down() {
-        send_command('e800b20');
+        send_command('e400b20');
       },
       d_downdown() {
-        send_command('e800b22');
+        send_command('e400b22');
       },
       t_step_f() {
-        send_command('e100t-70,!1t0');
+        send_command('e100t-40,!1t0');
       },
 
       t_step_b() {
