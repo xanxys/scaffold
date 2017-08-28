@@ -11,7 +11,7 @@
 ActionExecutorSingleton actions;
 
 // Parse ":..." ASCII messages from standard TWELITE MWAPP.
-class TweliteParser {
+class TweliteInterface {
 private:
   // Command without ":" or newlines.
   const static uint8_t BUF_SIZE = 64;
@@ -45,6 +45,21 @@ public:
       }
     }
     return data_ix;
+  }
+
+  // Send current log as normal priority data. Total size must be <=800 bytes.
+  // Ideally <=80 bytes to fit in one packet.
+  void send_normal(Logger& log) {
+    // Parent, Send
+    Serial.write(":0001");
+    // Data in hex.
+    for(int i = 0; i < log.index; i++) {
+      send_byte(log.buffer[i]);
+    }
+    // csum (omitted) + CRLF
+    Serial.write("X\r\n");
+    Serial.flush();
+    log.index = 0;
   }
 private:
   uint8_t decode_nibble(char c) {
@@ -83,11 +98,35 @@ private:
   char getch() {
     while (Serial.available() == 0) {
       if (request_log.send) {
-        request_log.send_normal();
+        send_normal(request_log);
         request_log.send = false;
       }
     }
     return Serial.read();
+  }
+
+  static void send_cstr(const char* ptr) {
+    while (true) {
+      uint8_t v = *ptr;
+      if (v == 0) {
+        break;
+      }
+      send_byte(v);
+      ptr++;
+    }
+  }
+
+  inline static void send_byte(uint8_t v) {
+    Serial.write(format_half_byte(v >> 4));
+    Serial.write(format_half_byte(v & 0xf));
+  }
+
+  inline static char format_half_byte(uint8_t v) {
+    if (v < 10) {
+      return '0' + v;
+    } else {
+      return 'A' + (v - 10);
+    }
   }
 };
 
@@ -97,7 +136,7 @@ private:
 //
 class CommandProcessorSingleton {
 private:
-  TweliteParser parser;
+  TweliteInterface twelite;
   const static uint8_t BUF_SIZE = 64;
   char buffer[BUF_SIZE];
   int r_ix;
@@ -108,7 +147,7 @@ public:
   void loop() {
     while (true) {
       r_ix = 0;
-      w_ix = parser.get_datagram(reinterpret_cast<uint8_t*>(buffer), BUF_SIZE);
+      w_ix = twelite.get_datagram(reinterpret_cast<uint8_t*>(buffer), BUF_SIZE);
       indicator.flash_blocking();
 
       char code = read();
@@ -119,7 +158,7 @@ public:
         default:
           request_log.println("[WARN] Unknown command");
       }
-      request_log.send_normal();
+      twelite.send_normal(request_log);
     }
   }
 

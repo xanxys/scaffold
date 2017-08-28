@@ -1,15 +1,15 @@
 #pragma once
 
+// Current logger design is messed up. It should become temporary ephemeral
+// object issued by TweliteInterface. 
 class Logger {
-private:
+public:
   const static uint8_t SIZE = 200;
   char buffer[SIZE];
   uint8_t index;
-
-
 public:
   volatile bool send;
-  
+
   Logger() : index(0) {}
 
   template<typename T>
@@ -78,21 +78,6 @@ public:
     // csum (omitted) + CRLF
     Serial.write("X\r\n");
     Serial.flush();
-  }
-
-  // Send current log as normal priority data. Total size must be <=800 bytes.
-  // Ideally <=80 bytes to fit in one packet.
-  void send_normal() {
-    // Parent, Send
-    Serial.write(":0001");
-    // Data in hex.
-    for(int i = 0; i < index; i++) {
-      send_byte(buffer[i]);
-    }
-    // csum (omitted) + CRLF
-    Serial.write("X\r\n");
-    Serial.flush();
-    index = 0;
   }
 
   void send_soon() {
