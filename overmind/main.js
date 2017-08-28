@@ -27,7 +27,9 @@ parser.on('data', data => {
     let payload_hex = data.slice(':7801'.length, -2 /* csum */);
     let payload = decode_hex(payload_hex);
     try {
-      payload = JSON.stringify(JSON.parse(payload), null, 2);
+      let payload_json = JSON.parse(payload);
+      handle_payload(payload_json);
+      payload = JSON.stringify(payload_json, null, 2);
     } catch (e) {
     }
     model.workers[0].messages.unshift(payload);
@@ -355,11 +357,11 @@ new Vue({
         send_command('e400b22');
       },
       t_step_f() {
-        send_command('e100t-40,!1t0');
+        send_command('e100t-70,!1t0');
       },
 
       t_step_b() {
-        send_command('e100t70,!1t0');
+        send_command('e 100t70,!1t0');
       },
 
       s_lock() {
