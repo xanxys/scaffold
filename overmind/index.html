@@ -125,6 +125,8 @@
                                 ↓
                               </button>
                               O:{{worker.out[1][1]}}
+
+                               <line-chart :width="300" :height="200" :data="worker.readings"></line-chart>
                             </div>
 
                             <pre v-for="msg in worker.messages">{{msg}}</pre>
@@ -142,7 +144,6 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.1/vue.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/86/three.min.js"></script>
     <script src="./3p/trackball.js"></script>
     <script src="./3p/STLLoader.js"></script>

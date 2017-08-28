@@ -4,6 +4,43 @@ const PRIM_COLOR_HOVER = 0x286090;
 const $ = require('jquery');
 const _ = require('underscore');
 const SerialPort = require('serialport');
+const Vue = require('vue/dist/vue.js');
+
+const Line = require('vue-chartjs').Line;  // import { Line } from 'vue-chartjs';
+
+Vue.component('line-chart', {
+  extends: Line,
+  props: ['data', 'options'],
+  mounted () {
+    this.render();
+  },
+  methods: {
+    render() {
+      let xydata = _.map(this.data, (v, ix) => ({x:ix, y:v}));
+      this.renderChart({
+        labels: _.map(this.data, (v, ix) => ix),
+        datasets:
+          [{
+            label: "T",
+            data: xydata,
+            borderColor: "rgba(100,180,220,1)",
+            backgroundColor: "rgba(100,180,220,0.3)",
+          }]
+      }, {
+        cubicInterpolationMode: "monotone",
+        responsive: false,
+        maintainAspectRatio: false
+      });
+      console.log(xydata);
+    }
+  },
+  watch: {
+    data: function() {
+      this._chart.destroy();
+      this.render();
+    }
+  }
+});
 
 let port_model = {isOpen: false};
 
@@ -102,6 +139,7 @@ class ScaffoldModel {
             human_id: 1,
             hw_id: "a343fd",
             messages: [],
+            readings: [],
         }];
     }
 
@@ -121,10 +159,13 @@ class ScaffoldModel {
 
     handle_payload(payload) {
       if (payload.out !== undefined) {
+        // status
         this.workers[0].out = payload.out;
+      } else if (payload.val !== undefined) {
+        this.workers[0].readings = this.workers[0].readings.concat(payload.val);
       }
-
     }
+
 }
 
 // ViewModel / View.
@@ -369,7 +410,7 @@ new Vue({
       },
 
       t_step_b() {
-        send_command('e 100t70,!1t0');
+        send_command('e100t70,!1t0');
       },
 
       s_lock() {
@@ -382,8 +423,14 @@ new Vue({
 
       s_stop() {
         send_command('e1s0');
-      }
+      },
+    },
+    computed: {
+      readings() {
+        // return [1, 3,2];
+        return this.workers[0].readings.concat([]);  // copy
 
+      }
     }
 });
 

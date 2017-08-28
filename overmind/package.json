@@ -17,7 +17,9 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "electron": "^1.4.1",
-    "electron-rebuild": "^1.6.0"
+    "electron-rebuild": "^1.6.0",
+    "vue": "^2.4.2",
+    "vue-chartjs": "^2.8.2"
   },
   "dependencies": {
     "jquery": "^3.2.1",
