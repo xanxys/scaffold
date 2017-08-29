@@ -19,14 +19,14 @@ private:
   const static uint8_t BUF_SIZE = 64;
   char buffer[BUF_SIZE];
   int r_ix;
-  int w_ix;
+  int size;
 public:
-  CommandProcessorSingleton() : r_ix(0), w_ix(0) {}
+  CommandProcessorSingleton() : r_ix(0), size(0) {}
 
   void loop() {
     while (true) {
       r_ix = 0;
-      w_ix = twelite.get_datagram(reinterpret_cast<uint8_t*>(buffer), BUF_SIZE);
+      size = twelite.get_datagram(reinterpret_cast<uint8_t*>(buffer), BUF_SIZE);
       indicator.flash_blocking();
       request_log.clear();
 
@@ -47,20 +47,17 @@ private:
   // Consume next byte if it matches target (return true).
   // If it doesn't match, doesn't consume anything (return false).
   bool consume(char target) {
-    if (!available()) {
-      return false;
+    if (r_ix < size) {
+      if (buffer[r_ix] == target) {
+        r_ix++;
+        return true;
+      }
     }
-
-    char ch = read();
-    if (ch == target) {
-      return true;
-    }
-    unread(ch);
     return false;
   }
 
   char peek() {
-    if (available()) {
+    if (r_ix < size) {
       return buffer[r_ix];
     } else {
       return 0;
@@ -68,11 +65,11 @@ private:
   }
 
   bool available() {
-    return r_ix < w_ix;
+    return r_ix < size;
   }
 
   char read() {
-    if (r_ix < w_ix) {
+    if (r_ix < size) {
       char ret = buffer[r_ix];
       r_ix++;
       return ret;
@@ -90,7 +87,7 @@ private:
   int16_t parse_int() {
     bool positive = !consume('-');
     int16_t v = 0;
-    while (true) {
+    while (available()) {
       char c = read();
       if ('0' <= c && c <= '9') {
         v = v * 10 + (c - '0');
