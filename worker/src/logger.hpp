@@ -27,6 +27,13 @@ public:
     }
   }
 
+  inline void print(char v) {
+    if (index < SIZE) {
+      buffer[index] = v;
+      index++;
+    }
+  }
+
   void print_dict_key(const char* s) {
     print_str(s);
     print(':');
