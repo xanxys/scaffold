@@ -63,13 +63,16 @@ parser.on('data', data => {
   if (data.startsWith(':7801')) {
     let payload_hex = data.slice(':7801'.length, -2 /* csum */);
     let payload = decode_hex(payload_hex);
+    let payload_json = null;
     try {
-      let payload_json = JSON.parse(payload);
-      model.handle_payload(payload_json);
-      payload = JSON.stringify(payload_json, null, 2);
+      payload_json = JSON.parse(payload);
     } catch (e) {
+      model.workers[0].messages.unshift('CORRUPT' + payload);
+      return;
     }
-    model.workers[0].messages.unshift(payload);
+    if (payload_json !== null) {
+      model.handle_payload(payload_json);
+    }
   }
 });
 
@@ -160,8 +163,13 @@ class ScaffoldModel {
     handle_payload(payload) {
       if (payload.ty === 'STATUS') {
         this.workers[0].out = payload.out;
+        this.workers[0].messages.unshift("o");
       } else if (payload.ty === 'SENSOR_CACHE') {
         this.workers[0].readings = this.workers[0].readings.concat(payload.val);
+        this.workers[0].messages.unshift("o");
+      } else {
+        payload = JSON.stringify(payload, null, 2);
+        this.workers[0].messages.unshift(payload);
       }
     }
 
