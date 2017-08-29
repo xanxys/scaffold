@@ -416,7 +416,7 @@ new Vue({
       },
 
       extend() {
-        send_command('e500a29,500t-60,300b22,5000t-40s-70,400b10,500s0t70T30,300t0a11');
+        send_command('e500a29,500t-60,300b22s-20,5000t50s-100,400b10,500s0t70T30,300t0a11');
       },
 
       shorten() {

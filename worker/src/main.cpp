@@ -16,7 +16,7 @@ ActionExecutorSingleton actions;
 //
 class CommandProcessorSingleton {
 private:
-  const static uint8_t BUF_SIZE = 64;
+  const static uint8_t BUF_SIZE = 70;
   char buffer[BUF_SIZE];
   int r_ix;
   int size;
