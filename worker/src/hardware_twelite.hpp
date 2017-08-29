@@ -5,10 +5,14 @@
 // Parse ":..." ASCII messages from standard TWELITE MWAPP.
 class TweliteInterface {
 private:
+  // RX buffer.
   // Command without ":" or newlines.
   const static uint8_t BUF_SIZE = 64;
   char buffer[BUF_SIZE];
   uint8_t size;
+
+  // TX buffer.
+  Logger<70> warn_log;
 
   // Size of 01 command data (excludes TWELITE header / csum) sent.
   uint32_t data_bytes_sent = 0;
@@ -44,19 +48,18 @@ public:
     return data_ix;
   }
 
-  // Send current log as normal priority data. Total size must be <=800 bytes.
+  // Send specified buffer.
   // Ideally <=80 bytes to fit in one packet.
-  void send_normal(Logger& log) {
+  void send_datagram(const char* ptr, uint8_t size) {
     // Parent, Send
     Serial.write(":0001");
     // Data in hex.
-    for(int i = 0; i < log.index; i++) {
-      send_byte(log.buffer[i]);
+    for(uint8_t i = 0; i < size; i++) {
+      send_byte(ptr[i]);
     }
     // csum (omitted) + CRLF
     Serial.write("X\r\n");
     Serial.flush();
-    log.index = 0;
   }
 
   // Simple warning message.
@@ -64,22 +67,11 @@ public:
   // e.g.
   // * network data corruption
   void warn(const char* message) {
-    // Parent, Send
-    Serial.write(":0001");
-    send_byte('W');
-    send_cstr(message);
-    // csum (omitted) + CRLF
-    Serial.write("X\r\n");
-    Serial.flush();
+    send_status("WARN", message);
   }
 
-  void send_short(const char* message) {
-    // Parent, Send
-    Serial.write(":0001");
-    send_cstr(message);
-    // csum (omitted) + CRLF
-    Serial.write("X\r\n");
-    Serial.flush();
+  void info(const char* message) {
+    send_status("INFO", message);
   }
 
   uint32_t get_data_bytes_sent() {
@@ -90,6 +82,26 @@ public:
     return data_bytes_recv;
   }
 private:
+  void send_status(const char* type, const char* message) {
+    warn_log.clear();
+    warn_log.print('{');
+
+    warn_log.print_dict_key("ty");
+    warn_log.print_str(type);
+    warn_log.print(',');
+
+    warn_log.print_dict_key("t/ms");
+    warn_log.print(millis());
+    warn_log.print(',');
+
+    warn_log.print_dict_key("msg");
+    warn_log.print_str(message);
+
+    warn_log.print('}');
+
+    send_datagram(warn_log.buffer, warn_log.index);
+  }
+
   uint8_t decode_nibble(char c) {
     if ('0' <= c && c <= '9') {
       return c - '0';
@@ -125,9 +137,10 @@ private:
 
   char getch() {
     while (Serial.available() == 0) {
-      if (request_log.send) {
-        send_normal(request_log);
-        request_log.send = false;
+      if (request_log.send_async) {
+        send_datagram(request_log.buffer, request_log.index);
+        request_log.clear();
+        request_log.send_async = false;
       }
     }
     return Serial.read();

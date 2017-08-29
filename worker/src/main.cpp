@@ -28,6 +28,7 @@ public:
       r_ix = 0;
       w_ix = twelite.get_datagram(reinterpret_cast<uint8_t*>(buffer), BUF_SIZE);
       indicator.flash_blocking();
+      request_log.clear();
 
       char code = read();
       switch (code) {
@@ -35,39 +36,41 @@ public:
         case 'p': exec_print_actions(); break;
         case 'e': exec_enqueue(); break;
         default:
-          request_log.println("[WARN] Unknown command");
+          twelite.warn("unknown command");
+          continue;
       }
-      twelite.send_normal(request_log);
+      twelite.send_datagram(request_log.buffer, request_log.index);
     }
   }
 
 private:
-  bool consume_separator() {
-    char ch = read();
-    if (ch == ',') {
-      return true;
+  // Consume next byte if it matches target (return true).
+  // If it doesn't match, doesn't consume anything (return false).
+  bool consume(char target) {
+    if (!available()) {
+      return false;
     }
 
-    if (ch != 0) {
-      unread(ch);
+    char ch = read();
+    if (ch == target) {
+      return true;
     }
+    unread(ch);
     return false;
   }
 
-  bool consume_report_flag() {
-    char ch = read();
-    if (ch == '!') {
-      return true;
+  char peek() {
+    if (!available()) {
+      return 0;
     }
 
-    if (ch != 0) {
-      unread(ch);
-    }
-    return false;
+    char ch = read();
+    unread(ch);
+    return ch;
   }
 
   bool available() {
-    return (buffer != 0) || (Serial.available() > 0);
+    return r_ix < w_ix;
   }
 
   char read() {
@@ -125,13 +128,13 @@ private: // Command Handler
   void exec_enqueue() {
     while (true) {
       enqueue_single_action();
-      if (!consume_separator()) {
+      if (!consume(',')) {
         break;
       }
     }
     request_log.print('{');
 
-    request_log.print_dict_key("time/ms");
+    request_log.print_dict_key("t/ms");
     request_log.print(millis());
     request_log.print(',');
 
@@ -142,15 +145,15 @@ private: // Command Handler
   }
 
   void enqueue_single_action() {
-    bool report_flag = consume_report_flag();
+    bool report_flag = consume('!');
     int16_t dur_ms = parse_int();
     if (dur_ms < 1) {
       dur_ms = 1;
-      request_log.println("[WARN] dur extended to 1 ms");
+      twelite.warn("dur capped to 1ms");
     }
-    if (dur_ms > 2000) {
-      dur_ms = 2000;
-      request_log.println("[WARN] dur truncated to 2000 ms");
+    if (dur_ms > 3000) {
+      dur_ms = 3000;
+      twelite.warn("dur capped to 3s");
     }
 
     Action action(dur_ms);
@@ -163,22 +166,22 @@ private: // Command Handler
       if (target == 'a' || target == 'b') {
         if (value < 10) {
           value = 10;
-          request_log.println("[WARN] pos truncated to 10");
+          twelite.warn("pos capped to 10");
         } else if (value > 33) {
           // note: 255 is reserved as SERVO_POS_KEEP.
           value = 33;
-          request_log.println("[WARN] pos truncated to 33");
+          twelite.warn("pos capped to 33");
         }
       } else if (target == 't' || target == 'o' || target == 's') {
         if (value < -127) {
           value = -127;
-          request_log.println("[WARN] vel truncated to -127");
+          twelite.warn("vel capped to -127");
         } else if (value > 127) {
           value = 127;
-          request_log.println("[WARN] vel truncated to 127");
+          twelite.warn("vel capped to 127");
         }
       } else {
-        request_log.println("[WARN] unknown command ignored");
+        twelite.warn("unknown action target");
       }
 
       switch (target) {
@@ -188,7 +191,11 @@ private: // Command Handler
         case 'o': action.motor_vel[MV_ORI] = value; break;
         case 's': action.motor_vel[MV_SCREW_DRIVER] = value; break;
       }
-      break;
+
+      char next = peek();
+      if (next == 0 || next == ',') {
+        break;
+      }
     }
     actions.enqueue(action);
   }
@@ -207,7 +214,7 @@ int main() {
 
   Serial.begin(38400);
   indicator.flash_blocking();
-  twelite.send_short("worker:init1");
+  twelite.info("init1");
 
   Timer1.initialize(1000L /* usec */);
   Timer1.attachInterrupt(actions_loop1ms);
@@ -221,6 +228,6 @@ int main() {
   }
 
   indicator.flash_blocking();
-  twelite.send_short("worker:init2");
+  twelite.info("worker:init2");
   command_processor.loop();
 }

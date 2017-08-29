@@ -2,15 +2,19 @@
 
 // Current logger design is messed up. It should become temporary ephemeral
 // object issued by TweliteInterface.
+template<unsigned int SIZE>
 class Logger {
 public:
-  const static uint8_t SIZE = 250;
   char buffer[SIZE];
   uint8_t index;
 public:
-  volatile bool send;
+  volatile bool send_async;
 
   Logger() : index(0) {}
+
+  void clear() {
+    index = 0;
+  }
 
   template<typename T>
   void print(const T& v) {
@@ -58,10 +62,10 @@ public:
   }
 
   void send_soon() {
-    send = true;
+    send_async = true;
   }
 };
 
 // Request scoped logger.
 // Log buffer is created anew for every request.
-Logger request_log;
+Logger<250> request_log;
