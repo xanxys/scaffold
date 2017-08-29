@@ -104,13 +104,13 @@ public:
       return;
     }
 
-    for (int i = 0; i < N_SERVOS; i++) {
+    for (int8_t i = 0; i < N_SERVOS; i++) {
       const uint8_t targ_pos = action->servo_pos[i];
       if (targ_pos != Action::SERVO_POS_KEEP) {
         servo_pos_out[i] = interp(servo_pos_pre[i], targ_pos, (elapsed_step >> 4) + 1, (action->duration_step >> 4) + 1);
       }
     }
-    for (int i = 0; i < N_MOTORS; i++) {
+    for (int8_t i = 0; i < N_MOTORS; i++) {
       const int8_t targ_vel = action->motor_vel[i];
       if (targ_vel != Action::MOTOR_VEL_KEEP) {
         motor_vel_out[i] = targ_vel;
@@ -131,11 +131,11 @@ public:
       request_log.print_str("run");
       request_log.print(',');
 
-      request_log.print_dict_key("elapsed/step");
+      request_log.print_dict_key("elapsed/ms");
       request_log.print(elapsed_step);
       request_log.print(',');
 
-      request_log.print_dict_key("duration/step");
+      request_log.print_dict_key("duration/ms");
       request_log.print(action->duration_step);
     } else if (action != NULL) {
       request_log.print_str("done");
@@ -149,11 +149,11 @@ public:
 
 class ActionQueue {
 public:
-  const static int SIZE = 6;
+  const static uint8_t SIZE = 6;
 private:
   Action queue[SIZE];
-  int ix = 0;
-  int n = 0;
+  uint8_t ix = 0;
+  uint8_t n = 0;
 public:
   void enqueue(const Action& a) {
     queue[(ix + n) % SIZE] = a;
@@ -217,16 +217,6 @@ public:
   // Position based control. Set position will be maintained automatically (using Timer1)
   // in Calibrated Servo.
   uint8_t servo_pos[N_SERVOS];
-
-  // This is very important cnstant.
-  // In GWS PICO+ F BB, if you make it 200 (2ms, for example)
-  // they randomly vibrate when set to some pulse width.
-  // Apparently this needs to be longer than that.
-  static const uint8_t SERVO_PWM_NUM_PHASE = 250;
-  static const uint8_t SERVO_PWM_ON_PHASES = 20;
-  uint8_t servo_pwm_phase;
-  uint8_t servo_portd_mask_union;
-  uint8_t servo_pwm_offset[N_SERVOS];
 
   // Velocity based control for DC motors. This class is responsible for PWM-ing them,
   // even when no action is being executed.

@@ -60,13 +60,11 @@ private:
   }
 
   char peek() {
-    if (!available()) {
+    if (available()) {
+      return buffer[r_ix];
+    } else {
       return 0;
     }
-
-    char ch = read();
-    unread(ch);
-    return ch;
   }
 
   bool available() {
@@ -86,23 +84,11 @@ private:
   void unread(char c) {
     if (r_ix > 0) {
       r_ix--;
-      //buffer[r_ix] = c;
-    } else {
-      // NOT SUPPORTED; this means it encountered unparsable string.
-      request_log.println("[NEVER_HAPPEN] parse failed: unread failed for:");
-      request_log.println(c);
     }
   }
 
   int16_t parse_int() {
-    bool positive = true;
-    char maybe_sign = read();
-    if (maybe_sign == '-') {
-      positive = false;
-    } else {
-      unread(maybe_sign);
-    }
-
+    bool positive = !consume('-');
     int16_t v = 0;
     while (true) {
       char c = read();
