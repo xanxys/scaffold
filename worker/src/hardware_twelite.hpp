@@ -7,7 +7,7 @@ class TweliteInterface {
 private:
   // RX buffer.
   // Command without ":" or newlines.
-  const static uint8_t BUF_SIZE = 64;
+  const static uint8_t BUF_SIZE = 150;
   char buffer[BUF_SIZE];
   uint8_t size;
 
@@ -18,9 +18,13 @@ private:
   uint32_t data_bytes_sent = 0;
   uint32_t data_bytes_recv = 0;
 public:
+  // 0: overflown
   uint8_t get_datagram(uint8_t* data_ptr, uint8_t data_size) {
     while (true) {
-      receive_command();
+      bool ovf = receive_command();
+      if (ovf) {
+        return 0;
+      }
 
       // Filter / validate.
       // 6 = target(2) + command(2) + data(N) + checksum(2)
@@ -42,6 +46,8 @@ public:
         data_ptr[data_ix] =
           (decode_nibble(buffer[i]) << 4) | decode_nibble(buffer[i+1]);
         data_ix++;
+      } else {
+        return 0;
       }
     }
     data_bytes_recv += data_ix;
@@ -105,7 +111,8 @@ private:
     }
   }
 
-  void receive_command() {
+  bool receive_command() {
+    bool overflow = false;
     // Accept ":"
     while (getch() != ':');
 
@@ -113,7 +120,7 @@ private:
     while (true) {
       char c = getch();
       if (c == '\r' || c == '\n') {
-        return;
+        return overflow;
       } else if (c == ':') {
         warn("unexpected':'");
       } else if (c == '!') {
@@ -122,6 +129,8 @@ private:
         if (size < BUF_SIZE) {
           buffer[size] = c;
           size++;
+        } else {
+          overflow = true;
         }
       }
     }

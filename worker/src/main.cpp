@@ -27,6 +27,10 @@ public:
     while (true) {
       r_ix = 0;
       size = twelite.get_datagram(reinterpret_cast<uint8_t*>(buffer), BUF_SIZE);
+      if (size == 0) {
+        twelite.warn("too long command");
+        continue;
+      }
       indicator.flash_blocking();
       request_log.clear();
 
