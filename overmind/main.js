@@ -143,6 +143,7 @@ class ScaffoldModel {
             hw_id: "a343fd",
             messages: [],
             readings: [],
+            power: {}
         }];
     }
 
@@ -161,15 +162,28 @@ class ScaffoldModel {
     }
 
     handle_payload(payload) {
+      let worker = this.workers[0];
+
       let handled = true;
       if (payload.ty === 'STATUS') {
-        this.workers[0].out = payload.out;
+        worker.out = payload.out;
+        let vcc = payload.system['vcc/mV'];
+        let bat = payload.system['bat/mV'];
+        if (vcc < bat) {
+          // Known power init failure mode.
+          worker.power.classes = {"bg-danger": true};
+        } else if (bat < 3300) {
+          worker.power.classes = {"bg-warning": true};
+        } else {
+          worker.power.classes = {"bg-primary": true};
+        }
+        worker.power.desc = bat + 'mV (Vcc=' + vcc +'mV)';
       } else if (payload.ty === 'SENSOR_CACHE') {
-        this.workers[0].readings = this.workers[0].readings.concat(payload.val);
+        worker.readings = this.workers[0].readings.concat(payload.val);
       } else {
         handled = false;
       }
-      this.workers[0].messages.unshift({
+      worker.messages.unshift({
         payload: payload,
         msg: JSON.stringify(payload, null, 2),
         ok: handled

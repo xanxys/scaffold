@@ -56,6 +56,11 @@
                             <h3 class="panel-title">Worker #{{worker.human_id}} <span style="font-size:80%; color: lightgray">#{{worker.hw_id}}</span></h3>
                         </div>
                         <div class="panel-body">
+                            <div v-bind:class="worker.power.classes">
+                              <span class="glyphicon glyphicon-off"></span>
+                              {{worker.power.desc}}
+                            </div>
+
                             {{worker.loco}} Working Carrying: RS, screw<br/>
 
                             <button class="btn btn-default" title="Go to home position">
