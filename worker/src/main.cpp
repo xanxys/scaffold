@@ -121,8 +121,8 @@ private: // Command Handler
     }
     request_log.begin_std_dict("ENQUEUED");
 
-    request_log.print_dict_key("queue");
-    actions.queue.print_json();
+    request_log.print_dict_key("in_queue");
+    request_log.print(actions.queue.count());
 
     request_log.print('}');
   }

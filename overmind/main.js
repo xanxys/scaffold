@@ -158,10 +158,9 @@ class ScaffoldModel {
     }
 
     handle_payload(payload) {
-      if (payload.out !== undefined) {
-        // status
+      if (payload.ty === 'STATUS') {
         this.workers[0].out = payload.out;
-      } else if (payload.val !== undefined) {
+      } else if (payload.ty === 'SENSOR_CACHE') {
         this.workers[0].readings = this.workers[0].readings.concat(payload.val);
       }
     }

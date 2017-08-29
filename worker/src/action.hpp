@@ -336,6 +336,8 @@ public:
   }
 private:
   void report_cache() const {
+    // This breaks if main loop is sending something.
+    request_log.clear();
     request_log.begin_std_dict("SENSOR_CACHE");
 
     request_log.print_dict_key("rate/ms");
