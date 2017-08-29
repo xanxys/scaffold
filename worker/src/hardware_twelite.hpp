@@ -84,15 +84,7 @@ public:
 private:
   void send_status(const char* type, const char* message) {
     warn_log.clear();
-    warn_log.print('{');
-
-    warn_log.print_dict_key("ty");
-    warn_log.print_str(type);
-    warn_log.print(',');
-
-    warn_log.print_dict_key("t/ms");
-    warn_log.print(millis());
-    warn_log.print(',');
+    warn_log.begin_std_dict(type);
 
     warn_log.print_dict_key("msg");
     warn_log.print_str(message);

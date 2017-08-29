@@ -104,7 +104,8 @@ private:
 private: // Command Handler
   void exec_cancel_actions() {
     actions.cancel_all();
-    request_log.println("cancelled");
+    request_log.begin_std_dict("CANCELLED");
+    request_log.print('}');
   }
 
   void exec_print_actions() {
@@ -118,11 +119,7 @@ private: // Command Handler
         break;
       }
     }
-    request_log.print('{');
-
-    request_log.print_dict_key("t/ms");
-    request_log.print(millis());
-    request_log.print(',');
+    request_log.begin_std_dict("ENQUEUED");
 
     request_log.print_dict_key("queue");
     actions.queue.print_json();

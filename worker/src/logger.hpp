@@ -32,6 +32,20 @@ public:
     print(':');
   }
 
+  // Print standard "ty" & "t/ms" fields.
+  // Must be called inside a dict.
+  void begin_std_dict(const char* ty) {
+    print('{');
+
+    print_dict_key("ty");
+    print_str(ty);
+    print(',');
+
+    print_dict_key("t/ms");
+    print(millis());
+    print(',');
+  }
+
   void print_str(const char* s) {
     print('"');
     while(*s != 0) {

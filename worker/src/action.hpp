@@ -311,7 +311,7 @@ public:
   }
 
   void print() const {
-    request_log.print('{');
+    request_log.begin_std_dict("STATUS");
 
     request_log.print_dict_key("out");
     print_output_json();
@@ -336,7 +336,7 @@ public:
   }
 private:
   void report_cache() const {
-    request_log.print("{");
+    request_log.begin_std_dict("SENSOR_CACHE");
 
     request_log.print_dict_key("rate/ms");
     request_log.print(sensor.get_rate_ms());
@@ -368,11 +368,6 @@ private:
 
     request_log.print_dict_key("bat/mV");
     request_log.print((uint16_t) sensor.get_bat_mv());
-    request_log.print(',');
-
-    request_log.print_dict_key("uptime/s");
-    uint32_t uptime_sec = millis() / 1000;
-    request_log.print(uptime_sec);
     request_log.print(',');
 
     request_log.print_dict_key("data_recv/B");
