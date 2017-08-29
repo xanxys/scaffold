@@ -96,23 +96,23 @@ public:
     return value_cache[PHASE_SEN_X] >> 2;
   }
 
-  uint16_t get_bat_mv() {
+  uint16_t get_bat_mv() const {
     uint32_t t = value_cache[PHASE_BAT] * 5000L;
     t /= 1024L;
     return t;
   }
 
-  uint16_t get_vcc_mv() {
+  uint16_t get_vcc_mv() const {
     uint32_t result = value_cache[PHASE_AVCC];
     result = (1024L * 1100L) / result; // Back-calculate AVcc in mV
     return result;
   }
 
-  uint8_t get_rate_ms() {
+  uint8_t get_rate_ms() const {
     return NUM_PHASES * phase_length;
   }
 
-  bool is_start() {
+  bool is_start() const {
     return phase_index == 0 && current_phase == 0;
   }
 private:

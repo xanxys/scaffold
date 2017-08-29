@@ -48,7 +48,7 @@ public:
       motor_vel{MOTOR_VEL_KEEP, MOTOR_VEL_KEEP, MOTOR_VEL_KEEP} {
   }
 
-  void print_json() {
+  void print_json() const {
     request_log.print('[');
 
     request_log.print('[');
@@ -126,11 +126,11 @@ public:
     elapsed_step++;
   }
 
-  bool is_running() {
+  bool is_running() const {
     return action != NULL && (elapsed_step <= action->duration_step);
   }
 
-  void print_json() {
+  void print_json() const {
     request_log.print('{');
 
     request_log.print_dict_key("type");
@@ -190,11 +190,11 @@ public:
     n = 0;
   }
 
-  uint8_t count() {
+  uint8_t count() const {
     return n;
   }
 
-  void print_json() {
+  void print_json() const {
     request_log.print('{');
 
     request_log.print_dict_key("actions");
@@ -297,7 +297,7 @@ public:
     queue.enqueue(a);
   }
 
-  bool is_idle() {
+  bool is_idle() const {
     return queue.count() == 0 && !state.is_running();
   }
 
@@ -310,7 +310,7 @@ public:
     commit_posvel();
   }
 
-  void print() {
+  void print() const {
     request_log.print('{');
 
     request_log.print_dict_key("out");
@@ -335,7 +335,7 @@ public:
     request_log.print('}');
   }
 private:
-  void report_cache() {
+  void report_cache() const {
     request_log.print("{");
 
     request_log.print_dict_key("rate/ms");
@@ -359,7 +359,7 @@ private:
     request_log.send_soon();
   }
 
-  void print_system_status() {
+  void print_system_status() const {
     request_log.print('{');
 
     request_log.print_dict_key("vcc/mV");
@@ -385,7 +385,7 @@ private:
     request_log.print('}');
   }
 
-  void print_sensor_status() {
+  void print_sensor_status() const {
     request_log.print('{');
 
     request_log.print_dict_key("T");
@@ -417,7 +417,7 @@ private:
     }
   }
 
-  void print_output_json() {
+  void print_output_json() const {
     request_log.print('[');
 
     request_log.print('[');

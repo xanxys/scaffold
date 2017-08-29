@@ -163,7 +163,7 @@ private:
     data_bytes_sent++;
   }
 
-  inline char format_half_byte(uint8_t v) {
+  inline static char format_half_byte(uint8_t v) {
     if (v < 10) {
       return '0' + v;
     } else {
