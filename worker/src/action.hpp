@@ -111,7 +111,7 @@ public:
     for (int8_t i = 0; i < N_SERVOS; i++) {
       const uint8_t targ_pos = action->servo_pos[i];
       if (targ_pos != Action::SERVO_POS_KEEP) {
-        servo_pos_out[i] = interp(servo_pos_pre[i], targ_pos, (elapsed_step >> 4) + 1, (action->duration_step >> 4) + 1);
+        servo_pos_out[i] = interp(servo_pos_pre[i], targ_pos, (elapsed_step >> 5) + 1, (action->duration_step >> 5) + 1);
       }
     }
     for (int8_t i = 0; i < N_MOTORS; i++) {
