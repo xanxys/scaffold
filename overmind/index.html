@@ -133,7 +133,15 @@
                                <line-chart :width="300" :height="200" :data="worker.readings"></line-chart>
                             </div>
 
-                            <pre v-for="msg in worker.messages">{{msg}}</pre>
+                            <div class="panel" v-for="msg in worker.messages" v-bind:class="{'panel-default': msg.ok, 'panel-warning': !msg.ok}"
+                                 v-bind:title="msg.msg">
+                              <div class="panel-heading">
+                                {{msg.payload['t/ms']}}<h3 class="panel-title">{{msg.payload.ty}}</h3>
+                              </div>
+                              <div v-if="!msg.ok">
+                                <pre>{{msg.msg}}</pre>
+                              </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -161,16 +161,19 @@ class ScaffoldModel {
     }
 
     handle_payload(payload) {
+      let handled = true;
       if (payload.ty === 'STATUS') {
         this.workers[0].out = payload.out;
-        this.workers[0].messages.unshift("o");
       } else if (payload.ty === 'SENSOR_CACHE') {
         this.workers[0].readings = this.workers[0].readings.concat(payload.val);
-        this.workers[0].messages.unshift("o");
       } else {
-        payload = JSON.stringify(payload, null, 2);
-        this.workers[0].messages.unshift(payload);
+        handled = false;
       }
+      this.workers[0].messages.unshift({
+        payload: payload,
+        msg: JSON.stringify(payload, null, 2),
+        ok: handled
+      });
     }
 
 }
