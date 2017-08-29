@@ -406,11 +406,11 @@ new Vue({
         send_command('e400b22');
       },
       t_step_f() {
-        send_command('e100t-70,!1t0');
+        send_command('e100t-70,1!t0');
       },
 
       t_step_b() {
-        send_command('e100t70,!1t0');
+        send_command('e100t70,1!t0');
       },
 
       s_lock() {

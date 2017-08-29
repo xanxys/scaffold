@@ -131,51 +131,28 @@ private: // Command Handler
   }
 
   void enqueue_single_action() {
-    bool report_flag = consume('!');
     int16_t dur_ms = parse_int();
     if (dur_ms < 1) {
       dur_ms = 1;
       twelite.warn("dur capped to 1ms");
-    }
-    if (dur_ms > 3000) {
+    } else if (dur_ms > 3000) {
       dur_ms = 3000;
       twelite.warn("dur capped to 3s");
     }
-
     Action action(dur_ms);
-    action.report = report_flag;
-    // parse command body.
+
     while (true) {
       char target = read();
-      int16_t value = parse_int();
-
-      if (target == 'a' || target == 'b') {
-        if (value < 10) {
-          value = 10;
-          twelite.warn("pos capped to 10");
-        } else if (value > 33) {
-          // note: 255 is reserved as SERVO_POS_KEEP.
-          value = 33;
-          twelite.warn("pos capped to 33");
-        }
-      } else if (target == 't' || target == 'o' || target == 's') {
-        if (value < -127) {
-          value = -127;
-          twelite.warn("vel capped to -127");
-        } else if (value > 127) {
-          value = 127;
-          twelite.warn("vel capped to 127");
-        }
-      } else {
-        twelite.warn("unknown action target");
-      }
-
       switch (target) {
-        case 'a': action.servo_pos[CIX_A] = value; break;
-        case 'b': action.servo_pos[CIX_B] = value; break;
-        case 't': action.motor_vel[MV_TRAIN] = value; break;
-        case 'o': action.motor_vel[MV_ORI] = value; break;
-        case 's': action.motor_vel[MV_SCREW_DRIVER] = value; break;
+        case '!': action.report = true; break;
+        case 'a': action.servo_pos[CIX_A] = safe_read_pos(); break;
+        case 'b': action.servo_pos[CIX_B] = safe_read_pos(); break;
+        case 't': action.motor_vel[MV_TRAIN] = safe_read_vel(); break;
+        case 'o': action.motor_vel[MV_ORI] = safe_read_vel(); break;
+        case 's': action.motor_vel[MV_SCREW_DRIVER] = safe_read_vel(); break;
+        case 'T': action.train_cutoff_thresh = safe_read_thresh(); break;
+        default:
+          twelite.warn("unknown action target");
       }
 
       char next = peek();
@@ -184,6 +161,43 @@ private: // Command Handler
       }
     }
     actions.enqueue(action);
+  }
+
+  uint8_t safe_read_thresh() {
+    int16_t value = parse_int();
+    if (value < 0) {
+      value = 0;
+      twelite.warn("thresh capped to 0");
+    } else if (value > 255) {
+      value = 255;
+      twelite.warn("thresh capped to 25");
+    }
+    return value;
+  }
+
+  uint8_t safe_read_pos() {
+    int16_t value = parse_int();
+    if (value < 10) {
+      value = 10;
+      twelite.warn("pos capped to 10");
+    } else if (value > 33) {
+      // note: 255 is reserved as SERVO_POS_KEEP.
+      value = 33;
+      twelite.warn("pos capped to 33");
+    }
+    return value;
+  }
+
+  int8_t safe_read_vel() {
+    int16_t value = parse_int();
+    if (value < -127) {
+      value = -127;
+      twelite.warn("vel capped to -127");
+    } else if (value > 127) {
+      value = 127;
+      twelite.warn("vel capped to 127");
+    }
+    return value;
   }
 };
 

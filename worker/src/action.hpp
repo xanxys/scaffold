@@ -24,6 +24,10 @@ public:
   // Note that reporting can cause some jankiness (a few ms) in command execution.
   bool report;
 
+  // Set train=0 when sensor reading > this value.
+  // 255 means disable this functionality.
+  uint8_t train_cutoff_thresh = 255;
+
   // Note this can be 0, but action still has effect.
   uint16_t duration_step;
 
@@ -99,7 +103,7 @@ public:
     }
   }
 
-  void step(uint8_t* servo_pos_out, int8_t* motor_vel_out) {
+  void step(const MultiplexedSensor& sensor, uint8_t* servo_pos_out, int8_t* motor_vel_out) {
     if (action == NULL) {
       return;
     }
@@ -115,6 +119,9 @@ public:
       if (targ_vel != Action::MOTOR_VEL_KEEP) {
         motor_vel_out[i] = targ_vel;
       }
+    }
+    if (sensor.get_sensor_t() > action->train_cutoff_thresh) {
+      motor_vel_out[MV_TRAIN] = 0;
     }
     elapsed_step++;
   }
@@ -265,7 +272,7 @@ public:
     sensor.loop1ms();
 
     if (state.is_running()) {
-        state.step(servo_pos, motor_vel);
+        state.step(sensor, servo_pos, motor_vel);
         if (sensor.is_start()) {
           if (tr_sensor_cache_ix < T_SEN_CACHE_SIZE) {
             tr_sensor_cache[tr_sensor_cache_ix] = sensor.get_sensor_t();

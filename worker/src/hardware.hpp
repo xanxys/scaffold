@@ -84,15 +84,15 @@ public:
   }
 
   // 0: 0V, 255: 5V ("max")
-  uint8_t get_sensor_t() {
+  uint8_t get_sensor_t() const {
     return value_cache[PHASE_SEN_T] >> 2;
   }
 
-  uint8_t get_sensor_o() {
+  uint8_t get_sensor_o() const {
     return value_cache[PHASE_SEN_O] >> 2;
   }
 
-  uint8_t get_sensor_x() {
+  uint8_t get_sensor_x() const {
     return value_cache[PHASE_SEN_X] >> 2;
   }
 
