@@ -56,20 +56,36 @@
                             <h3 class="panel-title">Worker #{{worker.human_id}} <span style="font-size:80%; color: lightgray">#{{worker.hw_id}}</span></h3>
                         </div>
                         <div class="panel-body">
+                            <div class="btn-group dropup">
+                              <button v-on:click='update_info' class="btn btn-default" title="refresh now">
+                                <span class="glyphicon glyphicon-refresh"></span>
+                              </button>
+                              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                              </button>
+                              <ul class="dropdown-menu">
+                                <li><a href="#">Refresh every 5sec</a></li>
+                                <li><a href="#">Refresh every 15sec</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li><a href="#">Disable Auto-refresh</a></li>
+                              </ul>
+                            </div>
                             <div v-bind:class="worker.power.classes">
                               <span class="glyphicon glyphicon-off"></span>
                               {{worker.power.desc}}
                             </div>
 
-                            {{worker.loco}} Working Carrying: RS, screw<br/>
+                            Carrying: RS, screw<br/>
 
-                            <button class="btn btn-default" title="Go to home position">
-                              <span class="glyphicon glyphicon-home"></span>
+                            <button v-on:click='extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
+                              Extend
                             </button>
 
-                            <button v-on:click='update_info' class="btn btn-default" title="update">
-                              <span class="glyphicon glyphicon-refresh"></span>
+                            <button v-on:click='shorten()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
+                              Shorten
                             </button>
+
 
                             <!-- header -->
                             <div style="overflow:hidden">
@@ -122,7 +138,7 @@
 
                             <div>
                               <h4>T</h4>
-                              <button v-on:click="command('e500t-70T80,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
+                              <button v-on:click="command('e500t-70T30,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
                                 <span class="glyphicon glyphicon-arrow-up"></span>
                               </button>
                               <button v-on:click='t_step_f()' class="btn btn-default" title="go forward for a moment">
@@ -130,6 +146,9 @@
                               </button>
                               {{worker.out[1][0]}}
                               <br/>
+                              <button v-on:click="command('e500t70T30,1!t0')" class="btn btn-primary" title="Find origin baclward(500ms)">
+                                <span class="glyphicon glyphicon-arrow-down"></span>
+                              </button>
                               <button v-on:click='t_step_b()' class="btn btn-default" title="go backward for a moment">
                                 <span class="glyphicon glyphicon-arrow-down"></span>
                               </button>

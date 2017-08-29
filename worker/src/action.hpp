@@ -156,7 +156,7 @@ public:
 
 class ActionQueue {
 public:
-  const static uint8_t SIZE = 6;
+  const static uint8_t SIZE = 8;
 private:
   Action queue[SIZE];
   uint8_t ix = 0;

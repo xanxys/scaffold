@@ -415,6 +415,14 @@ new Vue({
         send_command('p');
       },
 
+      extend() {
+        send_command('e500a29,500t-60,300b22,5000t-40s-70,400b10,500s0t70T30,300t0a11');
+      },
+
+      shorten() {
+        send_command('e500a29,800t-70,300b21,3000s70b22t-30,600b10s0t60T30,500t0a11');
+      },
+
       scr_up() {
         send_command('e300a11');
       },

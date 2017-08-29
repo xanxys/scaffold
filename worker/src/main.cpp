@@ -133,9 +133,9 @@ private: // Command Handler
     if (dur_ms < 1) {
       dur_ms = 1;
       twelite.warn("dur capped to 1ms");
-    } else if (dur_ms > 3000) {
-      dur_ms = 3000;
-      twelite.warn("dur capped to 3s");
+    } else if (dur_ms > 5000) {
+      dur_ms = 5000;
+      twelite.warn("dur capped to 5s");
     }
     Action action(dur_ms);
 
