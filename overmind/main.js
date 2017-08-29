@@ -382,6 +382,10 @@ new Vue({
     el: '#workers',
     data: model,
     methods: {
+      command(msg) {
+        send_command(msg);
+      },
+
       update_info() {
         send_command('p');
       },
@@ -410,18 +414,6 @@ new Vue({
 
       t_step_b() {
         send_command('e100t70,1!t0');
-      },
-
-      s_lock() {
-        send_command('e1s-100');
-      },
-
-      s_unlock() {
-        send_command('e1s100');
-      },
-
-      s_stop() {
-        send_command('e1s0');
       },
     },
     computed: {

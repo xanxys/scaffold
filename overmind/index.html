@@ -57,7 +57,7 @@
                         </div>
                         <div class="panel-body">
                             {{worker.loco}} Working Carrying: RS, screw<br/>
-                            
+
                             <button class="btn btn-default" title="Go to home position">
                               <span class="glyphicon glyphicon-home"></span>
                             </button>
@@ -103,13 +103,13 @@
                                 {{worker.out[1][2]}}
                                 <br/>
 
-                                <button v-on:click='s_unlock()' class="btn btn-default" title="update">
+                                <button v-on:click="command('e1s100')" class="btn btn-default" title="unfasten screw">
                                   unlock
                                 </button>
-                                <button v-on:click='s_stop()' class="btn btn-default" title="update">
+                                <button v-on:click="command('e1s0')" class="btn btn-default" title="stop screw">
                                   <span class="glyphicon glyphicon-stop"></span>
                                 </button>
-                                <button v-on:click='s_lock()' class="btn btn-default" title="update">
+                                <button v-on:click="command('e1s-100')" class="btn btn-default" title="fasten screw">
                                   lock
                                 </button>
                               </div>
@@ -117,12 +117,15 @@
 
                             <div>
                               <h4>T</h4>
-                              <button v-on:click='t_step_f()' class="btn btn-default" title="update">
+                              <button v-on:click="command('e500t-70T80,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
+                                <span class="glyphicon glyphicon-arrow-up"></span>
+                              </button>
+                              <button v-on:click='t_step_f()' class="btn btn-default" title="go forward for a moment">
                                 <span class="glyphicon glyphicon-arrow-up"></span>
                               </button>
                               {{worker.out[1][0]}}
                               <br/>
-                              <button v-on:click='t_step_b()' class="btn btn-default" title="update">
+                              <button v-on:click='t_step_b()' class="btn btn-default" title="go backward for a moment">
                                 <span class="glyphicon glyphicon-arrow-down"></span>
                               </button>
                               O:{{worker.out[1][1]}}
