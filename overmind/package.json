@@ -4,6 +4,7 @@
   "description": "Scaffold controller; communicates with workers and visualizes / executes planning.",
   "main": "app.js",
   "scripts": {
+    "dev": "webpack",
     "start": "electron ."
   },
   "repository": "https://github.com/xanxys/scaffold",
@@ -16,8 +17,16 @@
   "author": "eqsan",
   "license": "Apache-2.0",
   "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-es2015": "^6.24.1",
+    "css-loader": "^0.28.7",
     "electron": "^1.4.1",
-    "electron-rebuild": "^1.6.0"
+    "electron-rebuild": "^1.6.0",
+    "electron-reload": "^1.2.1",
+    "file-loader": "^0.11.2",
+    "vue-template-compiler": "^2.4.2"
   },
   "dependencies": {
     "chart.js": "^2.6.0",

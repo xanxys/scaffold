@@ -1,12 +1,17 @@
 const PRIM_COLOR = 0x3498db;
 const PRIM_COLOR_HOVER = 0x286090;
 
-const $ = require('jquery');
-const _ = require('underscore');
-const SerialPort = require('serialport');
-const Vue = require('vue/dist/vue.js');
+import $ from 'jquery';
+import _ from 'underscore';
+import Vue from 'vue/dist/vue.js';
+import {Line} from 'vue-chartjs';
 
-const Line = require('vue-chartjs').Line; // import { Line } from 'vue-chartjs';
+import PaneControl from './pane-control.vue';
+
+// Need to use window.require: https://github.com/railsware/bozon/issues/40
+const SerialPort = window.require('serialport');
+
+Vue.component('pane-control', PaneControl);
 
 Vue.component('line-chart', {
     extends: Line,
@@ -496,4 +501,8 @@ new Vue({
             return this.port.path;
         }
     }
+});
+
+new Vue({
+  el: '#app'
 });
