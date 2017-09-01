@@ -2,6 +2,10 @@ const PRIM_COLOR = 0x3498db;
 const PRIM_COLOR_HOVER = 0x286090;
 
 import $ from 'jquery';
+
+global.jQuery = $;
+require('bootstrap');
+
 import _ from 'underscore';
 import Vue from 'vue/dist/vue.js';
 import {
