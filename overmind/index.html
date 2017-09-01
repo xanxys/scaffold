@@ -8,7 +8,7 @@
 </head>
 
 <body style="background-color: #444">
-    <div id="app">
+    <div>
         <nav class="navbar navbar-default" style="background-color: #222">
             <div class="container-fluid">
                 <div class="navbar-header" id="conn-status">
@@ -19,9 +19,9 @@
         </nav>
 
         <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-4" style="background-color: #333; height: 100%">
-                    <pane-control name="Plan"></pane-control>
+            <div class="row" style="margin-left: 0">
+                <div id="sidepanel" class="col-md-4" style="background-color: #333; height: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">
+                    <pane-control name="Plan" v-bind:active="active_pane" v-on:change="update_pane"></pane-control>
 
                     <table class="table">
                         <tr>
@@ -56,14 +56,19 @@
                         </tr>
                     </table>
 
-                    <pane-control name="Nodes"></pane-control>
+                    <pane-control name="Nodes" v-bind:active="active_pane" v-on:change="update_pane"></pane-control>
                     <div id="nodes">
                         W1 W2
                     </div>
                 </div>
 
                 <div class="col-md-8">
-                    <div id="workers">
+                    <div id="tab_plan">
+                        <div id="viewport"></div>
+                        <button id="add_rs" class="btn btn-default">+RS</button> Make it DnD
+                    </div>
+
+                    <div id="tab_workers" style="display: none">
                         <div class="panel panel-info" v-for="worker in workers">
                             <div class="panel-heading">
                                 <h3 class="panel-title">Worker #{{worker.human_id}} <span style="font-size:80%; color: lightgray">#{{worker.hw_id}}</span></h3>
@@ -174,11 +179,12 @@
                                 </div>
                             </div>
                         </div>
-                    </div <div id="viewport"></div>
-                <button id="add_rs" class="btn btn-default">+RS</button> Make it DnD
+                    </div>
+
+
+                </div>
             </div>
         </div>
-    </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/86/three.min.js"></script>

@@ -4,7 +4,9 @@ const PRIM_COLOR_HOVER = 0x286090;
 import $ from 'jquery';
 import _ from 'underscore';
 import Vue from 'vue/dist/vue.js';
-import {Line} from 'vue-chartjs';
+import {
+    Line
+} from 'vue-chartjs';
 
 import PaneControl from './pane-control.vue';
 
@@ -406,23 +408,32 @@ class View3DClient {
     }
 
     /* UI Utils */
-    animate() {
+    _animate() {
         // note: three.js includes requestAnimationFrame shim
-        let _this = this;
-        requestAnimationFrame(function() {
-            _this.animate();
-        });
+        if (!this.animating) {
+          return;
+        }
+        requestAnimationFrame(() => this._animate());
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
+    }
+
+    start() {
+      this.animating = true;
+      this._animate();
+    }
+
+    stop() {
+      this.animating = false;
     }
 }
 
 let model = new ScaffoldModel();
 let client = new View3DClient(model);
-client.animate();
+client.start();
 
 new Vue({
-    el: '#workers',
+    el: '#tab_workers',
     data: model,
     methods: {
         command(msg) {
@@ -504,5 +515,27 @@ new Vue({
 });
 
 new Vue({
-  el: '#app'
+    el: '#sidepanel',
+    data: {
+        active_pane: "Plan"
+    },
+    methods: {
+        update_pane(new_active) {
+            if (this.active_pane === 'Plan') {
+              $('#tab_plan').hide();
+              client.stop();
+            } else if (this.active_pane === 'Nodes') {
+              $('#tab_workers').hide();
+            }
+
+            this.active_pane = new_active;
+
+            if (new_active === 'Plan') {
+                $('#tab_plan').show();
+                client.start();
+            } else if (this.active_pane === 'Nodes') {
+                $('#tab_workers').show();
+            }
+        }
+    }
 });
