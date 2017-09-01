@@ -6,103 +6,108 @@ const _ = require('underscore');
 const SerialPort = require('serialport');
 const Vue = require('vue/dist/vue.js');
 
-const Line = require('vue-chartjs').Line;  // import { Line } from 'vue-chartjs';
+const Line = require('vue-chartjs').Line; // import { Line } from 'vue-chartjs';
 
 Vue.component('line-chart', {
-  extends: Line,
-  props: ['data', 'options'],
-  mounted () {
-    this.render();
-  },
-  methods: {
-    render() {
-      let xydata = _.map(this.data, (v, ix) => ({x:ix, y:v}));
-      this.renderChart({
-        labels: _.map(this.data, (v, ix) => ix),
-        datasets:
-          [{
-            label: "T",
-            data: xydata,
-            borderColor: "rgba(100,180,220,1)",
-            backgroundColor: "rgba(100,180,220,0.3)",
-          }]
-      }, {
-        cubicInterpolationMode: "monotone",
-        responsive: false,
-        maintainAspectRatio: false
-      });
-      console.log(xydata);
+    extends: Line,
+    props: ['data', 'options'],
+    mounted() {
+        this.render();
+    },
+    methods: {
+        render() {
+            let xydata = _.map(this.data, (v, ix) => ({
+                x: ix,
+                y: v
+            }));
+            this.renderChart({
+                labels: _.map(this.data, (v, ix) => ix),
+                datasets: [{
+                    label: "T",
+                    data: xydata,
+                    borderColor: "rgba(100,180,220,1)",
+                    backgroundColor: "rgba(100,180,220,0.3)",
+                }]
+            }, {
+                cubicInterpolationMode: "monotone",
+                responsive: false,
+                maintainAspectRatio: false
+            });
+            console.log(xydata);
+        }
+    },
+    watch: {
+        data: function() {
+            this._chart.destroy();
+            this.render();
+        }
     }
-  },
-  watch: {
-    data: function() {
-      this._chart.destroy();
-      this.render();
-    }
-  }
 });
 
-let port_model = {isOpen: false};
+let port_model = {
+    isOpen: false
+};
 
 // We need port_model indirection to notify changes to vue.js
 const sp_path = '/dev/ttyUSB0';
 port_model.path = sp_path;
-let port = new SerialPort(sp_path, {baudRate: 115200}, err => {
-  if (err !== null) {
-    console.log('serial port error', err);
-  } else {
-    console.log('serial port ok');
-    port_model.isOpen = true;
-  }
+let port = new SerialPort(sp_path, {
+    baudRate: 115200
+}, err => {
+    if (err !== null) {
+        console.log('serial port error', err);
+    } else {
+        console.log('serial port ok');
+        port_model.isOpen = true;
+    }
 });
 const parser = new SerialPort.parsers.Readline();
 port.pipe(parser);
 parser.on('data', data => {
-  data = data.trim();
-  flash_status();
-  if (data.startsWith(':7801')) {
-    let payload_hex = data.slice(':7801'.length, -2 /* csum */);
-    let payload = decode_hex(payload_hex);
-    let payload_json = null;
-    try {
-      payload_json = JSON.parse(payload);
-    } catch (e) {
-      model.workers[0].messages.unshift('CORRUPT' + payload);
-      return;
+    data = data.trim();
+    flash_status();
+    if (data.startsWith(':7801')) {
+        let payload_hex = data.slice(':7801'.length, -2 /* csum */ );
+        let payload = decode_hex(payload_hex);
+        let payload_json = null;
+        try {
+            payload_json = JSON.parse(payload);
+        } catch (e) {
+            model.workers[0].messages.unshift('CORRUPT' + payload);
+            return;
+        }
+        if (payload_json !== null) {
+            model.handle_payload(payload_json);
+        }
     }
-    if (payload_json !== null) {
-      model.handle_payload(payload_json);
-    }
-  }
 });
 
 function flash_status() {
-  let el = $('#conn-icon');
-  el.addClass('text-muted');
-  setTimeout(() => {
-    el.removeClass('text-muted');
-  }, 100);
+    let el = $('#conn-icon');
+    el.addClass('text-muted');
+    setTimeout(() => {
+        el.removeClass('text-muted');
+    }, 100);
 }
 
 function decode_hex(hex) {
-  let result = '';
-  for (let ix = 0; ix < hex.length; ix += 2) {
-    result += String.fromCharCode(parseInt(hex.substr(ix, 2), 16));
-  }
-  return result;
+    let result = '';
+    for (let ix = 0; ix < hex.length; ix += 2) {
+        result += String.fromCharCode(parseInt(hex.substr(ix, 2), 16));
+    }
+    return result;
 }
 
 function encode_hex(bytes) {
-  return _.map(bytes, b => (b >> 4).toString(16) + (b & 0xf).toString(16)).join('').toUpperCase();
+    return _.map(bytes, b => (b >> 4).toString(16) + (b & 0xf).toString(16)).join('').toUpperCase();
 }
 
 function send_command(command) {
-  let twelite_command =
-    [0x78, 0x01].concat(_.map(command, ch => ch.charCodeAt(0)));
+    let twelite_command = [0x78, 0x01].concat(_.map(command, ch => ch.charCodeAt(0)));
 
-  let final_command = ':' + encode_hex(twelite_command) + 'X\r\n';
-  console.log('send', final_command);
-  port.write(final_command);
+    let final_command = ':' + encode_hex(twelite_command) + 'X\r\n';
+    console.log('send', final_command);
+    port.write(final_command);
 }
 
 
@@ -138,7 +143,10 @@ class ScaffoldModel {
                 dump: 'RH',
                 driver: false,
             },
-            out: [[0,0],[0,0,0]],
+            out: [
+                [0, 0],
+                [0, 0, 0]
+            ],
             human_id: 1,
             hw_id: "a343fd",
             messages: [],
@@ -162,32 +170,38 @@ class ScaffoldModel {
     }
 
     handle_payload(payload) {
-      let worker = this.workers[0];
+        let worker = this.workers[0];
 
-      let handled = true;
-      if (payload.ty === 'STATUS') {
-        worker.out = payload.out;
-        let vcc = payload.system['vcc/mV'];
-        let bat = payload.system['bat/mV'];
-        if (vcc < bat) {
-          // Known power init failure mode.
-          worker.power.classes = {"bg-danger": true};
-        } else if (bat < 3300) {
-          worker.power.classes = {"bg-warning": true};
+        let handled = true;
+        if (payload.ty === 'STATUS') {
+            worker.out = payload.out;
+            let vcc = payload.system['vcc/mV'];
+            let bat = payload.system['bat/mV'];
+            if (vcc < bat) {
+                // Known power init failure mode.
+                worker.power.classes = {
+                    "bg-danger": true
+                };
+            } else if (bat < 3300) {
+                worker.power.classes = {
+                    "bg-warning": true
+                };
+            } else {
+                worker.power.classes = {
+                    "bg-primary": true
+                };
+            }
+            worker.power.desc = bat + 'mV (Vcc=' + vcc + 'mV)';
+        } else if (payload.ty === 'SENSOR_CACHE') {
+            worker.readings = this.workers[0].readings.concat(payload.val);
         } else {
-          worker.power.classes = {"bg-primary": true};
+            handled = false;
         }
-        worker.power.desc = bat + 'mV (Vcc=' + vcc +'mV)';
-      } else if (payload.ty === 'SENSOR_CACHE') {
-        worker.readings = this.workers[0].readings.concat(payload.val);
-      } else {
-        handled = false;
-      }
-      worker.messages.unshift({
-        payload: payload,
-        msg: JSON.stringify(payload, null, 2),
-        ok: handled
-      });
+        worker.messages.unshift({
+            payload: payload,
+            msg: JSON.stringify(payload, null, 2),
+            ok: handled
+        });
     }
 
 }
@@ -272,27 +286,27 @@ class View3DClient {
 
         let prev_hover_object = null;
         $('#viewport').mousemove(ev => {
-          let ev_pos_normalized = new THREE.Vector2(
-              ev.offsetX / $('#viewport').width() * 2 - 1, -(ev.offsetY / $('#viewport').height() * 2 - 1));
+            let ev_pos_normalized = new THREE.Vector2(
+                ev.offsetX / $('#viewport').width() * 2 - 1, -(ev.offsetY / $('#viewport').height() * 2 - 1));
 
-          let raycaster = new THREE.Raycaster();
-          raycaster.setFromCamera(ev_pos_normalized, this.camera);
-          let isects = raycaster.intersectObject(this.scene, true);
-          let curr_hover_object = null;
-          if (isects.length > 0 && isects[0].object.name === 'ui') {
-            curr_hover_object = isects[0].object;
-          }
-
-          if (curr_hover_object !== prev_hover_object) {
-            if (curr_hover_object !== null) {
-              // on enter
-              curr_hover_object.material.color.set(PRIM_COLOR_HOVER);
-            } else {
-              // on leave
-              prev_hover_object.material.color.set(PRIM_COLOR);
+            let raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(ev_pos_normalized, this.camera);
+            let isects = raycaster.intersectObject(this.scene, true);
+            let curr_hover_object = null;
+            if (isects.length > 0 && isects[0].object.name === 'ui') {
+                curr_hover_object = isects[0].object;
             }
-          }
-          prev_hover_object = curr_hover_object;
+
+            if (curr_hover_object !== prev_hover_object) {
+                if (curr_hover_object !== null) {
+                    // on enter
+                    curr_hover_object.material.color.set(PRIM_COLOR_HOVER);
+                } else {
+                    // on leave
+                    prev_hover_object.material.color.set(PRIM_COLOR);
+                }
+            }
+            prev_hover_object = curr_hover_object;
         });
 
         $('#viewport').click(ev => {
@@ -309,20 +323,20 @@ class View3DClient {
             let obj = isects[0].object;
 
             if (add_rs) {
-              // obj.
-              _this.model.rails.push({
-                type: "RS",
-                center: new THREE.Vector3(0, 0.12, 0.03),
-                ori: new THREE.Vector3(0, 0, 1),
-                id: 2,
-              });
-              _this.regen_scaffold_view();
+                // obj.
+                _this.model.rails.push({
+                    type: "RS",
+                    center: new THREE.Vector3(0, 0.12, 0.03),
+                    ori: new THREE.Vector3(0, 0, 1),
+                    id: 2,
+                });
+                _this.regen_scaffold_view();
             }
             add_rs = false;
         });
 
         $('#add_rs').click(ev => {
-          add_rs = true;
+            add_rs = true;
         });
 
         this.update_projection();
@@ -353,8 +367,7 @@ class View3DClient {
             }
             let mesh = new THREE.Mesh();
             mesh.name = 'ui';
-            mesh.userData = {
-            };
+            mesh.userData = {};
             mesh.geometry = this.cache_point_geom;
             mesh.material = new THREE.MeshBasicMaterial({
                 color: PRIM_COLOR,
@@ -407,80 +420,80 @@ new Vue({
     el: '#workers',
     data: model,
     methods: {
-      command(msg) {
-        send_command(msg);
-      },
+        command(msg) {
+            send_command(msg);
+        },
 
-      update_info() {
-        send_command('p');
-      },
+        update_info() {
+            send_command('p');
+        },
 
-      extend() {
-        send_command('e500a29,500t-60,300b22s-20,5000t50s-100,400b10,500s0t70T30,300t0a11');
-      },
+        extend() {
+            send_command('e500a29,500t-60,300b22s-20,5000t50s-100,400b10,500s0t70T30,300t0a11');
+        },
 
-      shorten() {
-        send_command('e500a29,800t-70,300b21,3000s70b22t-30,600b10s0t60T30,500t0a11');
-      },
+        shorten() {
+            send_command('e500a29,800t-70,300b21,3000s70b22t-30,600b10s0t60T30,500t0a11');
+        },
 
-      scr_up() {
-        send_command('e300a11');
-      },
+        scr_up() {
+            send_command('e300a11');
+        },
 
-      scr_down() {
-        send_command('e300a29');
-      },
+        scr_down() {
+            send_command('e300a29');
+        },
 
-      d_up() {
-        send_command('e400b10');
-      },
+        d_up() {
+            send_command('e400b10');
+        },
 
-      d_down() {
-        send_command('e400b20');
-      },
-      d_downdown() {
-        send_command('e400b22');
-      },
-      t_step_f() {
-        send_command('e100t-70,1!t0');
-      },
+        d_down() {
+            send_command('e400b20');
+        },
+        d_downdown() {
+            send_command('e400b22');
+        },
+        t_step_f() {
+            send_command('e100t-70,1!t0');
+        },
 
-      t_step_b() {
-        send_command('e100t70,1!t0');
-      },
+        t_step_b() {
+            send_command('e100t70,1!t0');
+        },
     },
     computed: {
-      readings() {
-        // return [1, 3,2];
-        return this.workers[0].readings.concat([]);  // copy
+        readings() {
+            // return [1, 3,2];
+            return this.workers[0].readings.concat([]); // copy
 
-      }
+        }
     }
 });
 
 
 new Vue({
-  el: '#conn-status',
-  data: {
-    port: port_model,
-  },
-  computed: {
-    status() {
-      if (this.port.isOpen) {
-        return 'connected';
-      } else {
-        return 'cutoff'
-      }
+    el: '#conn-status',
+    data: {
+        port: port_model,
     },
-    status_class() {
-      if (this.port.isOpen) {
-        return 'text-success';
-      } else {
-        return 'text-muted';
-      }
-    },
-    path() {
-      return this.port.path;
+    computed: {
+        status() {
+            if (this.port.isOpen) {
+                return 'connected';
+            } else {
+                return 'cutoff'
+            }
+        },
+        status_class() {
+            if (this.port.isOpen) {
+                return 'text-success';
+            } else {
+                return 'text-muted';
+            }
+        },
+        path() {
+            return this.port.path;
+        }
     }
-  }
 });

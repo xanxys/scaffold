@@ -57,23 +57,22 @@
                         </div>
                         <div class="panel-body">
                             <div class="btn-group dropup">
-                              <button v-on:click='update_info' class="btn btn-default" title="refresh now">
+                                <button v-on:click='update_info' class="btn btn-default" title="refresh now">
                                 <span class="glyphicon glyphicon-refresh"></span>
                               </button>
-                              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret"></span>
                                 <span class="sr-only">Toggle Dropdown</span>
                               </button>
-                              <ul class="dropdown-menu">
-                                <li><a href="#">Refresh every 5sec</a></li>
-                                <li><a href="#">Refresh every 15sec</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li><a href="#">Disable Auto-refresh</a></li>
-                              </ul>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#">Refresh every 5sec</a></li>
+                                    <li><a href="#">Refresh every 15sec</a></li>
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#">Disable Auto-refresh</a></li>
+                                </ul>
                             </div>
                             <div v-bind:class="worker.power.classes">
-                              <span class="glyphicon glyphicon-off"></span>
-                              {{worker.power.desc}}
+                                <span class="glyphicon glyphicon-off"></span> {{worker.power.desc}}
                             </div>
 
                             Carrying: RS, screw<br/>
@@ -89,82 +88,76 @@
 
                             <!-- header -->
                             <div style="overflow:hidden">
-                              <div style="float:left">
-                                <h4>D</h4>
-                                <button v-on:click='d_up()' class="btn btn-default" title="update">
+                                <div style="float:left">
+                                    <h4>D</h4>
+                                    <button v-on:click='d_up()' class="btn btn-default" title="update">
                                   <span class="glyphicon glyphicon-arrow-up"></span>
                                 </button>
-                                <br/>
+                                    <br/>
 
-                                <button v-on:click='d_down()' class="btn btn-default" title="update">
+                                    <button v-on:click='d_down()' class="btn btn-default" title="update">
+                                  <span class="glyphicon glyphicon-arrow-down"></span>
+                                </button> {{worker.out[0][1]}}
+                                    <br/>
+                                    <button v-on:click='d_downdown()' class="btn btn-warning" title="update">
                                   <span class="glyphicon glyphicon-arrow-down"></span>
                                 </button>
-                                {{worker.out[0][1]}}
-                                <br/>
-                                <button v-on:click='d_downdown()' class="btn btn-warning" title="update">
-                                  <span class="glyphicon glyphicon-arrow-down"></span>
-                                </button>
-                              </div>
+                                </div>
 
-                              <div style="float:left">
-                                <h4>SCR</h4>
-                                <button v-on:click='scr_up()' class="btn btn-default" title="update">
+                                <div style="float:left">
+                                    <h4>SCR</h4>
+                                    <button v-on:click='scr_up()' class="btn btn-default" title="update">
                                   <span class="glyphicon glyphicon-arrow-up"></span>
                                 </button>
-                                <br/>
-                                <button v-on:click='scr_down()' class="btn btn-default" title="update">
+                                    <br/>
+                                    <button v-on:click='scr_down()' class="btn btn-default" title="update">
                                   <span class="glyphicon glyphicon-arrow-down"></span>
-                                </button>
-                                {{worker.out[0][0]}}
-                              </div>
+                                </button> {{worker.out[0][0]}}
+                                </div>
 
-                              <div style="float:left">
-                                <h4>S</h4>
+                                <div style="float:left">
+                                    <h4>S</h4> {{worker.out[1][2]}}
+                                    <br/>
 
-                                {{worker.out[1][2]}}
-                                <br/>
-
-                                <button v-on:click="command('e1s100')" class="btn btn-default" title="unfasten screw">
+                                    <button v-on:click="command('e1s100')" class="btn btn-default" title="unfasten screw">
                                   unlock
                                 </button>
-                                <button v-on:click="command('e1s0')" class="btn btn-default" title="stop screw">
+                                    <button v-on:click="command('e1s0')" class="btn btn-default" title="stop screw">
                                   <span class="glyphicon glyphicon-stop"></span>
                                 </button>
-                                <button v-on:click="command('e1s-100')" class="btn btn-default" title="fasten screw">
+                                    <button v-on:click="command('e1s-100')" class="btn btn-default" title="fasten screw">
                                   lock
                                 </button>
-                              </div>
+                                </div>
                             </div>
 
                             <div>
-                              <h4>T</h4>
-                              <button v-on:click="command('e500t-70T30,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
+                                <h4>T</h4>
+                                <button v-on:click="command('e500t-70T30,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
                                 <span class="glyphicon glyphicon-arrow-up"></span>
                               </button>
-                              <button v-on:click='t_step_f()' class="btn btn-default" title="go forward for a moment">
+                                <button v-on:click='t_step_f()' class="btn btn-default" title="go forward for a moment">
                                 <span class="glyphicon glyphicon-arrow-up"></span>
-                              </button>
-                              {{worker.out[1][0]}}
-                              <br/>
-                              <button v-on:click="command('e500t70T30,1!t0')" class="btn btn-primary" title="Find origin baclward(500ms)">
+                              </button> {{worker.out[1][0]}}
+                                <br/>
+                                <button v-on:click="command('e500t70T30,1!t0')" class="btn btn-primary" title="Find origin baclward(500ms)">
                                 <span class="glyphicon glyphicon-arrow-down"></span>
                               </button>
-                              <button v-on:click='t_step_b()' class="btn btn-default" title="go backward for a moment">
+                                <button v-on:click='t_step_b()' class="btn btn-default" title="go backward for a moment">
                                 <span class="glyphicon glyphicon-arrow-down"></span>
-                              </button>
-                              O:{{worker.out[1][1]}}
+                              </button> O:{{worker.out[1][1]}}
 
-                               <line-chart :width="300" :height="200" :data="worker.readings"></line-chart>
+                                <line-chart :width="300" :height="200" :data="worker.readings"></line-chart>
                             </div>
 
-                            <div class="panel" v-for="msg in worker.messages" v-bind:class="{'panel-default': msg.ok, 'panel-warning': !msg.ok}"
-                                 v-bind:title="msg.msg">
-                              <div class="panel-heading">
-                                {{msg.payload['t/ms']}}<h3 class="panel-title">{{msg.payload.ty}}</h3>
-                              </div>
-                              <div v-if="!msg.ok">
-                                <pre>{{msg.msg}}</pre>
-                              </div>
+                            <div class="panel" v-for="msg in worker.messages" v-bind:class="{'panel-default': msg.ok, 'panel-warning': !msg.ok}" v-bind:title="msg.msg">
+                                <div class="panel-heading">
+                                    {{msg.payload['t/ms']}}
+                                    <h3 class="panel-title">{{msg.payload.ty}}</h3>
+                                </div>
+                                <div v-if="!msg.ok">
+                                    <pre>{{msg.msg}}</pre>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -174,8 +167,7 @@
 
             <div class="col-md-8">
                 <div id="viewport"></div>
-                <button id="add_rs" class="btn btn-default">+RS</button>
-                Make it DnD
+                <button id="add_rs" class="btn btn-default">+RS</button> Make it DnD
             </div>
         </div>
     </div>
