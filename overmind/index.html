@@ -58,37 +58,63 @@
 
                     <pane-control name="Nodes" v-bind:active="active_pane" v-on:change="update_pane"></pane-control>
                     <div id="nodes">
-                        W1 W2
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h2 class="panel-title"><span class="glyphicon glyphicon-ok"></span> Worker #1</h2>
+                            </div>
+                            <div class="panel-body">
+                                <div>
+                                    Carrying RS
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h2 class="panel-title"><span class="glyphicon glyphicon-remove"></span> Feeder (RS) #1</h2>
+                            </div>
+                            <div class="panel-body">
+                                <div>
+                                  Idle; Stock:4/5
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="col-md-8">
                     <div id="tab_plan">
-                        <div id="viewport"></div>
                         <button id="add_rs" class="btn btn-default">+RS</button> Make it DnD
+                        <div id="viewport"></div>
                     </div>
 
                     <div id="tab_workers" style="display: none">
+                        <div class="btn-group dropdown">
+                            <button v-on:click='update_info' class="btn btn-default" title="refresh now">
+                              <span class="glyphicon glyphicon-refresh"></span>
+                            </button>
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                              <span class="caret"></span>
+                              <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Refresh every 5sec</a></li>
+                                <li><a href="#">Refresh every 15sec</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li><a href="#">Disable Auto-refresh</a></li>
+                            </ul>
+                        </div>
+
+                        <button class="btn btn-warning" title="Show raw actions">
+                          <span class="glyphicon glyphicon-warning-sign"></span>Show raw actions
+                        </button>
+
+
                         <div class="panel panel-info" v-for="worker in workers">
                             <div class="panel-heading">
                                 <h3 class="panel-title">Worker #{{worker.human_id}} <span style="font-size:80%; color: lightgray">#{{worker.hw_id}}</span></h3>
                             </div>
                             <div class="panel-body">
-                                <div class="btn-group dropup">
-                                    <button v-on:click='update_info' class="btn btn-default" title="refresh now">
-                              <span class="glyphicon glyphicon-refresh"></span>
-                            </button>
-                                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                              <span class="caret"></span>
-                              <span class="sr-only">Toggle Dropdown</span>
-                            </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a href="#">Refresh every 5sec</a></li>
-                                        <li><a href="#">Refresh every 15sec</a></li>
-                                        <li role="separator" class="divider"></li>
-                                        <li><a href="#">Disable Auto-refresh</a></li>
-                                    </ul>
-                                </div>
                                 <div v-bind:class="worker.power.classes">
                                     <span class="glyphicon glyphicon-off"></span> {{worker.power.desc}}
                                 </div>
