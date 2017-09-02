@@ -13,9 +13,8 @@ import {
 } from 'vue-chartjs';
 
 import PaneControl from './pane-control.vue';
+import Bridge from './comm.js';
 
-// Need to use window.require: https://github.com/railsware/bozon/issues/40
-const SerialPort = window.require('serialport');
 
 Vue.component('pane-control', PaneControl);
 
@@ -55,50 +54,12 @@ Vue.component('line-chart', {
     }
 });
 
-let port_model = {
-    isOpen: false
-};
-
-// We need port_model indirection to notify changes to vue.js
-const sp_path = '/dev/ttyUSB0';
-port_model.path = sp_path;
-let port = new SerialPort(sp_path, {
-    baudRate: 115200
-}, err => {
-    if (err !== null) {
-        console.log('serial port error', err);
-    } else {
-        console.log('serial port ok');
-        port_model.isOpen = true;
-    }
-});
-const parser = new SerialPort.parsers.Readline();
-port.pipe(parser);
-parser.on('data', data => {
-    data = data.trim();
+const bridge = new Bridge(packet => {
     flash_status();
-    console.log(data);
-    if (data.startsWith(':7801')) {
-        let payload_hex = data.slice(':7801'.length, -2 /* csum */ );
-        let payload = decode_hex(payload_hex);
-
-        let src_addr = new DataView(payload).getUint32(0);
-        let src_ts = new DataView(payload).getUint32(4);
-        let datagram = new Uint8Array(payload, 8);
-        let payload_json = null;
-        try {
-            payload_json = JSON.parse(String.fromCharCode.apply(String, datagram));
-            payload_json['src'] = src_addr;
-            payload_json['t/ms'] = src_ts;
-            console.log(payload_json);
-        } catch (e) {
-            console.log(datagram);
-            model.workers[0].messages.unshift('CORRUPT' + payload);
-            return;
-        }
-        if (payload_json !== null) {
-            model.handle_payload(payload_json);
-        }
+    if (packet.data !== null) {
+        model.handle_payload(packet.data);
+    } else if (packet.datagram !== null) {
+      console.log("Corrupt JSON", packet);
     }
 });
 
@@ -109,28 +70,6 @@ function flash_status() {
         el.removeClass('text-muted');
     }, 100);
 }
-
-function decode_hex(hex) {
-    let buffer = new ArrayBuffer(hex.length / 2);
-    let view = new Uint8Array(buffer);
-    for (let ix = 0; ix < hex.length; ix += 2) {
-      view[ix / 2] = parseInt(hex.substr(ix, 2), 16);
-    }
-    return buffer;
-}
-
-function encode_hex(bytes) {
-    return _.map(bytes, b => (b >> 4).toString(16) + (b & 0xf).toString(16)).join('').toUpperCase();
-}
-
-function send_command(command) {
-    let twelite_command = [0x78, 0x01, 0xff, 0xff, 0xff, 0xff].concat(_.map(command, ch => ch.charCodeAt(0)));
-
-    let final_command = ':' + encode_hex(twelite_command) + 'X\r\n';
-    console.log('send', final_command);
-    port.write(final_command);
-}
-
 
 // Scaffold inferred / target world model.
 // Assumes z=0 is floor.
@@ -196,7 +135,7 @@ class ScaffoldModel {
 
         let handled = true;
         if (payload.ty === undefined) {
-          handled = false;
+            handled = false;
         } else if (payload.ty === 'STATUS') {
             worker.out = payload.out;
             let vcc = payload.system['vcc/mV'];
@@ -428,7 +367,7 @@ class View3DClient {
     _animate() {
         // note: three.js includes requestAnimationFrame shim
         if (!this.animating) {
-          return;
+            return;
         }
         requestAnimationFrame(() => this._animate());
         this.controls.update();
@@ -436,12 +375,12 @@ class View3DClient {
     }
 
     start() {
-      this.animating = true;
-      this._animate();
+        this.animating = true;
+        this._animate();
     }
 
     stop() {
-      this.animating = false;
+        this.animating = false;
     }
 }
 
@@ -454,45 +393,45 @@ new Vue({
     data: model,
     methods: {
         command(msg) {
-            send_command(msg);
+            bridge.send_command(msg);
         },
 
         update_info() {
-            send_command('p');
+            this.command('p');
         },
 
         extend() {
-            send_command('e500a29,500t-60,300b22s-20,5000t50s-100,400b10,500s0t70T30,300t0a11');
+            this.command('e500a29,500t-60,300b22s-20,5000t50s-100,400b10,500s0t70T30,300t0a11');
         },
 
         shorten() {
-            send_command('e500a29,800t-70,300b21,3000s70b22t-30,600b10s0t60T30,500t0a11');
+            this.command('e500a29,800t-70,300b21,3000s70b22t-30,600b10s0t60T30,500t0a11');
         },
 
         scr_up() {
-            send_command('e300a11');
+            this.command('e300a11');
         },
 
         scr_down() {
-            send_command('e300a29');
+            this.command('e300a29');
         },
 
         d_up() {
-            send_command('e400b10');
+            this.command('e400b10');
         },
 
         d_down() {
-            send_command('e400b20');
+            this.command('e400b20');
         },
         d_downdown() {
-            send_command('e400b22');
+            this.command('e400b22');
         },
         t_step_f() {
-            send_command('e100t-70,1!t0');
+            this.command('e100t-70,1!t0');
         },
 
         t_step_b() {
-            send_command('e100t70,1!t0');
+            this.command('e100t70,1!t0');
         },
     },
     computed: {
@@ -508,7 +447,7 @@ new Vue({
 new Vue({
     el: '#conn-status',
     data: {
-        port: port_model,
+        port: bridge,
     },
     computed: {
         status() {
@@ -539,10 +478,10 @@ new Vue({
     methods: {
         update_pane(new_active) {
             if (this.active_pane === 'Plan') {
-              $('#tab_plan').hide();
-              client.stop();
+                $('#tab_plan').hide();
+                client.stop();
             } else if (this.active_pane === 'Nodes') {
-              $('#tab_workers').hide();
+                $('#tab_workers').hide();
             }
 
             this.active_pane = new_active;
@@ -557,4 +496,4 @@ new Vue({
     }
 });
 
-global.send_command = send_command;
+global.send_command = bridge.send_command;
