@@ -170,28 +170,27 @@ private:
   uint32_t intercept_header() {
     // Search SID=xxxx. Abandon at 100B.
     uint8_t n_read = 0;
+    const char* target = "SID=";
+    uint8_t ok_ix = 0;
     while (true) {
       if (n_read > 100) {
         return 0;  // failed to get SID=.
       }
 
+      char c = getch();
       n_read++;
-      if (getch() != 'S') {
-        continue;
+      if (c == ':') {
+        // exit on command start, to not mess up other commands
+        // when e.g. AVR is re-flashed while TWELITE is connected to power
+        return 0;
+      } else if (c == target[ok_ix]) {
+        ok_ix++;
+        if (ok_ix >= 4) {
+          break;
+        }
+      } else {
+        ok_ix = 0;
       }
-      n_read++;
-      if (getch() != 'I') {
-        continue;
-      }
-      n_read++;
-      if (getch() != 'D') {
-        continue;
-      }
-      n_read++;
-      if (getch() != '=') {
-        continue;
-      }
-      break;
     }
 
     // Discard "0x";
@@ -254,7 +253,7 @@ private:
     while (true) {
       char c = getch();
       if (c == '\r' || c == '\n') {
-        if (first_nibble) {
+        if (!first_nibble) {
           return RecvResult::INVALID;  // last byte was incomplete.
         } else {
           *out_slice = MaybeSlice(buffer, size);

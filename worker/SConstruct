@@ -19,8 +19,8 @@ env.Append(BUILDERS=
     })
 
 # http://www.engbedded.com/fusecalc/
-# 16MHz 1:1, fast start, no watchdog
-env.Alias('writefuse',env.Command('fake-fuse', None, "avrdude -p m328p -c usbasp -U lfuse:w:0xfe:m -U hfuse:w:0xd9:m"))
+# 16MHz 1:1, fast start, no watchdog, preserve EEPROM while flashing
+env.Alias('writefuse',env.Command('fake-fuse', None, "avrdude -p m328p -c usbasp -U lfuse:w:0xfe:m -U hfuse:w:0xd1:m"))
 
 env.Library('build/libs.a', Glob('lib/*.cpp') + Glob('lib/*.c'))
 

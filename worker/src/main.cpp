@@ -28,6 +28,7 @@ public:
         twelite.warn("too long command");
         continue;
       }
+      twelite.info("CRv");
       r_ix = 0;
 
       #ifdef WORKER_TYPE_BUILDER
