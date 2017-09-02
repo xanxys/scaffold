@@ -112,7 +112,7 @@
 
                         <div class="panel panel-info" v-for="worker in workers">
                             <div class="panel-heading">
-                                <h3 class="panel-title">Worker #{{worker.human_id}} <span style="font-size:80%; color: lightgray">#{{worker.hw_id}}</span></h3>
+                                <h3 class="panel-title">Worker <span style="font-size:80%; color: lightgray">#{{worker.addr}}</span></h3>
                                 <button v-on:click='update_info' class="btn btn-default" title="refresh now">
                                   <span class="glyphicon glyphicon-refresh"></span>
                                 </button>
@@ -197,13 +197,12 @@
                                     <line-chart :width="300" :height="200" :data="worker.readings"></line-chart>
                                 </div>
 
-                                <div class="panel" v-for="msg in worker.messages" v-bind:class="{'panel-default': msg.ok, 'panel-warning': !msg.ok}" v-bind:title="msg.msg">
+                                <div class="panel" v-for="msg in worker.messages" v-bind:class="{'panel-default': msg.status == 'known', 'panel-warning': msg.status == 'unknown', 'panel-danger': msg.status == 'corrupt'}" v-bind:title="msg.desc">
                                     <div class="panel-heading">
-                                        <!--{{msg.payload['t/ms']}} -->
-                                        <h3 class="panel-title">{{msg.payload.ty}}</h3>
+                                        {{msg.timestamp}}<h3 class="panel-title">{{msg.head}}</h3>
                                     </div>
-                                    <div v-if="!msg.ok">
-                                        <pre>{{msg.msg}}</pre>
+                                    <div v-if="msg.status != 'known'">
+                                        <pre>{{msg.desc}}</pre>
                                     </div>
                                 </div>
                             </div>

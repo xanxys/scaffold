@@ -56,10 +56,8 @@ Vue.component('line-chart', {
 
 const bridge = new Bridge(packet => {
     flash_status();
-    if (packet.data !== null) {
-        model.handle_payload(packet.data);
-    } else if (packet.datagram !== null) {
-      console.log("Corrupt JSON", packet);
+    if (packet.datagram !== null) {
+        worker_pool.handle_datagram(packet);
     }
 });
 
@@ -91,28 +89,6 @@ class ScaffoldModel {
             id: 1,
             support: false,
         }];
-
-        this.workers = [{
-            type: 'builder',
-            loco: {
-                sensor: 123,
-                on_rail: 0,
-                pos: 0.3,
-            },
-            builder: {
-                dump: 'RH',
-                driver: false,
-            },
-            out: [
-                [0, 0],
-                [0, 0, 0]
-            ],
-            human_id: 1,
-            hw_id: "a343fd",
-            messages: [],
-            readings: [],
-            power: {}
-        }];
     }
 
     get_worker_pos() {}
@@ -128,46 +104,81 @@ class ScaffoldModel {
             normal: new THREE.Vector3(0, 0, 1)
         }];
     }
+}
 
-    handle_payload(payload) {
-        let worker = this.workers[0];
-        console.log(payload);
 
-        let handled = true;
-        if (payload.ty === undefined) {
-            handled = false;
-        } else if (payload.ty === 'STATUS') {
-            worker.out = payload.out;
-            let vcc = payload.system['vcc/mV'];
-            let bat = payload.system['bat/mV'];
-            if (vcc < bat) {
-                // Known power init failure mode.
-                worker.power.classes = {
-                    "bg-danger": true
-                };
-            } else if (bat < 3300) {
-                worker.power.classes = {
-                    "bg-warning": true
-                };
-            } else {
-                worker.power.classes = {
-                    "bg-primary": true
-                };
-            }
-            worker.power.desc = bat + 'mV (Vcc=' + vcc + 'mV)';
-        } else if (payload.ty === 'SENSOR_CACHE') {
-            worker.readings = this.workers[0].readings.concat(payload.val);
-        } else {
-            handled = false;
-        }
-        worker.messages.unshift({
-            payload: payload,
-            msg: JSON.stringify(payload, null, 2),
-            ok: handled
-        });
+class WorkerPool {
+    constructor() {
+        this.workers = [];
     }
 
+    handle_datagram(packet) {
+        let worker = this.workers.find(w => w.addr === packet.src);
+        if (worker !== undefined) {
+            this.handle_datagram_in_worker(worker, packet);
+        } else if (packet.src !== 0) {
+            let worker = {
+                addr: packet.src,
+                messages: [],
+                out: [],
+                power: {},
+                readings: [],
+            };
+            this.handle_datagram_in_worker(worker, packet);
+            this.workers.push(worker);
+        }
+    }
+
+    handle_datagram_in_worker(worker, packet) {
+        console.log(packet);
+        let message = {
+            status: 'known', // known, unknown, corrupt
+            timestamp: packet.src_ts / 1e3,
+        };
+        if (packet.data === null) {
+            message.status = 'corrupt';
+            message.head = 'CORRUPT JSON';
+            message.desc = packet.datagram;
+        } else if (packet.data.ty === undefined) {
+            message.status = 'corrupt';
+            message.head = 'MISSING TYPE';
+            message.desc = JSON.stringify(payload, null, 2);
+        } else {
+            let data = packet.data;
+            message.head = data.ty;
+            message.desc = JSON.stringify(data, null, 2);
+
+            if (data.ty === 'STATUS') {
+                worker.out = data.out;
+                let vcc = data.system['vcc/mV'];
+                let bat = data.system['bat/mV'];
+                if (vcc < bat) {
+                    // Known power init failure mode.
+                    worker.power.classes = {
+                        "bg-danger": true
+                    };
+                } else if (bat < 3300) {
+                    worker.power.classes = {
+                        "bg-warning": true
+                    };
+                } else {
+                    worker.power.classes = {
+                        "bg-primary": true
+                    };
+                }
+                worker.power.desc = bat + 'mV (Vcc=' + vcc + 'mV)';
+            } else if (data.ty === 'SENSOR_CACHE') {
+                worker.readings = worker.readings.concat(data.val);
+            } else {
+                message.status = 'unknown';
+                message.head = `?${data.ty}?`;
+            }
+        }
+        worker.messages.unshift(message);
+    }
 }
+
+const worker_pool = new WorkerPool();
 
 // ViewModel / View.
 // Since we update all frame all the time, we don't care about MVVM framework / bindings etc.
@@ -390,7 +401,7 @@ client.start();
 
 new Vue({
     el: '#tab_workers',
-    data: model,
+    data: worker_pool,
     methods: {
         command(msg) {
             bridge.send_command(msg);
@@ -438,7 +449,6 @@ new Vue({
         readings() {
             // return [1, 3,2];
             return this.workers[0].readings.concat([]); // copy
-
         }
     }
 });
@@ -473,7 +483,8 @@ new Vue({
 new Vue({
     el: '#sidepanel',
     data: {
-        active_pane: "Plan"
+        active_pane: "Plan",
+        worker_pool: worker_pool,
     },
     methods: {
         update_pane(new_active) {
