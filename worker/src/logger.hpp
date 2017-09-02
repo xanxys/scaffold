@@ -53,6 +53,28 @@ public:
     print(',');
   }
 
+  // Print escaped string.
+  void print_str(const char* s, uint8_t size) {
+    print('"');
+    for (uint8_t i = 0; i < size; i++) {
+      char c = *s;
+      if (c == '"') {
+        print("\\\"");
+      } else if (c == '\n') {
+        print("\\n");
+      } else if (c < 0x20 || c >= 0x7f) {
+        print("\\x");
+        print(format_half_byte(c >> 4));
+        print(format_half_byte(c & 0xf));
+      } else {
+        print(c);
+      }
+      s++;
+    }
+    print('"');
+  }
+
+  // Print escaped 0-terminated string.
   void print_str(const char* s) {
     print('"');
     while(*s != 0) {
@@ -84,6 +106,14 @@ public:
 
   void send_soon() {
     send_async = true;
+  }
+private:
+  inline static char format_half_byte(uint8_t v) {
+    if (v < 10) {
+      return '0' + v;
+    } else {
+      return 'A' + (v - 10);
+    }
   }
 };
 

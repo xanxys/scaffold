@@ -378,12 +378,16 @@ private:
     request_log.print((uint16_t) sensor.get_bat_mv());
     request_log.print(',');
 
-    request_log.print_dict_key("data_recv/B");
+    request_log.print_dict_key("recv/B");
     request_log.print(twelite.get_data_bytes_recv());
     request_log.print(',');
 
-    request_log.print_dict_key("data_sent/B");
+    request_log.print_dict_key("sent/B");
     request_log.print(twelite.get_data_bytes_sent());
+    request_log.print(',');
+
+    request_log.print_dict_key("id");
+    request_log.print(twelite.get_device_id());
 
     request_log.print('}');
   }

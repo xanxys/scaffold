@@ -211,8 +211,8 @@ void actions_loop1ms() {
 int main() {
   // Init arduino core things (e.g. Timer0).
   init();
+  twelite.init();
 
-  Serial.begin(38400);
   #ifdef WORKER_TYPE_BUILDER
   indicator.flash_blocking();
   #endif
@@ -232,6 +232,6 @@ int main() {
   #ifdef WORKER_TYPE_BUILDER
   indicator.flash_blocking();
   #endif
-  twelite.info("worker:init2");
+  twelite.info("init2");
   command_processor.loop();
 }

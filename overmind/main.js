@@ -182,9 +182,12 @@ class ScaffoldModel {
 
     handle_payload(payload) {
         let worker = this.workers[0];
+        console.log(payload);
 
         let handled = true;
-        if (payload.ty === 'STATUS') {
+        if (payload.ty === undefined) {
+          handled = false;
+        } else if (payload.ty === 'STATUS') {
             worker.out = payload.out;
             let vcc = payload.system['vcc/mV'];
             let bat = payload.system['bat/mV'];
@@ -543,3 +546,5 @@ new Vue({
         }
     }
 });
+
+global.send_command = send_command;
