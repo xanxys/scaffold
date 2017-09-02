@@ -58,9 +58,9 @@
 
                     <pane-control name="Workers" v-bind:active="active_pane" v-on:change="update_pane"></pane-control>
                     <div id="workers">
-                        <div class="panel panel-info">
+                        <div class="panel panel-info" v-for="worker in worker_pool.workers">
                             <div class="panel-heading">
-                                <h2 class="panel-title"><span class="glyphicon glyphicon-ok"></span> Worker #1</h2>
+                                <h2 class="panel-title"><span class="glyphicon glyphicon-ok"></span> Worker #{{worker.addr}}</h2>
                             </div>
                             <div class="panel-body">
                                 <div>
@@ -68,17 +68,7 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h2 class="panel-title"><span class="glyphicon glyphicon-remove"></span> Feeder (RS) #1</h2>
-                            </div>
-                            <div class="panel-body">
-                                <div>
-                                  Idle; Stock:4/5
-                                </div>
-                            </div>
-                        </div>
+                        <div v-bind:class="{'alert': true, 'alert-info': !has_uninit, 'alert-danger': has_uninit}" role="alert">{{uninit_desc}}</div>
                     </div>
                 </div>
 

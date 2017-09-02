@@ -110,13 +110,19 @@ class ScaffoldModel {
 class WorkerPool {
     constructor() {
         this.workers = [];
+        this.last_uninit = null;
     }
 
     handle_datagram(packet) {
+        if (packet.src === 0) {
+            this.last_uninit = new Date();
+            return;
+        }
+
         let worker = this.workers.find(w => w.addr === packet.src);
         if (worker !== undefined) {
             this.handle_datagram_in_worker(worker, packet);
-        } else if (packet.src !== 0) {
+        } else {
             let worker = {
                 addr: packet.src,
                 messages: [],
@@ -485,6 +491,23 @@ new Vue({
     data: {
         active_pane: "Plan",
         worker_pool: worker_pool,
+        unit_ref_now: new Date(),
+    },
+    created() {
+      this.timer = setInterval(() => this.unit_ref_now = new Date(), 800);
+    },
+    computed: {
+      has_uninit() {
+        return this.worker_pool.last_uninit !== null;
+      },
+      uninit_desc() {
+        if (this.worker_pool.last_uninit === null) {
+          return "All workers have good addresses so far.";
+        } else {
+          let stale = this.unit_ref_now - this.worker_pool.last_uninit;
+          return "SrcAddr=0 observed ${staleness*1e-3} seconds ago.";
+        }
+      },
     },
     methods: {
         update_pane(new_active) {
