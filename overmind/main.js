@@ -534,3 +534,5 @@ new Vue({
 });
 
 global.send_command = bridge.send_command;
+
+bridge.send_command('p');
