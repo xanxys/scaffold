@@ -1,6 +1,12 @@
 #pragma once
 
-#include "hardware.hpp"
+#ifdef WORKER_TYPE_BUILDER
+#include "hardware_builder.hpp"
+#endif
+
+#ifdef WORKER_TYPE_FEEDER
+#include "hardware_feeder.hpp"
+#endif
 
 const int N_SERVOS = 2;
 const int CIX_A = 0;

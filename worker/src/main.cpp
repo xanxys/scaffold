@@ -31,7 +31,9 @@ public:
         twelite.warn("too long command");
         continue;
       }
+      #ifdef WORKER_TYPE_BUILDER
       indicator.flash_blocking();
+      #endif
       request_log.clear();
 
       char code = read();
@@ -211,7 +213,9 @@ int main() {
   init();
 
   Serial.begin(38400);
+  #ifdef WORKER_TYPE_BUILDER
   indicator.flash_blocking();
+  #endif
   twelite.info("init1");
 
   Timer1.initialize(1000L /* usec */);
@@ -225,7 +229,9 @@ int main() {
     actions.enqueue(action);
   }
 
+  #ifdef WORKER_TYPE_BUILDER
   indicator.flash_blocking();
+  #endif
   twelite.info("worker:init2");
   command_processor.loop();
 }

@@ -61,22 +61,29 @@ scons writefuse
 
 First time & whenever code is changed:
 ```
-scons write
+scons write-builder
+```
+or
+```
+scons write-feeder
 ```
 
-Just compile:
+Just compile and see resulting FW size:
 ```
 scons
 ```
 
+## Worker command
 
-## Worker (Builder) Commands
+* p: print status
+* e: enqueue actions
 
-approach and unscrew
+Action will differ.
+
+
+## Actions
+
+e.g.
 ```
-e1000s-100t100/e1000t0/e1s0
+eA123BCD-23
 ```
-
-* R: 0 (up), 50~60 (ortho)
-* O: 30 (center)
-* D: ?

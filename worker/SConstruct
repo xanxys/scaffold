@@ -1,34 +1,47 @@
 arch="atmega328p"
 
-
-#arduino_root = "/usr/share/arduino/hardware/arduino/cores/arduino"
-
-files = Glob('lib/*.cpp') + Glob('lib/*.c') + ["build/main.cpp"]
-
-
 VariantDir('build','src')
 
+####################################################################################################
 # common code
 env=Environment(
     AS="avr-as",
     CC='avr-gcc',
     CXX="avr-gcc",
-    CCFLAGS ="-D F_CPU=16000000L -mmcu=%s -std=c++11 -Wall -Os -funroll-loops -I./lib -I%s -fdata-sections -ffunction-sections"%(arch, "/usr/share/arduino/hardware/arduino/avr/variants/standard"),
+    CCFLAGS="-D F_CPU=16000000L -mmcu=%s -std=c++11 -Wall -Os -funroll-loops -I./lib -I%s -fdata-sections -ffunction-sections"%(arch, "/usr/share/arduino/hardware/arduino/avr/variants/standard"),
     LINKFLAGS="-mmcu=%s -Wl,--gc-sections"%arch)
 
 env.Append(BUILDERS=
     {"Copy":Builder(action="avr-objcopy $SOURCE -O ihex $TARGET")
     ,"Dump":Builder(action="avr-objdump -dSr $SOURCE > $TARGET")
     ,"WriteProg":Builder(action="avrdude -p m328p -c usbasp -U flash:w:$SOURCE:i")
+    ,"CheckSize":Builder(action="avr-size $SOURCE")
     })
 
-# env.Alias('compile',env.Program('build/libs.o', Glob('lib/*.cpp')))
-env.Alias('compile',env.Program('build/fw.elf', files))
-env.Alias('compile',env.Copy('build/fw.hex', 'build/fw.elf'))
-env.Alias('compile',env.Dump('build/disasm.S', 'build/fw.elf'))
 # http://www.engbedded.com/fusecalc/
 # 16MHz 1:1, fast start, no watchdog
-env.Alias('writefuse',env.Command('forever-non-existent', None, "avrdude -p m328p -c usbasp -U lfuse:w:0xfe:m -U hfuse:w:0xd9:m"))
-env.Alias('write',env.WriteProg(None, 'build/fw.hex'))
+env.Alias('writefuse',env.Command('fake-fuse', None, "avrdude -p m328p -c usbasp -U lfuse:w:0xfe:m -U hfuse:w:0xd9:m"))
 
-env.Default('compile')
+env.Library('build/libs.a', Glob('lib/*.cpp') + Glob('lib/*.c'))
+
+####################################################################################################
+# different FWs
+
+env.Object('build/builder-main.o', 'build/main.cpp', CPPDEFINES=['WORKER_TYPE_BUILDER'])
+env.Object('build/feeder-main.o', 'build/main.cpp', CPPDEFINES=['WORKER_TYPE_FEEDER'])
+
+env.Program('build/builder-fw.elf', ['build/builder-main.o', 'build/libs.a'])
+env.Copy('build/builder-fw.hex', 'build/builder-fw.elf')
+env.Dump('build/builder-disasm.S', 'build/builder-fw.elf')
+
+env.Program('build/feeder-fw.elf', ['build/feeder-main.o', 'build/libs.a'])
+env.Copy('build/feeder-fw.hex', 'build/feeder-fw.elf')
+env.Dump('build/feeder-disasm.S', 'build/feeder-fw.elf')
+
+env.Alias('write-builder', env.WriteProg(None, 'build/builder-fw.hex'))
+env.Alias('write-feeder', env.WriteProg(None, 'build/feeder-fw.hex'))
+
+env.Alias('size-builder', env.CheckSize('fake-sz-builder', 'build/builder-fw.elf'))
+env.Alias('size-feeder', env.CheckSize('fake-sz-feeder', 'build/feeder-fw.elf'))
+
+env.Default('size-builder', 'size-feeder')

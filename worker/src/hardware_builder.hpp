@@ -9,7 +9,6 @@
 
 #include "hardware_twelite.hpp"
 
-
 class Indicator {
 private:
   bool error;

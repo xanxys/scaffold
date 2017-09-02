@@ -1,10 +1,13 @@
-# Worker V2 (S60C-T)
+# Worker (Builder 2.0: S60C-TB, Feeder 1.0: S60C-FD-x)
 
+Builder 2.0
 * PCB DD & Eratta: https://docs.google.com/document/d/1Juym4ehH7gGHqDHJOSv_l-aBb0Xs5iWDp3gg6BylRzI/edit
 * Designs
   * Hardware: Autodesk Fusion360 cloud
   * PCB: Eagle
     * 2.0: https://drive.google.com/file/d/0B6zCoyeuDn-pWUhYQTVqWkgwS1E/view?usp=sharing
+
+Feeder 1.0
 
 ## Error Handling Policy
 
@@ -12,12 +15,7 @@
 * Analog data (duration, pos, vel): Clip & warn
 
 
-## Size Shrink Tips
-```
-scons; and avr-size build/fw.elf
-```
-
-## Pin assigment / connections (V2)
+## Builder Pin assigment / connections (V2)
 ATmega328P
 
 16MHz (ceralock) / 1:1 clock division / No watchdog
@@ -80,3 +78,7 @@ DRV8830 (3/3)
 
 * OUT: Extension motor (screw)
 * Addr[3:0]: 0010 (A0: H, A1: L)
+
+
+## Feeder Pin assigment / connections (1.x)
+ATmega328P
