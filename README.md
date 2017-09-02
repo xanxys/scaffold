@@ -73,17 +73,39 @@ Just compile and see resulting FW size:
 scons
 ```
 
-## Worker command
+# Communication Protocol Stack
+
+## Commands
 
 * p: print status
 * e: enqueue actions
 
-Action will differ.
+```
+Command
+  = "p"
+  | "e" Action+
+```
 
-
-## Actions
+```
+Action = [Duration ms : 2] ([ActionTarget ASCII: 1] [ActionVal int : 1]*)*
+```
 
 e.g.
 ```
 eA123BCD-23
+```
+
+## Addressing
+
+Everything is in big endian.
+
+overmind -> worker
+```
+Packet = [dest addr : 4] Command
+```
+When addr = 0xffffffff, it means broadcasting.
+
+worker -> overmind
+```
+Packet = [src addr : 4] [worker timestamp in millisec : 4] [JSON ascii : N]
 ```

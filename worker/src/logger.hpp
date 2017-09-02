@@ -47,10 +47,6 @@ public:
     print_dict_key("ty");
     print_str(ty);
     print(',');
-
-    print_dict_key("t/ms");
-    print(millis());
-    print(',');
   }
 
   // Print escaped string.

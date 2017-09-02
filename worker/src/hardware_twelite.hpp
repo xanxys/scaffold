@@ -2,16 +2,16 @@
 
 #include <EEPROM.h>
 
+#include "slice.hpp"
 #include "logger.hpp"
 
 // Parse ":..." ASCII messages from standard TWELITE MWAPP.
 class TweliteInterface {
 private:
   // RX buffer.
-  // Command without ":" or newlines.
+  // Decodex command without ":" or newlines, but includes checksum.
   const static uint8_t BUF_SIZE = 150;
-  char buffer[BUF_SIZE];
-  uint8_t size;
+  uint8_t buffer[BUF_SIZE];
 
   // TX buffer.
   Logger<70> warn_log;
@@ -20,15 +20,15 @@ private:
   uint32_t data_bytes_sent = 0;
   uint32_t data_bytes_recv = 0;
 
-  struct RecvCommandResult {
-    bool overflow : 1;
-    bool is_command : 1;
-  };
-  bool first = true;
-
   const uint32_t UID_EEPROM_ADDR = 0;
 
   uint32_t uid = 0;
+
+  enum class RecvResult : uint8_t {
+    OK,
+    OVERFLOW,
+    INVALID
+  };
 public:
   void init() {
     Serial.begin(38400);
@@ -51,41 +51,24 @@ public:
     return uid;
   }
 
-
-  // 0: overflown
-  uint8_t get_datagram(uint8_t* data_ptr, uint8_t data_size) {
+  // Wait for next datagram addressed (including broadcast) to this device.
+  // retval: slice of buffer held by this instance. returns invalid slice when overflown.
+  MaybeSlice get_datagram() {
     while (true) {
-      RecvCommandResult res = receive_command();
-      if (res.overflow) {
-        return 0;
+      MaybeSlice packet;
+      RecvResult res = receive_modbus_command(&packet);
+      if (res == RecvResult::INVALID) {
+        continue;
+      } else if (res == RecvResult::OVERFLOW) {
+        return MaybeSlice();
       }
 
-      // Filter / validate.
-      // 6 = target(2) + command(2) + data(N) + checksum(2)
-      if (size < 6 || size % 2 != 0) {
-        warn("too small packet");
-        continue;
-      }
-      if (memcmp(buffer, "0001", 4) != 0) {
-        // There are so many noisy packets (e.g. auto-local echo), we shouldn't
-        // treat them as warning.
-        continue;
-      }
-      break;
-    }
-
-    uint8_t data_ix = 0;
-    for (int i = 4; i < size - 2; i += 2) {
-      if (data_ix < data_size) {
-        data_ptr[data_ix] =
-          (decode_nibble(buffer[i]) << 4) | decode_nibble(buffer[i+1]);
-        data_ix++;
-      } else {
-        return 0;
+      packet = validate_and_extract_modbus(packet);
+      packet = validate_and_extract_overmind(packet);
+      if (packet.is_valid()) {
+        return packet;
       }
     }
-    data_bytes_recv += data_ix;
-    return data_ix;
   }
 
   // Send specified buffer.
@@ -93,6 +76,9 @@ public:
   void send_datagram(const char* ptr, uint8_t size) {
     // Parent, Send
     Serial.write(":0001");
+    // Overmind info.
+    send_u32_be(uid);
+    send_u32_be(millis());
     // Data in hex.
     for(uint8_t i = 0; i < size; i++) {
       send_byte(ptr[i]);
@@ -137,6 +123,50 @@ public:
     return data_bytes_recv;
   }
 private:
+  void send_u32_be(uint32_t v) {
+    send_byte(v >> 24);
+    send_byte((v >> 16) & 0xff);
+    send_byte((v >> 8) & 0xff);
+    send_byte(v & 0xff);
+  }
+
+  // TWELITE-Modbus level check. We only accept valid ASCII packets with origin=0x00, command=0x01
+  MaybeSlice validate_and_extract_modbus(MaybeSlice modbus_packet) {
+    if (!modbus_packet.is_valid()) {
+      return MaybeSlice();
+    }
+
+    // Filter / validate.
+    // 3 = target(1) + command(1) + data(N) + checksum(1)
+    if (modbus_packet.size < 3) {
+      warn("too small twelite packet");
+      return MaybeSlice();
+    }
+    if (modbus_packet.ptr[0] != 0x00 || modbus_packet.ptr[1] != 0x01) {
+      // There are so many noisy packets (e.g. auto-local echo), we shouldn't
+      // treat them as warning.
+      return MaybeSlice();
+    }
+    return modbus_packet.trim(2, 1);
+  }
+
+  MaybeSlice validate_and_extract_overmind(MaybeSlice ovm_packet) {
+    if (!ovm_packet.is_valid()) {
+      return MaybeSlice();
+    }
+
+    // OvmPacket = <Addr : 4> <datagram>
+    if (ovm_packet.size < 4) {
+      warn("no address");
+      return MaybeSlice();
+    }
+    uint32_t addr = ovm_packet.u32_be();
+    if (addr != uid && addr != 0xffffffff) {
+      return MaybeSlice();
+    }
+    return ovm_packet.trim(4, 0);
+  }
+
   uint32_t intercept_header() {
     // Search SID=xxxx. Abandon at 100B.
     uint8_t n_read = 0;
@@ -215,28 +245,51 @@ private:
     }
   }
 
-  RecvCommandResult receive_command() {
+  RecvResult receive_modbus_command(MaybeSlice* out_slice) {
     while (getch_concurrent() != ':');
 
-    RecvCommandResult result;
-    result.overflow = false;
-    result.is_command = true;
-    size = 0;
+    uint8_t size = 0;
+    bool first_nibble = true;
+    uint8_t v_temp = 0;
     while (true) {
       char c = getch();
       if (c == '\r' || c == '\n') {
-        return result;
+        if (first_nibble) {
+          return RecvResult::INVALID;  // last byte was incomplete.
+        } else {
+          *out_slice = MaybeSlice(buffer, size);
+          return RecvResult::OK;
+        }
       } else if (c == ':') {
         warn("unexpected':'");
+        return RecvResult::INVALID;
       } else if (c == '!') {
         warn("unexpected'!");
+        return RecvResult::INVALID;
       } else {
-        if (size < BUF_SIZE) {
-          buffer[size] = c;
-          size++;
-        } else {
-          result.overflow = true;
+        v_temp <<= 4;
+        v_temp |= decode_nibble(c);
+        first_nibble = !first_nibble;
+
+        if (first_nibble) {
+          if (size < BUF_SIZE) {
+            buffer[size] = v_temp;
+            v_temp = 0;
+            size++;
+          } else {
+            consume_this_command();
+            return RecvResult::OVERFLOW;
+          }
         }
+      }
+    }
+  }
+
+  void consume_this_command() {
+    while (true) {
+      char c = getch();
+      if (c == '\r' || c == '\n') {
+        return;
       }
     }
   }

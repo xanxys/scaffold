@@ -16,21 +16,20 @@ ActionExecutorSingleton actions;
 //
 class CommandProcessorSingleton {
 private:
-  const static uint8_t BUF_SIZE = 70;
-  char buffer[BUF_SIZE];
+  MaybeSlice datagram;  // dependent on buffer inside twelite.
   int r_ix;
-  int size;
 public:
-  CommandProcessorSingleton() : r_ix(0), size(0) {}
+  CommandProcessorSingleton() : r_ix(0) {}
 
   void loop() {
     while (true) {
-      r_ix = 0;
-      size = twelite.get_datagram(reinterpret_cast<uint8_t*>(buffer), BUF_SIZE);
-      if (size == 0) {
+      datagram = twelite.get_datagram();
+      if (!datagram.is_valid()) {
         twelite.warn("too long command");
         continue;
       }
+      r_ix = 0;
+
       #ifdef WORKER_TYPE_BUILDER
       indicator.flash_blocking();
       #endif
@@ -53,8 +52,8 @@ private:
   // Consume next byte if it matches target (return true).
   // If it doesn't match, doesn't consume anything (return false).
   bool consume(char target) {
-    if (r_ix < size) {
-      if (buffer[r_ix] == target) {
+    if (r_ix < datagram.size) {
+      if (datagram.ptr[r_ix] == target) {
         r_ix++;
         return true;
       }
@@ -63,20 +62,20 @@ private:
   }
 
   char peek() {
-    if (r_ix < size) {
-      return buffer[r_ix];
+    if (r_ix < datagram.size) {
+      return datagram.ptr[r_ix];
     } else {
       return 0;
     }
   }
 
   bool available() {
-    return r_ix < size;
+    return r_ix < datagram.size;
   }
 
   char read() {
-    if (r_ix < size) {
-      char ret = buffer[r_ix];
+    if (r_ix < datagram.size) {
+      char ret = datagram.ptr[r_ix];
       r_ix++;
       return ret;
     } else {
