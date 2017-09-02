@@ -22,7 +22,21 @@ https://docs.google.com/document/d/1zPHIgSu1AZrwIe-akWDu8TK5ug4Fznx-tUY5lZn-zfI/
 
 ## Overmind
 
-To run overmind,
+First-time only, when you cloned repo, run:
+```
+cd ./overmind
+npm install
+```
+
+To develop / run overmind, you need two consoles.
+
+In one, do the following to compile & setup dynamic reloader for
+```
+cd ./overmind
+npm run dev
+```
+
+Then, in another, to start the app:
 ```
 cd ./overmind
 npm start
