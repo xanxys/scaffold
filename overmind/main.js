@@ -14,6 +14,8 @@ import {
 
 import PaneControl from './pane-control.vue';
 import Bridge from './comm.js';
+import md5 from 'md5';
+import Identicon from 'identicon.js';
 
 
 Vue.component('pane-control', PaneControl);
@@ -125,6 +127,7 @@ class WorkerPool {
         } else {
             let worker = {
                 addr: packet.src,
+                identicon: new Identicon(md5(packet.src), {saturation: 0.5, background: [200, 200, 200, 255], size: 50}),
                 messages: [],
                 out: [],
                 power: {},

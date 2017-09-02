@@ -33,7 +33,9 @@
   "dependencies": {
     "bootstrap": "^3.3.7",
     "chart.js": "^2.6.0",
+    "identicon.js": "^2.3.1",
     "jquery": "^3.2.1",
+    "md5": "^2.2.1",
     "serialport": "^5.0.0",
     "underscore": "^1.8.3",
     "vue": "^2.4.2",
