@@ -77,13 +77,22 @@ port.pipe(parser);
 parser.on('data', data => {
     data = data.trim();
     flash_status();
+    console.log(data);
     if (data.startsWith(':7801')) {
         let payload_hex = data.slice(':7801'.length, -2 /* csum */ );
         let payload = decode_hex(payload_hex);
+
+        let src_addr = new DataView(payload).getUint32(0);
+        let src_ts = new DataView(payload).getUint32(4);
+        let datagram = new Uint8Array(payload, 8);
         let payload_json = null;
         try {
-            payload_json = JSON.parse(payload);
+            payload_json = JSON.parse(String.fromCharCode.apply(String, datagram));
+            payload_json['src'] = src_addr;
+            payload_json['t/ms'] = src_ts;
+            console.log(payload_json);
         } catch (e) {
+            console.log(datagram);
             model.workers[0].messages.unshift('CORRUPT' + payload);
             return;
         }
@@ -102,11 +111,12 @@ function flash_status() {
 }
 
 function decode_hex(hex) {
-    let result = '';
+    let buffer = new ArrayBuffer(hex.length / 2);
+    let view = new Uint8Array(buffer);
     for (let ix = 0; ix < hex.length; ix += 2) {
-        result += String.fromCharCode(parseInt(hex.substr(ix, 2), 16));
+      view[ix / 2] = parseInt(hex.substr(ix, 2), 16);
     }
-    return result;
+    return buffer;
 }
 
 function encode_hex(bytes) {
@@ -114,7 +124,7 @@ function encode_hex(bytes) {
 }
 
 function send_command(command) {
-    let twelite_command = [0x78, 0x01].concat(_.map(command, ch => ch.charCodeAt(0)));
+    let twelite_command = [0x78, 0x01, 0xff, 0xff, 0xff, 0xff].concat(_.map(command, ch => ch.charCodeAt(0)));
 
     let final_command = ':' + encode_hex(twelite_command) + 'X\r\n';
     console.log('send', final_command);
