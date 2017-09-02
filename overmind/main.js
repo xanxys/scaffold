@@ -480,7 +480,7 @@ new Vue({
             if (this.active_pane === 'Plan') {
                 $('#tab_plan').hide();
                 client.stop();
-            } else if (this.active_pane === 'Nodes') {
+            } else if (this.active_pane === 'Workers') {
                 $('#tab_workers').hide();
             }
 
@@ -489,7 +489,7 @@ new Vue({
             if (new_active === 'Plan') {
                 $('#tab_plan').show();
                 client.start();
-            } else if (this.active_pane === 'Nodes') {
+            } else if (this.active_pane === 'Workers') {
                 $('#tab_workers').show();
             }
         }
