@@ -5,22 +5,38 @@
     <meta charset="UTF-8">
     <title>Scaffold Overmind</title>
     <link href="css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 </head>
 
 <body style="background-color: #444">
     <div>
         <nav class="navbar navbar-default" style="background-color: #222">
             <div class="container-fluid">
-                <div class="navbar-header" id="conn-status">
-                    <span v-bind:class="status_class"><span id="conn-icon">●</span> {{status}}</span>
-                    {{path}}
+                <div class="navbar-header" >
+                  <a class="navbar-brand" href="#">S60C</a>
+                </div>
+                <div class="collapse navbar-collapse" id="nav">
+                    <ul class="nav navbar-nav">
+                        <li id="conn-status"><p class="navbar-text"><span v-bind:class="status_class"><i id="conn-icon" class="material-icons">wifi_tethering</i>{{status}}</span> {{path}}</p></li>
+
+                        <li><a href="#" v-on:click="refresh_now" title="Refresh now"><span style="padding-top: 7px" class="glyphicon glyphicon-refresh"></span></a></li>
+                        <li class="dropdown" style="margin-left:-26px; padding-top:9px">
+                            <a class="dropdown-toggle" data-toggle="dropdown" role="button">{{refresh_ago}}<span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#" v-on:click="set_ref_period(5)">Refresh every 5sec</a></li>
+                                <li><a href="#" v-on:click="set_ref_period(15)">Refresh every 15sec</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li><a href="#" v-on:click="set_ref_period(null)">Disable Auto-refresh</a></li>
+                            </ul>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </nav>
 
         <div class="container-fluid">
             <div class="row" style="margin-left: 0">
-                <div id="sidepanel" class="col-md-4" style="background-color: #333; height: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">
+                <div id="sidepanel" class="col-md-3" style="background-color: #333; height: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">
                     <pane-control name="Plan" v-bind:active="active_pane" v-on:change="update_pane"></pane-control>
 
                     <table class="table">
@@ -72,134 +88,20 @@
                     </div>
                 </div>
 
-                <div class="col-md-8">
-                    <div id="tab_plan">
+                <div class="col-md-9">
+                    <div id="tab_plan" style="display: none">
                         <button id="add_rs" class="btn btn-default">+RS</button> Make it DnD
                         <div id="viewport"></div>
                     </div>
 
-                    <div id="tab_workers" style="display: none">
-                        <div class="btn-group dropdown">
-                            <button v-on:click='update_info' class="btn btn-default" title="refresh now">
-                              <span class="glyphicon glyphicon-refresh"></span>
-                            </button>
-                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                              <span class="caret"></span>
-                              <span class="sr-only">Toggle Dropdown</span>
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a href="#">Refresh every 5sec</a></li>
-                                <li><a href="#">Refresh every 15sec</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li><a href="#">Disable Auto-refresh</a></li>
-                            </ul>
-                        </div>
+                    <div id="tab_workers" >
 
                         <button class="btn btn-warning" title="Show raw actions">
                           <span class="glyphicon glyphicon-warning-sign"></span>Show raw actions
                         </button>
 
-
-                        <div class="panel panel-info" v-for="worker in workers">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">Worker <img width="50" height="50" v-bind:src="'data:image/png;base64,' + worker.identicon.toString()"/><span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h3>
-                                <button v-on:click='update_info' class="btn btn-default" title="refresh now">
-                                  <span class="glyphicon glyphicon-refresh"></span>
-                                </button>
-                            </div>
-                            <div class="panel-body">
-                                <div v-bind:class="worker.power.classes">
-                                    <span class="glyphicon glyphicon-off"></span> {{worker.power.desc}}
-                                </div>
-
-                                Carrying: RS, screw<br/>
-
-                                <button v-on:click='extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
-                            Extend
-                          </button>
-
-                                <button v-on:click='shorten()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
-                            Shorten
-                          </button>
-
-
-                                <!-- header -->
-                                <div style="overflow:hidden">
-                                    <div style="float:left">
-                                        <h4>D</h4>
-                                        <button v-on:click='d_up()' class="btn btn-default" title="update">
-                                <span class="glyphicon glyphicon-arrow-up"></span>
-                              </button>
-                                        <br/>
-
-                                        <button v-on:click='d_down()' class="btn btn-default" title="update">
-                                <span class="glyphicon glyphicon-arrow-down"></span>
-                              </button> {{worker.out[0][1]}}
-                                        <br/>
-                                        <button v-on:click='d_downdown()' class="btn btn-warning" title="update">
-                                <span class="glyphicon glyphicon-arrow-down"></span>
-                              </button>
-                                    </div>
-
-                                    <div style="float:left">
-                                        <h4>SCR</h4>
-                                        <button v-on:click='scr_up()' class="btn btn-default" title="update">
-                                <span class="glyphicon glyphicon-arrow-up"></span>
-                              </button>
-                                        <br/>
-                                        <button v-on:click='scr_down()' class="btn btn-default" title="update">
-                                <span class="glyphicon glyphicon-arrow-down"></span>
-                              </button> {{worker.out[0][0]}}
-                                    </div>
-
-                                    <div style="float:left">
-                                        <h4>S</h4> {{worker.out[1][2]}}
-                                        <br/>
-
-                                        <button v-on:click="command('e1s100')" class="btn btn-default" title="unfasten screw">
-                                unlock
-                              </button>
-                                        <button v-on:click="command('e1s0')" class="btn btn-default" title="stop screw">
-                                <span class="glyphicon glyphicon-stop"></span>
-                              </button>
-                                        <button v-on:click="command('e1s-100')" class="btn btn-default" title="fasten screw">
-                                lock
-                              </button>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h4>T</h4>
-                                    <button v-on:click="command('e500t-70T30,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
-                              <span class="glyphicon glyphicon-arrow-up"></span>
-                            </button>
-                                    <button v-on:click='t_step_f()' class="btn btn-default" title="go forward for a moment">
-                              <span class="glyphicon glyphicon-arrow-up"></span>
-                            </button> {{worker.out[1][0]}}
-                                    <br/>
-                                    <button v-on:click="command('e500t70T30,1!t0')" class="btn btn-primary" title="Find origin baclward(500ms)">
-                              <span class="glyphicon glyphicon-arrow-down"></span>
-                            </button>
-                                    <button v-on:click='t_step_b()' class="btn btn-default" title="go backward for a moment">
-                              <span class="glyphicon glyphicon-arrow-down"></span>
-                            </button> O:{{worker.out[1][1]}}
-
-                                    <line-chart :width="300" :height="200" :data="worker.readings"></line-chart>
-                                </div>
-
-                                <div class="panel" v-for="msg in worker.messages" v-bind:class="{'panel-default': msg.status == 'known', 'panel-warning': msg.status == 'unknown', 'panel-danger': msg.status == 'corrupt'}" v-bind:title="msg.desc">
-                                    <div class="panel-heading">
-                                        {{msg.timestamp}}<h3 class="panel-title">{{msg.head}}</h3>
-                                    </div>
-                                    <div v-if="msg.status != 'known'">
-                                        <pre>{{msg.desc}}</pre>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <worker-card v-bind:worker="worker" v-for="worker in workers"></worker-card>
                     </div>
-
-
                 </div>
             </div>
         </div>

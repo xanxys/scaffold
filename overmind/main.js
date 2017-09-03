@@ -12,13 +12,15 @@ import {
     Line
 } from 'vue-chartjs';
 
-import PaneControl from './pane-control.vue';
 import Bridge from './comm.js';
 import md5 from 'md5';
 import Identicon from 'identicon.js';
 
-
+// Components.
+import PaneControl from './pane-control.vue';
+import WorkerCard from './worker-card.vue';
 Vue.component('pane-control', PaneControl);
+Vue.component('worker-card', WorkerCard);
 
 Vue.component('line-chart', {
     extends: Line,
@@ -128,7 +130,11 @@ class WorkerPool {
             let worker = {
                 addr: packet.src,
                 wtype: null,
-                identicon: new Identicon(md5(packet.src), {saturation: 0.5, background: [200, 200, 200, 255], size: 50}),
+                identicon: new Identicon(md5(packet.src), {
+                    saturation: 0.5,
+                    background: [200, 200, 200, 255],
+                    size: 50
+                }),
                 messages: [],
                 out: [],
                 power: {},
@@ -413,106 +419,85 @@ client.start();
 new Vue({
     el: '#tab_workers',
     data: worker_pool,
-    methods: {
-        command(msg) {
-            bridge.send_command(msg);
-        },
-
-        update_info() {
-            this.command('p');
-        },
-
-        extend() {
-            this.command('e500a29,500t-60,300b22s-20,5000t50s-100,400b10,500s0t70T30,300t0a11');
-        },
-
-        shorten() {
-            this.command('e500a29,800t-70,300b21,3000s70b22t-30,600b10s0t60T30,500t0a11');
-        },
-
-        scr_up() {
-            this.command('e300a11');
-        },
-
-        scr_down() {
-            this.command('e300a29');
-        },
-
-        d_up() {
-            this.command('e400b10');
-        },
-
-        d_down() {
-            this.command('e400b20');
-        },
-        d_downdown() {
-            this.command('e400b22');
-        },
-        t_step_f() {
-            this.command('e100t-70,1!t0');
-        },
-
-        t_step_b() {
-            this.command('e100t70,1!t0');
-        },
-    },
-    computed: {
-        readings() {
-            // return [1, 3,2];
-            return this.workers[0].readings.concat([]); // copy
-        }
-    }
 });
 
-
 new Vue({
-    el: '#conn-status',
-    data: {
-        port: bridge,
-    },
-    computed: {
-        status() {
-            if (this.port.isOpen) {
-                return 'connected';
-            } else {
-                return 'cutoff'
-            }
-        },
-        status_class() {
-            if (this.port.isOpen) {
-                return 'text-success';
-            } else {
-                return 'text-muted';
-            }
-        },
-        path() {
-            return this.port.path;
+  el: '#nav',
+  data: {
+    port: bridge,
+    ref_now: new Date(),
+    last_refresh: null,
+    period: 15
+  },
+  created() {
+      this.timer = setInterval(() => {
+        this.ref_now = new Date();
+        if (this.last_refresh == null || (this.period != null && this.ref_now - this.last_refresh > this.period * 1e3)) {
+          this.refresh_now();
         }
+      }, 1000);
+  },
+  computed: {
+    refresh_ago() {
+      let autoref = (this.period !== null) ? `(auto: every ${this.period} sec)` : '(auto disabled)'
+      if (this.last_refresh !== null) {
+        let delta_sec = Math.floor(Math.max(0, this.ref_now - this.last_refresh) * 1e-3);
+        return `Last refreshed ${delta_sec} sec ago ${autoref}`;
+      } else {
+        return `Never refreshed ${autoref}`;
+      }
+    },
+    status() {
+        if (this.port.isOpen) {
+            return 'connected';
+        } else {
+            return 'cutoff'
+        }
+    },
+    status_class() {
+        if (this.port.isOpen) {
+            return 'text-success';
+        } else {
+            return 'text-muted';
+        }
+    },
+    path() {
+        return this.port.path;
     }
+  },
+  methods: {
+    refresh_now() {
+      bridge.send_command('p');
+      this.last_refresh = new Date();
+    },
+    set_ref_period(period) {
+      this.period = period;
+    }
+  }
 });
 
 new Vue({
     el: '#sidepanel',
     data: {
-        active_pane: "Plan",
+        active_pane: "Workers",
         worker_pool: worker_pool,
         unit_ref_now: new Date(),
     },
     created() {
-      this.timer = setInterval(() => this.unit_ref_now = new Date(), 800);
+        this.timer = setInterval(() => this.unit_ref_now = new Date(), 800);
     },
     computed: {
-      has_uninit() {
-        return this.worker_pool.last_uninit !== null;
-      },
-      uninit_desc() {
-        if (this.worker_pool.last_uninit === null) {
-          return "All workers have good addresses so far.";
-        } else {
-          let stale = this.unit_ref_now - this.worker_pool.last_uninit;
-          return "SrcAddr=0 observed ${staleness*1e-3} seconds ago.";
-        }
-      },
+        has_uninit() {
+            return this.worker_pool.last_uninit !== null;
+        },
+        uninit_desc() {
+            if (this.worker_pool.last_uninit === null) {
+                return "All workers have good addresses so far.";
+            } else {
+                let stale = this.unit_ref_now - this.worker_pool.last_uninit;
+                return "SrcAddr=0 observed ${staleness*1e-3} seconds ago.";
+            }
+        },
     },
     methods: {
         update_pane(new_active) {
@@ -536,5 +521,3 @@ new Vue({
 });
 
 global.send_command = bridge.send_command;
-
-bridge.send_command('p');
