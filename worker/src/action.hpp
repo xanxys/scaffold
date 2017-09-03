@@ -319,6 +319,16 @@ public:
   void print() const {
     request_log.begin_std_dict("STATUS");
 
+    request_log.print_dict_key("wtype");
+    #ifdef WORKER_TYPE_BUILDER
+    request_log.print_str("builder");
+    #elif defined WORKER_TYPE_FEEDER
+    request_log.print_str("feeder");
+    #else
+    request_log.print("null");
+    #endif
+    request_log.print(',');
+
     request_log.print_dict_key("out");
     print_output_json();
     request_log.print(',');
@@ -384,10 +394,6 @@ private:
 
     request_log.print_dict_key("sent/B");
     request_log.print(twelite.get_data_bytes_sent());
-    request_log.print(',');
-
-    request_log.print_dict_key("id");
-    request_log.print(twelite.get_device_id());
 
     request_log.print('}');
   }
