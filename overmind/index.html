@@ -60,7 +60,7 @@
                     <div id="workers">
                         <div class="panel panel-info" v-for="worker in worker_pool.workers">
                             <div class="panel-heading">
-                                <h2 class="panel-title"><span class="glyphicon glyphicon-ok"></span> Worker<img width="25" height="25" v-bind:src="'data:image/png;base64,' + worker.identicon.toString()"/> #{{worker.addr}}</h2>
+                                <h2 class="panel-title"><img width="25" height="25" v-bind:src="'data:image/png;base64,' + worker.identicon.toString()"/> {{worker.wtype}} <span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h2>
                             </div>
                             <div class="panel-body">
                                 <div>

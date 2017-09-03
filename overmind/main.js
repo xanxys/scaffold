@@ -127,6 +127,7 @@ class WorkerPool {
         } else {
             let worker = {
                 addr: packet.src,
+                wtype: null,
                 identicon: new Identicon(md5(packet.src), {saturation: 0.5, background: [200, 200, 200, 255], size: 50}),
                 messages: [],
                 out: [],
@@ -158,6 +159,7 @@ class WorkerPool {
             message.desc = JSON.stringify(data, null, 2);
 
             if (data.ty === 'STATUS') {
+                worker.wtype = data.wtype;
                 worker.out = data.out;
                 let vcc = data.system['vcc/mV'];
                 let bat = data.system['bat/mV'];
