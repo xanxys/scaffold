@@ -10,7 +10,7 @@
 
 <body style="background-color: #444">
     <div>
-        <nav class="navbar navbar-default" style="background-color: #222">
+        <nav class="navbar navbar-default" style="background-color: #222; border-radius: 3px;">
             <div class="container-fluid">
                 <div class="navbar-header" >
                   <a class="navbar-brand" href="#">S60C</a>
@@ -74,17 +74,16 @@
 
                     <pane-control name="Workers" v-bind:active="active_pane" v-on:change="update_pane"></pane-control>
                     <div id="workers">
-                        <div class="panel panel-info" v-for="worker in worker_pool.workers">
-                            <div class="panel-heading">
-                                <h2 class="panel-title"><img width="25" height="25" v-bind:src="'data:image/png;base64,' + worker.identicon.toString()"/> {{worker.wtype}} <span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h2>
-                            </div>
-                            <div class="panel-body">
-                                <div>
-                                    Carrying RS
-                                </div>
-                            </div>
-                        </div>
-                        <div v-bind:class="{'alert': true, 'alert-info': !has_uninit, 'alert-danger': has_uninit}" role="alert">{{uninit_desc}}</div>
+                      <table>
+                        <tbody>
+                          <tr v-for="worker in worker_pool.workers">
+                            <td>
+                              <h4><img width="25" height="25" v-bind:src="'data:image/png;base64,' + worker.identicon.toString()"/> {{worker.wtype}} <span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h4>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div v-bind:class="{'alert': true, 'alert-info': !has_uninit, 'alert-danger': has_uninit}" role="alert">{{uninit_desc}}</div>
                     </div>
                 </div>
 

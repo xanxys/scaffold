@@ -1,8 +1,8 @@
 <template>
-<div class="panel panel-info">
-    <div class="panel-heading">
-        <h2 class="panel-title"><img width="50" height="50" v-bind:src="'data:image/png;base64,' + worker.identicon.toString()"/>{{worker.wtype}} <span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h2>
-        <button v-on:click='update_info' class="btn btn-default" title="refresh now">
+<div class="material-card-1">
+    <div class="panel-heading" style="overflow:hidden">
+        <h3 style="margin-top: 8px; float: left"><img width="32" height="32" v-bind:src="'data:image/png;base64,' + worker.identicon.toString()"/> {{worker.wtype}} <span style="font-size:70%; color: lightgray">{{worker.addr}}</span></h3>
+        <button style="float:right" v-on:click='update_info' class="btn btn-default" title="refresh now">
           <span class="glyphicon glyphicon-refresh"></span>
         </button>
     </div>
@@ -11,7 +11,7 @@
           <div v-bind:class="worker.power.classes">
             <span class="glyphicon glyphicon-off"></span> {{worker.power.desc}}
           </div>
-          Carrying: RS, screw
+          <b>{{desc_plan}}</b>
         </div>
 
         <div class="col-md-4">
@@ -89,16 +89,19 @@
           </div>
         </div>
 
-        <div class="col-md-2">
-          <div class="panel" v-for="msg in worker.messages" v-bind:class="{'panel-default': msg.status == 'known', 'panel-warning': msg.status == 'unknown', 'panel-danger': msg.status == 'corrupt'}" v-bind:title="msg.desc">
-            <div class="panel-heading">
-                {{msg.timestamp}}
-                <h3 class="panel-title">{{msg.head}}</h3>
-            </div>
-            <div v-if="msg.status != 'known'">
-                <pre>{{msg.desc}}</pre>
-            </div>
-          </div>
+        <div class="col-md-3">
+          <table class="table">
+           <tbody style="max-height: 250px; overflow-y: auto; display: block">
+             <tr v-for="msg in worker.messages" v-bind:class="{'default': msg.status == 'known', 'warning': msg.status == 'unknown', 'danger': msg.status == 'corrupt'}" v-bind:title="msg.desc">
+               <td>{{msg.timestamp}}</td>
+               <td>{{msg.head}}
+                 <div v-if="msg.status != 'known'">
+                   <pre>{{msg.desc}}</pre>
+                 </div>
+               </td>
+             </tr>
+           </tbody>
+          </table>
         </div>
     </div>
 </div>
@@ -157,11 +160,19 @@ export default {
         readings() {
             // return [1, 3,2];
             return this.worker.readings.concat([]); // copy
+        },
+        desc_plan() {
+          // if (this.worker.wtype == '')
+          return 'Idle';
         }
     }
 }
 </script>
 
 <style>
-
+.material-card-1 {
+  background-color: #333;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
 </style>
