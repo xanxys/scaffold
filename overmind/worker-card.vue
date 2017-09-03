@@ -15,16 +15,29 @@
         </div>
 
         <div class="col-md-4">
-          <button v-on:click='extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
-            Extend
-          </button>
-          <button v-on:click='shorten()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
-            Shorten
-          </button>
+          <div v-if="worker.wtype === 'builder'">
+            <button v-on:click='extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
+              Extend
+            </button>
+            <button v-on:click='shorten()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
+              Shorten
+            </button>
+          </div>
+          <div v-if="worker.wtype === 'feeder'">
+          </div>
 
           <div v-if="show_raw">
             <!-- Top Panel -->
-            <div style="overflow:hidden">
+            <div v-if="worker.wtype === 'feeder'" style="overflow:hidden">
+              <h4>G</h4>
+              <button v-on:click="command('e1a17')" class="btn btn-default">
+                close
+              </button>
+              <button v-on:click="command('e1a25')" class="btn btn-default">
+                open
+              </button>
+            </div>
+            <div v-if="worker.wtype === 'builder'" style="overflow:hidden">
                 <div style="float:left">
                     <h4>D</h4>
                     <button v-on:click='d_up()' class="btn btn-default" title="update">
@@ -66,7 +79,7 @@
             </div>
 
             <!-- Train & Sensor readings -->
-            <div>
+            <div v-if="worker.wtype === 'builder'">
                 <h4>T</h4>
                 <button v-on:click="command('e500t-70T30,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
                   <span class="glyphicon glyphicon-arrow-up"></span>
@@ -115,7 +128,9 @@ export default {
     },
     methods: {
         command(msg) {
-            bridge.send_command(msg);
+          //this.$emit('command', msg);
+          // TODO: Send to this node only.
+          send_command(msg);
         },
 
         update_info() {
