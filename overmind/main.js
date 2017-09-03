@@ -418,62 +418,70 @@ client.start();
 
 new Vue({
     el: '#tab_workers',
-    data: worker_pool,
+    data: {
+        pool: worker_pool,
+        raw_enabled: false
+    },
+    methods: {
+        set_raw_enabled(st) {
+            this.raw_enabled = st;
+        }
+    }
 });
 
 new Vue({
-  el: '#nav',
-  data: {
-    port: bridge,
-    ref_now: new Date(),
-    last_refresh: null,
-    period: 15
-  },
-  created() {
-      this.timer = setInterval(() => {
-        this.ref_now = new Date();
-        if (this.last_refresh == null || (this.period != null && this.ref_now - this.last_refresh > this.period * 1e3)) {
-          this.refresh_now();
-        }
-      }, 1000);
-  },
-  computed: {
-    refresh_ago() {
-      let autoref = (this.period !== null) ? `(auto: every ${this.period} sec)` : '(auto disabled)'
-      if (this.last_refresh !== null) {
-        let delta_sec = Math.floor(Math.max(0, this.ref_now - this.last_refresh) * 1e-3);
-        return `Last refreshed ${delta_sec} sec ago ${autoref}`;
-      } else {
-        return `Never refreshed ${autoref}`;
-      }
+    el: '#nav',
+    data: {
+        port: bridge,
+        ref_now: new Date(),
+        last_refresh: null,
+        period: 15
     },
-    status() {
-        if (this.port.isOpen) {
-            return 'connected';
-        } else {
-            return 'cutoff'
+    created() {
+        this.timer = setInterval(() => {
+            this.ref_now = new Date();
+            if (this.last_refresh == null || (this.period != null && this.ref_now - this.last_refresh > this.period * 1e3)) {
+                this.refresh_now();
+            }
+        }, 1000);
+    },
+    computed: {
+        refresh_ago() {
+            let autoref = (this.period !== null) ? `(auto: every ${this.period} sec)` : '(auto disabled)'
+            if (this.last_refresh !== null) {
+                let delta_sec = Math.floor(Math.max(0, this.ref_now - this.last_refresh) * 1e-3);
+                return `Last refreshed ${delta_sec} sec ago ${autoref}`;
+            } else {
+                return `Never refreshed ${autoref}`;
+            }
+        },
+        status() {
+            if (this.port.isOpen) {
+                return 'connected';
+            } else {
+                return 'cutoff'
+            }
+        },
+        status_class() {
+            if (this.port.isOpen) {
+                return 'text-success';
+            } else {
+                return 'text-muted';
+            }
+        },
+        path() {
+            return this.port.path;
         }
     },
-    status_class() {
-        if (this.port.isOpen) {
-            return 'text-success';
-        } else {
-            return 'text-muted';
+    methods: {
+        refresh_now() {
+            bridge.send_command('p');
+            this.last_refresh = new Date();
+        },
+        set_ref_period(period) {
+            this.period = period;
         }
-    },
-    path() {
-        return this.port.path;
     }
-  },
-  methods: {
-    refresh_now() {
-      bridge.send_command('p');
-      this.last_refresh = new Date();
-    },
-    set_ref_period(period) {
-      this.period = period;
-    }
-  }
 });
 
 new Vue({
