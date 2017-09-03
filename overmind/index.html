@@ -97,7 +97,7 @@
                     <div id="tab_workers">
                         <a v-if="!raw_enabled" style="color: #f0ad4e" href="#" v-on:click="set_raw_enabled(true)"><i class="material-icons">warning</i>Show raw actions</a>
                         <a v-if="raw_enabled"  style="color: #eee" href="#" v-on:click="set_raw_enabled(false)">Hide raw actions</a>
-                        <worker-card v-bind:worker="worker" v-for="worker in pool.workers"></worker-card>
+                        <worker-card v-bind:worker="worker" v-bind:show_raw="raw_enabled" v-for="worker in pool.workers"></worker-card>
                     </div>
                 </div>
             </div>

@@ -3,90 +3,94 @@
     <div class="panel-heading">
         <h2 class="panel-title"><img width="50" height="50" v-bind:src="'data:image/png;base64,' + worker.identicon.toString()"/>{{worker.wtype}} <span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h2>
         <button v-on:click='update_info' class="btn btn-default" title="refresh now">
-            <span class="glyphicon glyphicon-refresh"></span>
-          </button>
+          <span class="glyphicon glyphicon-refresh"></span>
+        </button>
     </div>
-    <div class="panel-body">
-        <div v-bind:class="worker.power.classes">
+    <div class="panel-body row">
+        <div class="col-md-2">
+          <div v-bind:class="worker.power.classes">
             <span class="glyphicon glyphicon-off"></span> {{worker.power.desc}}
+          </div>
+          Carrying: RS, screw
         </div>
 
-        Carrying: RS, screw<br/>
+        <div class="col-md-4">
+          <button v-on:click='extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
+            Extend
+          </button>
+          <button v-on:click='shorten()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
+            Shorten
+          </button>
 
-        <button v-on:click='extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
-      Extend
-    </button>
+          <div v-if="show_raw">
+            <!-- Top Panel -->
+            <div style="overflow:hidden">
+                <div style="float:left">
+                    <h4>D</h4>
+                    <button v-on:click='d_up()' class="btn btn-default" title="update">
+                        <span class="glyphicon glyphicon-arrow-up"></span>
+                    </button>
+                    <br/>
 
-        <button v-on:click='shorten()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
-      Shorten
-    </button>
-
-
-        <!-- header -->
-        <div style="overflow:hidden">
-            <div style="float:left">
-                <h4>D</h4>
-                <button v-on:click='d_up()' class="btn btn-default" title="update">
-          <span class="glyphicon glyphicon-arrow-up"></span>
-        </button>
-                <br/>
-
-                <button v-on:click='d_down()' class="btn btn-default" title="update">
-          <span class="glyphicon glyphicon-arrow-down"></span>
-        </button> {{worker.out[0][1]}}
-                <br/>
-                <button v-on:click='d_downdown()' class="btn btn-warning" title="update">
-          <span class="glyphicon glyphicon-arrow-down"></span>
-        </button>
+                    <button v-on:click='d_down()' class="btn btn-default" title="update">
+                      <span class="glyphicon glyphicon-arrow-down"></span>
+                    </button> {{worker.out[0][1]}}
+                    <br/>
+                    <button v-on:click='d_downdown()' class="btn btn-warning" title="update">
+                      <span class="glyphicon glyphicon-arrow-down"></span>
+                    </button>
+                </div>
+                <div style="float:left">
+                    <h4>SCR</h4>
+                    <button v-on:click='scr_up()' class="btn btn-default" title="update">
+                      <span class="glyphicon glyphicon-arrow-up"></span>
+                    </button>
+                    <br/>
+                    <button v-on:click='scr_down()' class="btn btn-default" title="update">
+                      <span class="glyphicon glyphicon-arrow-down"></span>
+                    </button> {{worker.out[0][0]}}
+                </div>
+                <div style="float:left">
+                    <h4>S</h4> {{worker.out[1][2]}}
+                    <br/>
+                    <button v-on:click="command('e1s100')" class="btn btn-default" title="unfasten screw">
+                      unlock
+                    </button>
+                    <button v-on:click="command('e1s0')" class="btn btn-default" title="stop screw">
+                      <span class="glyphicon glyphicon-stop"></span>
+                    </button>
+                    <button v-on:click="command('e1s-100')" class="btn btn-default" title="fasten screw">
+                      lock
+                    </button>
+                </div>
             </div>
 
-            <div style="float:left">
-                <h4>SCR</h4>
-                <button v-on:click='scr_up()' class="btn btn-default" title="update">
-          <span class="glyphicon glyphicon-arrow-up"></span>
-        </button>
+            <!-- Train & Sensor readings -->
+            <div>
+                <h4>T</h4>
+                <button v-on:click="command('e500t-70T30,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
+                  <span class="glyphicon glyphicon-arrow-up"></span>
+                </button>
+                <button v-on:click='t_step_f()' class="btn btn-default" title="go forward for a moment">
+                  <span class="glyphicon glyphicon-arrow-up"></span>
+                </button>
+                {{worker.out[1][0]}}
                 <br/>
-                <button v-on:click='scr_down()' class="btn btn-default" title="update">
-          <span class="glyphicon glyphicon-arrow-down"></span>
-        </button> {{worker.out[0][0]}}
-            </div>
+                <button v-on:click="command('e500t70T30,1!t0')" class="btn btn-primary" title="Find origin baclward(500ms)">
+                  <span class="glyphicon glyphicon-arrow-down"></span>
+                </button>
+                <button v-on:click='t_step_b()' class="btn btn-default" title="go backward for a moment">
+                  <span class="glyphicon glyphicon-arrow-down"></span>
+                </button>
+                O:{{worker.out[1][1]}}
 
-            <div style="float:left">
-                <h4>S</h4> {{worker.out[1][2]}}
-                <br/>
-
-                <button v-on:click="command('e1s100')" class="btn btn-default" title="unfasten screw">
-          unlock
-        </button>
-                <button v-on:click="command('e1s0')" class="btn btn-default" title="stop screw">
-          <span class="glyphicon glyphicon-stop"></span>
-        </button>
-                <button v-on:click="command('e1s-100')" class="btn btn-default" title="fasten screw">
-          lock
-        </button>
+                <line-chart :width="300" :height="200" :data="worker.readings"></line-chart>
             </div>
+          </div>
         </div>
 
-        <div>
-            <h4>T</h4>
-            <button v-on:click="command('e500t-70T30,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
-        <span class="glyphicon glyphicon-arrow-up"></span>
-      </button>
-            <button v-on:click='t_step_f()' class="btn btn-default" title="go forward for a moment">
-        <span class="glyphicon glyphicon-arrow-up"></span>
-      </button> {{worker.out[1][0]}}
-            <br/>
-            <button v-on:click="command('e500t70T30,1!t0')" class="btn btn-primary" title="Find origin baclward(500ms)">
-        <span class="glyphicon glyphicon-arrow-down"></span>
-      </button>
-            <button v-on:click='t_step_b()' class="btn btn-default" title="go backward for a moment">
-        <span class="glyphicon glyphicon-arrow-down"></span>
-      </button> O:{{worker.out[1][1]}}
-
-            <line-chart :width="300" :height="200" :data="worker.readings"></line-chart>
-        </div>
-
-        <div class="panel" v-for="msg in worker.messages" v-bind:class="{'panel-default': msg.status == 'known', 'panel-warning': msg.status == 'unknown', 'panel-danger': msg.status == 'corrupt'}" v-bind:title="msg.desc">
+        <div class="col-md-2">
+          <div class="panel" v-for="msg in worker.messages" v-bind:class="{'panel-default': msg.status == 'known', 'panel-warning': msg.status == 'unknown', 'panel-danger': msg.status == 'corrupt'}" v-bind:title="msg.desc">
             <div class="panel-heading">
                 {{msg.timestamp}}
                 <h3 class="panel-title">{{msg.head}}</h3>
@@ -94,6 +98,7 @@
             <div v-if="msg.status != 'known'">
                 <pre>{{msg.desc}}</pre>
             </div>
+          </div>
         </div>
     </div>
 </div>
@@ -101,7 +106,7 @@
 
 <script>
 export default {
-    props: ['worker'],
+    props: ['worker', 'show_raw'],
     data() {
         return {}
     },
