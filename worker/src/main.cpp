@@ -28,7 +28,6 @@ public:
         twelite.warn("too long command");
         continue;
       }
-      twelite.info("CRv");
       r_ix = 0;
 
       #ifdef WORKER_TYPE_BUILDER
@@ -204,7 +203,8 @@ private: // Command Handler
 CommandProcessorSingleton command_processor;
 
 
-void actions_loop1ms() {
+void loop1ms() {
+  // Called @ 976.5625 Hz w/ 16MHz crystal.
   actions.loop1ms();
 }
 
@@ -218,8 +218,7 @@ int main() {
   #endif
   twelite.info("init1");
 
-  Timer1.initialize(1000L /* usec */);
-  Timer1.attachInterrupt(actions_loop1ms);
+  setMillisHook(loop1ms);
 
   // Initialize servo pos to safe (i.e. not colliding with rail) position.
   {
