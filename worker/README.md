@@ -82,3 +82,38 @@ DRV8830 (3/3)
 
 ## Feeder Pin assigment / connections (1.x)
 ATmega328P
+
+|pin|usage|
+|---|---|
+|PB0| - |
+|PB1/OC1A| Gripper rotate servo |
+|PB2/OC1B| Gripper close servo |
+|PB3| ISP MOSI |
+|PB4| ISP MISO  |
+|PB5| ISP SCK  |
+|PB6| XTAL1  |
+|PB7| XTAL2  |
+|   |  |
+|   |  |
+|PC0| - |
+|PC1/ADC1| SEN-rail  |
+|PC2| -  |
+|PC3| -  |
+|PC4| -  |
+|PC5| -  |
+|PC6| #RESET  |
+|PC7| -  |
+|   |  |
+|   |  |
+|ADC6| SEN-O (rail marker)  |
+|ADC7| SEN-X (extension)  |
+|   |  |
+|   |  |
+|PD0| TWELITE-RX  |
+|PD1| TWELITE-TX  |
+|PD2| -  |
+|PD3/OC2B| Lock servo |
+|PD4| STP0 |
+|PD5| STP1 |
+|PD6| STP2 |
+|PD7| STP3 |
