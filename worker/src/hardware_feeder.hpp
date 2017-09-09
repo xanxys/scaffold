@@ -9,6 +9,17 @@
 
 #include "hardware_twelite.hpp"
 
+enum ServoIx : uint8_t {
+  CIX_GR_ROT,
+  CIX_GR_CLOSE,
+  CIX_LOCK,
+  N_SERVOS
+};
+
+enum MotorIx : uint8_t {
+  MV_VERT,
+  N_MOTORS
+};
 
 
 // Perodically measure fixed number of ADC inputs & controls sensor multiplexing.

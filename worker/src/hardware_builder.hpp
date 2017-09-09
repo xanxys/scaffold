@@ -9,6 +9,20 @@
 
 #include "hardware_twelite.hpp"
 
+enum ServoIx : uint8_t {
+  CIX_A,
+  CIX_B,
+  N_SERVOS
+};
+
+enum MotorIx : uint8_t {
+  MV_TRAIN,
+  MV_ORI,
+  MV_SCREW_DRIVER,
+  N_MOTORS
+};
+
+
 class Indicator {
 private:
   bool error;

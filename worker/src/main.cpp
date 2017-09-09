@@ -143,6 +143,7 @@ private: // Command Handler
     while (true) {
       char target = read();
       switch (target) {
+        #ifdef WORKER_TYPE_BUILDER
         case '!': action.report = true; break;
         case 'a': action.servo_pos[CIX_A] = safe_read_pos(); break;
         case 'b': action.servo_pos[CIX_B] = safe_read_pos(); break;
@@ -150,6 +151,13 @@ private: // Command Handler
         case 'o': action.motor_vel[MV_ORI] = safe_read_vel(); break;
         case 's': action.motor_vel[MV_SCREW_DRIVER] = safe_read_vel(); break;
         case 'T': action.train_cutoff_thresh = safe_read_thresh(); break;
+        #endif
+        #ifdef WORKER_TYPE_FEEDER
+        case 'r': action.servo_pos[CIX_GR_ROT] = safe_read_pos(); break;
+        case 'c': action.servo_pos[CIX_GR_CLOSE] = safe_read_pos(); break;
+        case 'l': action.servo_pos[CIX_LOCK] = safe_read_pos(); break;
+        case 'v': action.servo_pos[MV_VERT] = safe_read_vel(); break;
+        #endif
         default:
           twelite.warn("unknown action target");
       }
@@ -221,12 +229,16 @@ int main() {
   setMillisHook(loop1ms);
 
   // Initialize servo pos to safe (i.e. not colliding with rail) position.
+  #ifdef WORKER_TYPE_BUILDER
   {
     Action action(1 /* dur_ms */);
     action.servo_pos[CIX_A] = 13;
     action.servo_pos[CIX_B] = 11;
     actions.enqueue(action);
   }
+  #endif
+  #ifdef WORKER_TYPE_FEEDER
+  #endif
 
   #ifdef WORKER_TYPE_BUILDER
   indicator.flash_blocking();

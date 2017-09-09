@@ -3,19 +3,11 @@
 #ifdef WORKER_TYPE_BUILDER
 #include "hardware_builder.hpp"
 #endif
-
 #ifdef WORKER_TYPE_FEEDER
 #include "hardware_feeder.hpp"
+
+#include <Stepper.h>
 #endif
-
-const int N_SERVOS = 2;
-const int CIX_A = 0;
-const int CIX_B = 1;
-
-const int N_MOTORS = 3;
-const int MV_TRAIN = 0;
-const int MV_ORI = 1;
-const int MV_SCREW_DRIVER = 2;
 
 // Safely calculate va + (vb - va) * (ix / num)
 uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
@@ -47,11 +39,13 @@ public:
 
   Action() : Action(0) {}
 
-  Action(uint16_t duration_ms) :
-      report(false),
-      duration_step(duration_ms),
-      servo_pos{SERVO_POS_KEEP, SERVO_POS_KEEP},
-      motor_vel{MOTOR_VEL_KEEP, MOTOR_VEL_KEEP, MOTOR_VEL_KEEP} {
+  Action(uint16_t duration_ms) : report(false), duration_step(duration_ms) {
+    for (int i = 0; i < N_SERVOS; i++) {
+      servo_pos[i] = SERVO_POS_KEEP;
+    }
+    for (int i = 0; i < N_MOTORS; i++) {
+      motor_vel[i] = MOTOR_VEL_KEEP;
+    }
   }
 
   void print_json() const {
@@ -126,9 +120,11 @@ public:
         motor_vel_out[i] = targ_vel;
       }
     }
+    #ifdef WORKER_TYPE_BUILDER
     if (sensor.get_sensor_t() > action->train_cutoff_thresh) {
       motor_vel_out[MV_TRAIN] = 0;
     }
+    #endif
     elapsed_step++;
   }
 
@@ -234,7 +230,12 @@ public:
   // Velocity based control for DC motors. This class is responsible for PWM-ing them,
   // even when no action is being executed.
   // -0x7f~0x7f (7 bit effective)
+  #ifdef WORKER_TYPE_BUILDER
   DCMotor motors[N_MOTORS];
+  #endif
+  #ifdef WORKER_TYPE_FEEDER
+  Stepper stepper;
+  #endif
   int8_t motor_vel[N_MOTORS];
   int8_t motor_vel_prev[N_MOTORS];
 
@@ -251,6 +252,7 @@ public:
   uint8_t tr_sensor_cache_ix;
 public:
   ActionExecutorSingleton() :
+      #ifdef WORKER_TYPE_BUILDER
       servo_pos{50, 5},
       motors{
         // train
@@ -259,7 +261,14 @@ public:
         DCMotor(0xc2),
         // screw
         DCMotor(0xc8)
-      } {
+      }
+      #endif
+      #ifdef WORKER_TYPE_FEEDER
+      servo_pos{5, 5, 5},
+      stepper(120, 4, 5, 6, 7)  // PD4-PD7
+      #endif
+       {
+    #ifdef WORKER_TYPE_BUILDER
     // Init servo PWM (freq_pwm=61.0Hz, dur=16.4 ms)
     TCCR2A = TCCR2A_FAST_PWM | TCCR2A_A_NON_INVERT | TCCR2A_B_NON_INVERT;
     TCCR2B = TCCR2B_PRESCALER_1024;
@@ -270,6 +279,12 @@ public:
 
     // Init I2C bus for DC PWM motors.
     Wire.begin();
+    #endif
+
+    #ifdef WORKER_TYPE_FEEDER
+    // TODO: Initialize Timer1 PWM
+
+    #endif
 
     commit_posvel();
   }
@@ -417,17 +432,30 @@ private:
 
   void commit_posvel() {
     // Set PWM
+    #ifdef WORKER_TYPE_BUILDER
     OCR2A = servo_pos[CIX_A];
     OCR2B = servo_pos[CIX_B];
+    #endif
+    #ifdef WORKER_TYPE_FEEDER
+    // TODO:
+    // OCR1A
+    // OCR1B
+    OCR2B = servo_pos[CIX_LOCK];
+    #endif
 
     // I2C takes time, need to conserve time. Otherwise MCU become
     // unresponsive.
+    #ifdef WORKER_TYPE_BUILDER
     for (int i = 0; i < N_MOTORS; i++) {
       if (motor_vel[i] != motor_vel_prev[i]) {
         motors[i].set_velocity(motor_vel[i]);
         motor_vel_prev[i] = motor_vel[i];
       }
     }
+    #endif
+    #ifdef WORKER_TYPE_FEEDER
+    stepper.setSpeed(motor_vel[MV_VERT]);
+    #endif
   }
 
   void print_output_json() const {
