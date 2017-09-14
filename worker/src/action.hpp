@@ -230,12 +230,7 @@ public:
   // Velocity based control for DC motors. This class is responsible for PWM-ing them,
   // even when no action is being executed.
   // -0x7f~0x7f (7 bit effective)
-  #ifdef WORKER_TYPE_BUILDER
   DCMotor motors[N_MOTORS];
-  #endif
-  #ifdef WORKER_TYPE_FEEDER
-  Stepper stepper;
-  #endif
   int8_t motor_vel[N_MOTORS];
   int8_t motor_vel_prev[N_MOTORS];
 
@@ -265,26 +260,29 @@ public:
       #endif
       #ifdef WORKER_TYPE_FEEDER
       servo_pos{5, 5, 5},
-      stepper(120, 4, 5, 6, 7)  // PD4-PD7
+      motors{
+        // vert
+        DCMotor(0xc0)
+      }
       #endif
        {
-    #ifdef WORKER_TYPE_BUILDER
     // Init servo PWM (freq_pwm=61.0Hz, dur=16.4 ms)
     TCCR2A = TCCR2A_FAST_PWM | TCCR2A_A_NON_INVERT | TCCR2A_B_NON_INVERT;
     TCCR2B = TCCR2B_PRESCALER_1024;
 
+    #ifdef WORKER_TYPE_BUILDER
     // Set PWM ports as output.
     DDRB |= _BV(3); // PWMA
     DDRD |= _BV(3); // PWMB
-
-    // Init I2C bus for DC PWM motors.
-    Wire.begin();
     #endif
 
     #ifdef WORKER_TYPE_FEEDER
     // TODO: Initialize Timer1 PWM
-
+    DDRD |= _BV(3); // PWMB
     #endif
+
+    // Init I2C bus for DC PWM motors.
+    Wire.begin();
 
     commit_posvel();
   }
@@ -445,17 +443,12 @@ private:
 
     // I2C takes time, need to conserve time. Otherwise MCU become
     // unresponsive.
-    #ifdef WORKER_TYPE_BUILDER
     for (int i = 0; i < N_MOTORS; i++) {
       if (motor_vel[i] != motor_vel_prev[i]) {
         motors[i].set_velocity(motor_vel[i]);
         motor_vel_prev[i] = motor_vel[i];
       }
     }
-    #endif
-    #ifdef WORKER_TYPE_FEEDER
-    stepper.setSpeed(motor_vel[MV_VERT]);
-    #endif
   }
 
   void print_output_json() const {

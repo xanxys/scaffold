@@ -156,7 +156,7 @@ private: // Command Handler
         case 'r': action.servo_pos[CIX_GR_ROT] = safe_read_pos(); break;
         case 'c': action.servo_pos[CIX_GR_CLOSE] = safe_read_pos(); break;
         case 'l': action.servo_pos[CIX_LOCK] = safe_read_pos(); break;
-        case 'v': action.servo_pos[MV_VERT] = safe_read_vel(); break;
+        case 'v': action.motor_vel[MV_VERT] = safe_read_vel(); break;
         #endif
         default:
           twelite.warn("unknown action target");
@@ -238,6 +238,11 @@ int main() {
   }
   #endif
   #ifdef WORKER_TYPE_FEEDER
+  {
+    Action action(1 /* dur_ms */);
+    action.servo_pos[CIX_LOCK] = 20;  // open
+    actions.enqueue(action);
+  }
   #endif
 
   #ifdef WORKER_TYPE_BUILDER

@@ -36,8 +36,8 @@ ATmega328P
 |PC1/ADC1| SEN-T  |
 |PC2| -  |
 |PC3| -  |
-|PC4| -  |
-|PC5| -  |
+|PC4| I2C-SDA  |
+|PC5| I2C-SCL  |
 |PC6| #RESET  |
 |PC7| -  |
 |   |  |
@@ -99,8 +99,8 @@ ATmega328P
 |PC1/ADC1| SEN-rail  |
 |PC2| -  |
 |PC3| -  |
-|PC4| -  |
-|PC5| -  |
+|PC4| I2C-SDA  |
+|PC5| I2C-SCL  |
 |PC6| #RESET  |
 |PC7| -  |
 |   |  |
@@ -117,3 +117,12 @@ ATmega328P
 |PD5| STP1 |
 |PD6| STP2 |
 |PD7| STP3 |
+
+
+
+### I2C bus
+
+DRV8830 (1/1)
+
+* OUT: Vertical motor
+* Addr[3:0]: 0000 (A0: L, A1: L)
