@@ -251,10 +251,15 @@ public:
 
   MultiplexedSensor sensor;
 
+  static const uint8_t TCCR1A_FAST_PWM_8 = _BV(WGM10);
+  static const uint8_t TCCR1B_FAST_PWM_8 = _BV(WGM12);
+  static const uint8_t TCCR1A_A_NON_INVERT = _BV(COM1A1);
+  static const uint8_t TCCR1A_B_NON_INVERT = _BV(COM1B1);
+  static const uint8_t TCCR1B_PRESCALER_1024 = _BV(CS12) | _BV(CS10);
+
   static const uint8_t TCCR2A_FAST_PWM = _BV(WGM21) | _BV(WGM20);
   static const uint8_t TCCR2A_A_NON_INVERT = _BV(COM2A1);
   static const uint8_t TCCR2A_B_NON_INVERT = _BV(COM2B1);
-  static const uint8_t TCCR2B_PRESCALER_256 = _BV(CS22) | _BV(CS21);
   static const uint8_t TCCR2B_PRESCALER_1024 = _BV(CS22) | _BV(CS21) | _BV(CS20);
 
   static const uint8_t T_SEN_CACHE_SIZE = 100;
@@ -281,6 +286,10 @@ public:
       }
       #endif
        {
+
+  }
+
+  void init() {
     // Init servo PWM (freq_pwm=61.0Hz, dur=16.4 ms)
     TCCR2A = TCCR2A_FAST_PWM | TCCR2A_A_NON_INVERT | TCCR2A_B_NON_INVERT;
     TCCR2B = TCCR2B_PRESCALER_1024;
@@ -292,7 +301,11 @@ public:
     #endif
 
     #ifdef WORKER_TYPE_FEEDER
-    // TODO: Initialize Timer1 PWM
+    // Init servo PWM in Timer1 (freq=30.5Hz dur = 32ms)
+    TCCR1A = TCCR1A_FAST_PWM_8 | TCCR1A_A_NON_INVERT | TCCR1A_B_NON_INVERT;
+    TCCR1B = TCCR1B_FAST_PWM_8 | TCCR1B_PRESCALER_1024;
+    DDRB |= _BV(1) | _BV(2);
+    // Timer 2
     DDRD |= _BV(3); // PWMB
     #endif
 
@@ -455,9 +468,8 @@ private:
     OCR2B = servo_pos[CIX_B];
     #endif
     #ifdef WORKER_TYPE_FEEDER
-    // TODO:
-    // OCR1A
-    // OCR1B
+    OCR1A = servo_pos[CIX_GR_ROT];
+    OCR1B = servo_pos[CIX_GR_CLOSE];
     OCR2B = servo_pos[CIX_LOCK];
     #endif
 

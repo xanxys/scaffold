@@ -1,7 +1,6 @@
 // Scaffold worker v1 firmware
 
 #include <Arduino.h>
-#include <TimerOne.h>
 #include <MsTimer2.h>
 #include <Wire.h>
 
@@ -222,6 +221,7 @@ int main() {
   // Init arduino core things (e.g. Timer0).
   init();
   twelite.init();
+  actions.init();
 
   #ifdef WORKER_TYPE_BUILDER
   indicator.flash_blocking();

@@ -30,18 +30,34 @@
             <!-- Top Panel -->
             <div v-if="worker.wtype === 'feeder'" style="overflow:hidden">
               <h4>G</h4>
-              <button v-on:click="command('e1a17')" class="btn btn-default">
-                close
-              </button>
-              <button v-on:click="command('e1a25')" class="btn btn-default">
-                open
-              </button>
               <button v-on:click="command('e1000v80V70,v0')" class="btn btn-default">
                 V Origin
               </button>
               <button v-on:click="command('e150v-80,v0')" class="btn btn-default">
                 V<span class="glyphicon glyphicon-arrow-down"></span>
               </button>
+
+              <button v-on:click="command('e1c20')" class="btn btn-default">
+                close
+              </button>
+              <button v-on:click="command('e1c30')" class="btn btn-default">
+                open
+              </button>
+
+              <button v-on:click="command('e500r30')" class="btn btn-default">
+                Rvert
+              </button>
+              <button v-on:click="command('e500r18')" class="btn btn-default">
+                Rhorz
+              </button>
+
+              <button v-on:click="command('e1l23')" class="btn btn-default">
+                lock
+              </button>
+              <button v-on:click="command('e1l20')" class="btn btn-default">
+                unlock
+              </button>
+
             </div>
             <div v-if="worker.wtype === 'builder'" style="overflow:hidden">
                 <div style="float:left">
