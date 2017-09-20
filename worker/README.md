@@ -105,8 +105,8 @@ ATmega328P
 |PC7| -  |
 |   |  |
 |   |  |
-|ADC6| SEN-O (rail marker)  |
-|ADC7| SEN-X (extension)  |
+|ADC6| SEN-V (vertical rail origin)  |
+|ADC7| - |
 |   |  |
 |   |  |
 |PD0| TWELITE-RX  |

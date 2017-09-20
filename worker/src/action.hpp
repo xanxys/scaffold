@@ -1,12 +1,14 @@
 #pragma once
 
+#include "hardware_twelite.hpp"
+#include "hardware_motor.hpp"
+#include "hardware_sensor.hpp"
+
 #ifdef WORKER_TYPE_BUILDER
 #include "hardware_builder.hpp"
 #endif
 #ifdef WORKER_TYPE_FEEDER
 #include "hardware_feeder.hpp"
-
-#include <Stepper.h>
 #endif
 
 // Safely calculate va + (vb - va) * (ix / num)
@@ -22,9 +24,17 @@ public:
   // Note that reporting can cause some jankiness (a few ms) in command execution.
   bool report;
 
+  #ifdef WORKER_TYPE_BUILDER
   // Set train=0 when sensor reading > this value.
   // 255 means disable this functionality.
   uint8_t train_cutoff_thresh = 255;
+  #endif
+
+  #ifdef WORKER_TYPE_FEEDER
+  // Set train=0 when sensor reading > this value.
+  // 255 means disable this functionality.
+  uint8_t vert_cutoff_thresh = 255;
+  #endif
 
   // Note this can be 0, but action still has effect.
   uint16_t duration_step;
@@ -123,6 +133,11 @@ public:
     #ifdef WORKER_TYPE_BUILDER
     if (sensor.get_sensor_t() > action->train_cutoff_thresh) {
       motor_vel_out[MV_TRAIN] = 0;
+    }
+    #endif
+    #ifdef WORKER_TYPE_FEEDER
+    if (sensor.get_sensor_v() > action->vert_cutoff_thresh) {
+      motor_vel_out[MV_VERT] = 0;
     }
     #endif
     elapsed_step++;
@@ -294,7 +309,12 @@ public:
         state.step(sensor, servo_pos, motor_vel);
         if (sensor.is_start()) {
           if (tr_sensor_cache_ix < T_SEN_CACHE_SIZE) {
+            #ifdef WORKER_TYPE_BUILDER
             tr_sensor_cache[tr_sensor_cache_ix] = sensor.get_sensor_t();
+            #endif
+            #ifdef WORKER_TYPE_FEEDER
+            tr_sensor_cache[tr_sensor_cache_ix] = sensor.get_sensor_v();
+            #endif
             tr_sensor_cache_ix++;
           }
         }
