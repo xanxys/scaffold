@@ -36,6 +36,12 @@
               <button v-on:click="command('e1a25')" class="btn btn-default">
                 open
               </button>
+              <button v-on:click="command('e1000v80V70,v0')" class="btn btn-default">
+                V Origin
+              </button>
+              <button v-on:click="command('e150v-80,v0')" class="btn btn-default">
+                V<span class="glyphicon glyphicon-arrow-down"></span>
+              </button>
             </div>
             <div v-if="worker.wtype === 'builder'" style="overflow:hidden">
                 <div style="float:left">
