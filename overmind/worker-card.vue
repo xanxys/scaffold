@@ -1,5 +1,5 @@
 <template>
-<div class="material-card-1">
+<div class="material-card-1" style="margin-bottom: 8px">
     <div class="panel-heading" style="overflow:hidden">
         <h3 style="margin-top: 8px; float: left"><img width="32" height="32" v-bind:src="'data:image/png;base64,' + worker.identicon.toString()"/> {{worker.wtype}} <span style="font-size:70%; color: lightgray">{{worker.addr}}</span></h3>
         <button style="float:right" v-on:click='update_info' class="btn btn-default" title="refresh now">
