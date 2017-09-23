@@ -150,9 +150,7 @@ export default {
     },
     methods: {
         command(msg) {
-          //this.$emit('command', msg);
-          // TODO: Send to this node only.
-          send_command(msg);
+          send_command(msg, this.worker.addr);
         },
 
         update_info() {
