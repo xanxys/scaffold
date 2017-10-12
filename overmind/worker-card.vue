@@ -16,20 +16,38 @@
 
         <div class="col-md-4">
           <div v-if="worker.wtype === 'builder'">
-            <button v-on:click='extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
+            <button v-on:click='builder_extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
               Extend
             </button>
-            <button v-on:click='shorten()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
+            <button v-on:click='builder_shorten()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
               Shorten
             </button>
+
+            <button v-on:click='builder_insert()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
+              Insert to Feeder
+            </button>
           </div>
+
           <div v-if="worker.wtype === 'feeder'">
+            <button v-on:click='feeder_prepare()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
+              Prepare
+            </button>
+
+            <button v-on:click='feeder_accept_pre()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
+              Accept-Pre
+            </button>
+
+            <button v-on:click='feeder_accept()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
+              Accept
+            </button>
+            
           </div>
 
           <div v-if="show_raw">
             <!-- Top Panel -->
             <div v-if="worker.wtype === 'feeder'" style="overflow:hidden">
               <h4>Gripper</h4>
+              <div>
               <button v-on:click="command('e1000v80V70,v0')" class="btn btn-default">
                 V Origin
               </button>
@@ -39,22 +57,25 @@
               <button v-on:click="command('e150v-80,1v0')" class="btn btn-default">
                 V<span class="glyphicon glyphicon-arrow-down"></span>
               </button>
-              <br/>
+              </div>
 
+              <div>
               <button v-on:click="command('e1c11')" class="btn btn-default">
                 open
               </button>
               <button v-on:click="command('e1c20')" class="btn btn-default">
                 close
               </button>
-              <br/>
+              </div>
 
+              <div>
               <button v-on:click="command('e500r30')" class="btn btn-default">
                 Rvert
               </button>
               <button v-on:click="command('e500r18')" class="btn btn-default">
                 Rhorz
               </button>
+              </div>
 
               <h4>Stock</h4>
               <button v-on:click="command('e1l23')" class="btn btn-default">
@@ -170,13 +191,29 @@ export default {
             this.command('p');
         },
 
-        extend() {
+        builder_extend() {
             this.command('e500a29,500t-60,300b22s-20,5000t50s-100,400b10,500s0t70T30,300t0a11');
         },
 
-        shorten() {
+        builder_shorten() {
             this.command('e500a29,800t-70,300b21,3000s70b22t-30,600b10s0t60T30,500t0a11');
         },
+
+        builder_insert() {
+          this.command('e600t-60,1t0');
+        },
+
+        feeder_prepare() {
+          this.command('e200v-80,200r30,750v-70,1v0');
+        },
+
+        feeder_accept_pre() {
+          this.command('e100v60,1v0');
+        },
+
+        feeder_accept() {
+          this.command('e200v80,300r18,1000v70V70,1v0')
+        }
     },
     computed: {
         readings() {
