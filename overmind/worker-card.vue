@@ -29,20 +29,25 @@
           <div v-if="show_raw">
             <!-- Top Panel -->
             <div v-if="worker.wtype === 'feeder'" style="overflow:hidden">
-              <h4>G</h4>
+              <h4>Gripper</h4>
               <button v-on:click="command('e1000v80V70,v0')" class="btn btn-default">
                 V Origin
+              </button>
+              <button v-on:click="command('e150v80,v0')" class="btn btn-default">
+                V<span class="glyphicon glyphicon-arrow-up"></span>
               </button>
               <button v-on:click="command('e150v-80,v0')" class="btn btn-default">
                 V<span class="glyphicon glyphicon-arrow-down"></span>
               </button>
+              <br/>
 
+              <button v-on:click="command('e1c11')" class="btn btn-default">
+                open
+              </button>
               <button v-on:click="command('e1c20')" class="btn btn-default">
                 close
               </button>
-              <button v-on:click="command('e1c30')" class="btn btn-default">
-                open
-              </button>
+              <br/>
 
               <button v-on:click="command('e500r30')" class="btn btn-default">
                 Rvert
@@ -51,6 +56,7 @@
                 Rhorz
               </button>
 
+              <h4>Stock</h4>
               <button v-on:click="command('e1l23')" class="btn btn-default">
                 lock
               </button>
@@ -62,26 +68,26 @@
             <div v-if="worker.wtype === 'builder'" style="overflow:hidden">
                 <div style="float:left">
                     <h4>D</h4>
-                    <button v-on:click='d_up()' class="btn btn-default" title="update">
+                    <button v-on:click="command('e400b10')" class="btn btn-default" title="update">
                         <span class="glyphicon glyphicon-arrow-up"></span>
                     </button>
                     <br/>
 
-                    <button v-on:click='d_down()' class="btn btn-default" title="update">
+                    <button v-on:click="command('e400b20')" class="btn btn-default" title="update">
                       <span class="glyphicon glyphicon-arrow-down"></span>
                     </button> {{worker.out[0][1]}}
                     <br/>
-                    <button v-on:click='d_downdown()' class="btn btn-warning" title="update">
+                    <button v-on:click="command('e400b22')" class="btn btn-warning" title="update">
                       <span class="glyphicon glyphicon-arrow-down"></span>
                     </button>
                 </div>
                 <div style="float:left">
                     <h4>SCR</h4>
-                    <button v-on:click='scr_up()' class="btn btn-default" title="update">
+                    <button v-on:click="command('e300a11')" class="btn btn-default" title="update">
                       <span class="glyphicon glyphicon-arrow-up"></span>
                     </button>
                     <br/>
-                    <button v-on:click='scr_down()' class="btn btn-default" title="update">
+                    <button v-on:click="command('e300a29')" class="btn btn-default" title="update">
                       <span class="glyphicon glyphicon-arrow-down"></span>
                     </button> {{worker.out[0][0]}}
                 </div>
@@ -106,7 +112,7 @@
                 <button v-on:click="command('e500t-70T30,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
                   <span class="glyphicon glyphicon-arrow-up"></span>
                 </button>
-                <button v-on:click='t_step_f()' class="btn btn-default" title="go forward for a moment">
+                <button v-on:click="command('e100t-70,1!t0')" class="btn btn-default" title="go forward for a moment">
                   <span class="glyphicon glyphicon-arrow-up"></span>
                 </button>
                 {{worker.out[1][0]}}
@@ -114,7 +120,7 @@
                 <button v-on:click="command('e500t70T30,1!t0')" class="btn btn-primary" title="Find origin baclward(500ms)">
                   <span class="glyphicon glyphicon-arrow-down"></span>
                 </button>
-                <button v-on:click='t_step_b()' class="btn btn-default" title="go backward for a moment">
+                <button v-on:click="command('e100t70,1!t0')" class="btn btn-default" title="go backward for a moment">
                   <span class="glyphicon glyphicon-arrow-down"></span>
                 </button>
                 O:{{worker.out[1][1]}}
@@ -163,32 +169,6 @@ export default {
 
         shorten() {
             this.command('e500a29,800t-70,300b21,3000s70b22t-30,600b10s0t60T30,500t0a11');
-        },
-
-        scr_up() {
-            this.command('e300a11');
-        },
-
-        scr_down() {
-            this.command('e300a29');
-        },
-
-        d_up() {
-            this.command('e400b10');
-        },
-
-        d_down() {
-            this.command('e400b20');
-        },
-        d_downdown() {
-            this.command('e400b22');
-        },
-        t_step_f() {
-            this.command('e100t-70,1!t0');
-        },
-
-        t_step_b() {
-            this.command('e100t70,1!t0');
         },
     },
     computed: {
