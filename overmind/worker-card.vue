@@ -33,10 +33,10 @@
               <button v-on:click="command('e1000v80V70,v0')" class="btn btn-default">
                 V Origin
               </button>
-              <button v-on:click="command('e150v80,v0')" class="btn btn-default">
+              <button v-on:click="command('e150v80,1v0')" class="btn btn-default">
                 V<span class="glyphicon glyphicon-arrow-up"></span>
               </button>
-              <button v-on:click="command('e150v-80,v0')" class="btn btn-default">
+              <button v-on:click="command('e150v-80,1v0')" class="btn btn-default">
                 V<span class="glyphicon glyphicon-arrow-down"></span>
               </button>
               <br/>
@@ -133,10 +133,11 @@
         <div class="col-md-3">
           <table class="table">
            <tbody style="max-height: 250px; overflow-y: auto; display: block">
-             <tr v-for="msg in worker.messages" v-bind:class="{'default': msg.status == 'known', 'warning': msg.status == 'unknown', 'danger': msg.status == 'corrupt'}" v-bind:title="msg.desc">
+             <tr v-for="msg in worker.messages"
+                  v-bind:class="{'success': msg.status == 'command', 'default': msg.status == 'known', 'warning': msg.status == 'unknown', 'danger': msg.status == 'corrupt'}" v-bind:title="msg.desc">
                <td>{{msg.timestamp}}</td>
                <td>{{msg.head}}
-                 <div v-if="msg.status != 'known'">
+                 <div v-if="msg.status != 'known' && msg.status != 'command'">
                    <pre>{{msg.desc}}</pre>
                  </div>
                </td>
@@ -156,6 +157,12 @@ export default {
     },
     methods: {
         command(msg) {
+          this.worker.messages.unshift({
+            status: 'command',
+            timestamp: null,
+            head: msg,
+            desc: msg,
+          });
           send_command(msg, this.worker.addr);
         },
 
