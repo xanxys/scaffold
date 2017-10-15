@@ -30,6 +30,7 @@ button.active {
 
     opacity: 0;
     height: 0;  /* to prevent hiding other elements */
+    padding: 0; /* to prevent hiding other elements */
     transform: scale(3) translate(100px, 0);
     transition: opacity 0.3s linear, transform 0.3s ease-in;
 }
