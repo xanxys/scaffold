@@ -63,7 +63,7 @@
               <button v-on:click="command('e1c11')" class="btn btn-default">
                 open
               </button>
-              <button v-on:click="command('e1c20')" class="btn btn-default">
+              <button v-on:click="command('e1c23')" class="btn btn-default">
                 close
               </button>
               </div>
@@ -78,7 +78,7 @@
               </div>
 
               <h4>Stock</h4>
-              <button v-on:click="command('e1l23')" class="btn btn-default">
+              <button v-on:click="command('e1l24')" class="btn btn-default">
                 lock
               </button>
               <button v-on:click="command('e1l20')" class="btn btn-default">
@@ -204,7 +204,7 @@ export default {
         },
 
         feeder_prepare() {
-          this.command('e200v-80,200r30,750v-70,1v0');
+          this.command('e200v-80,200r32,850v-70,1v0');
         },
 
         feeder_accept_pre() {
@@ -212,7 +212,8 @@ export default {
         },
 
         feeder_accept() {
-          this.command('e200v80,300r18,1000v70V70,1v0')
+          // TODO: Do e1r30, T-, bfore V-
+          this.command('e500v80r18,1000v70V70,1v0')
         }
     },
     computed: {
