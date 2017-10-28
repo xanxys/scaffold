@@ -15,6 +15,7 @@
         </div>
 
         <div class="col-md-4">
+          <input size="30" v-model="command_palette" v-on:keyup.enter="send_palette"/>
           <div v-if="worker.wtype === 'builder'">
             <button v-on:click='builder_extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
               Extend
@@ -174,7 +175,9 @@
 export default {
     props: ['worker', 'show_raw'],
     data() {
-        return {}
+        return {
+          command_palette: "",
+        };
     },
     methods: {
         command(msg) {
@@ -185,6 +188,11 @@ export default {
             desc: msg,
           });
           send_command(msg, this.worker.addr);
+        },
+
+        send_palette() {
+          this.command(this.command_palette);
+          this.command_palette = "";
         },
 
         update_info() {
