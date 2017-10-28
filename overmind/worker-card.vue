@@ -216,7 +216,8 @@ export default {
         },
 
         feeder_accept_pre() {
-          this.command('e100v60,1v0');
+          // this.command('e100v60,1v0');
+          this.command('e1r30');
         },
 
         feeder_accept() {
