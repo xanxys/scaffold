@@ -263,11 +263,7 @@ class View3DClient {
         $('#viewport').height(600);
         $('#viewport').append(this.renderer.domElement);
 
-        this.controls = new THREE.TrackballControls(this.camera, this.renderer.domElement);
-        this.controls.noZoom = false;
-        this.controls.noPan = false;
-        this.controls.zoomSpeed = 0.1;
-        this.controls.maxDistance = 2;
+        this.reinitialize_controls();
 
         $(window).resize(() => {
             _this.update_projection();
@@ -331,6 +327,17 @@ class View3DClient {
         });
 
         this.update_projection();
+    }
+
+    // This needs to be called when the element is visibled (i.e. tab is switched.)
+    // Otherwise control.js internal DOM element size is meesed up and gets broken.
+    reinitialize_controls() {
+        this.controls = new THREE.TrackballControls(this.camera, this.renderer.domElement);
+        this.controls = new THREE.TrackballControls(this.camera, this.renderer.domElement);
+        this.controls.noZoom = false;
+        this.controls.noPan = false;
+        this.controls.zoomSpeed = 0.1;
+        this.controls.maxDistance = 2;
     }
 
     regen_scaffold_view() {
@@ -520,6 +527,7 @@ new Vue({
 
             if (new_active === 'Plan') {
                 $('#tab_plan').show();
+                client.reinitialize_controls();
                 client.start();
             } else if (this.active_pane === 'Workers') {
                 $('#tab_workers').show();
