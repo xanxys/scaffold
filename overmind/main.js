@@ -16,6 +16,8 @@ import Bridge from './comm.js';
 import md5 from 'md5';
 import Identicon from 'identicon.js';
 
+import ScaffoldModel from './scaffold-model.ts';
+
 // Components.
 import PaneControl from './pane-control.vue';
 import WorkerCard from './worker-card.vue';
@@ -72,44 +74,6 @@ function flash_status() {
         el.removeClass('text-muted');
     }, 100);
 }
-
-// Scaffold inferred / target world model.
-// Assumes z=0 is floor.
-class ScaffoldModel {
-
-    constructor() {
-        const unit = 0.06;
-
-        this.rails = [{
-            type: "RS",
-            center: new THREE.Vector3(0, 0, 0.03),
-            ori: new THREE.Vector3(0, 0, 1),
-            id: 0,
-            support: true,
-        }, {
-            type: "RS",
-            center: new THREE.Vector3(0, unit, 0.03),
-            ori: new THREE.Vector3(0, 0, 1),
-            id: 1,
-            support: false,
-        }];
-    }
-
-    get_worker_pos() {}
-
-    get_points() {
-        return [{
-            open: true,
-            pos: new THREE.Vector3(0, 0, 0.03),
-            normal: new THREE.Vector3(0, 0, 1)
-        }, {
-            open: true,
-            pos: new THREE.Vector3(0, 0.06 * 2, 0.03),
-            normal: new THREE.Vector3(0, 0, 1)
-        }];
-    }
-}
-
 
 class WorkerPool {
     constructor() {
