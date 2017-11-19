@@ -310,7 +310,7 @@ class View3DClient {
         _.each(this.model.rails, rail => {
             let mesh = new THREE.Mesh(this.cad_models['S60C-' + rail.type]);
             mesh.material = new THREE.MeshLambertMaterial({});
-            mesh.position.copy(rail.center);
+            mesh.position.copy(rail.coord.convertP(rail.bound.center(), model.coord));
             this.scene.add(mesh);
         });
         _.each(this.model.workers, worker => {
