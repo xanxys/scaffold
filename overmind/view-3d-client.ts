@@ -1,3 +1,4 @@
+
 import _ from 'underscore';
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
@@ -31,7 +32,7 @@ export default class View3DClient {
     texture_loader: any;
     stl_loader: any;
     cad_models: any;
-
+    cache_point_geom: THREE.BufferGeometry;
 
     constructor(model, windowElem, viewportElem, addRsElem) {
         this.model = model;

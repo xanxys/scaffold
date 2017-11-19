@@ -1,20 +1,6 @@
 
 import * as THREE from 'three';
 
-// TODO: Figure out proper way to do this.
-// declare const THREE : any;
-
-/*
-namespace THREE {
-    export interface Vector3 {
-        clone(): Vector3;
-        add(Vector3): Vector3;
-        sub(Vector3): Vector3;
-        multiplyScalar(number): Vector3;
-    }
-}
-*/
-
 // Scaffold inferred / target world model.
 // Captures lowest level of physics scaffold cares.
 // Currently, that is static rigid inteference models & rail connections.
