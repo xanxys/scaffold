@@ -114,7 +114,12 @@ export class S60RailFeederWide implements ScaffoldThing {
     constructor() {
         this.type = "FDW-RS";
         this.coord = new Coordinates();
-        this.ports = [];
+        this.ports = [0, 0.06, 0.06 + 0.035, 0.06 + 0.035 * 2, 0.06 + 0.035 * 3].map(xoffset => {
+            return new Port(
+                new THREE.Vector3(0.135 - xoffset, -0.022, 0.067),
+                new THREE.Vector3(0, -1, 0),
+                new THREE.Vector3(0, 0, 1));
+        });
         this.bound = new AABB(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.22, 0.045, 0.067));
 
         this.cadCoord = new Coordinates();
