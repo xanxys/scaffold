@@ -17,19 +17,13 @@ export class ScaffoldModel {
     constructor() {
         this.coord = new Coordinates();
 
-        /*
-        let rs = new S60RailStraight();
-        rs.coord.relationTo(this.coord).align().fix();
-        */
-
         this.rails = [
             new S60RailStraight(),
             new S60RailStraight(),
         ];
 
-        this.rails[0].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0));
-        this.rails[1].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0.06, 0));
-
+        this.rails[0].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.02));
+        this.rails[1].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0.06, 0.02));
 
         let fd = new S60RailFeederWide();
         fd.coord.unsafeSetParent(this.coord, new THREE.Vector3(0.1, 0, 0));
@@ -39,21 +33,35 @@ export class ScaffoldModel {
     get_worker_pos() {}
 
     get_points() {
-        return [{
-            open: true,
-            pos: new THREE.Vector3(0, 0, 0.03),
-            normal: new THREE.Vector3(0, 0, 1)
-        }, {
-            open: true,
-            pos: new THREE.Vector3(0, 0.06 * 2, 0.03),
-            normal: new THREE.Vector3(0, 0, 1)
-        }];
+        let port_points = [];
+        this.rails.forEach(rail => {
+            port_points = port_points.concat(rail.ports.map(port => {
+                return {
+                    open: true,
+                    pos: rail.coord.convertP(port.pos, this.coord),
+                    normal: rail.coord.convertD(port.up, this.coord)
+                };
+            })); 
+        });
+        console.log(port_points);
+        return port_points;
     }
 
     // Returns (pos, human readable error string).
     // If no error, return [].
     checkErrors(): Array<[THREE.Vector3, string]> {
-        return [];
+        let errors = [];
+
+        const size = this.rails.length;
+        for (let i = 0; i < size; i++) {
+            for (let j = i + 1; j < size; j++) {
+                let collision_pt = aabb_collision(this.rails[i].bound, this.rails[j].bound);
+                if (collision_pt !== null) {
+                    errors.push([collision_pt, "collision"]);
+                }
+            }
+        }
+        return errors;
     }
 }
 
@@ -64,6 +72,8 @@ export interface ScaffoldThing {
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
+
+    cadCoord: Coordinates;
 }
 
 // Something that is connected to wireless network and can act on comands.
@@ -75,12 +85,21 @@ export class S60RailStraight implements ScaffoldThing {
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
+
+    // TODO: refactor cad reference into this class?
+    cadCoord: Coordinates;
     
     constructor() {
         this.type = "RS";
         this.coord = new Coordinates();
-        this.ports = [];
+        this.ports = [
+            new Port(new THREE.Vector3(0, -0.03, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, -1, 0)),
+            new Port(new THREE.Vector3(0, 0.03, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 1, 0))
+        ];
         this.bound = new AABB(new THREE.Vector3(-0.015, -0.03, 0), new THREE.Vector3(0.015, 0.03, 0.02));
+
+        this.cadCoord = new Coordinates();
+        this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.03, 0));
     }
 }
 
@@ -89,12 +108,17 @@ export class S60RailFeederWide implements ScaffoldThing {
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
+
+    cadCoord: Coordinates;
     
     constructor() {
         this.type = "FDW-RS";
         this.coord = new Coordinates();
         this.ports = [];
         this.bound = new AABB(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.22, 0.045, 0.067));
+
+        this.cadCoord = new Coordinates();
+        this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0));
     }
 }
 
@@ -103,9 +127,8 @@ class S60Builder {
 }
 
 class Port {
-    coord: Coordinates;
-    up: THREE.Vector3;
-    fwd: THREE.Vector3;
+    constructor(public pos: THREE.Vector3, public up: THREE.Vector3, public fwd: THREE.Vector3) {
+    }
 }
 
 class AABB {
@@ -119,6 +142,28 @@ class AABB {
     size(): THREE.Vector3 {
         return this.max.clone().sub(this.min);
     }
+}
+
+function aabb_collision(a: AABB, b: AABB): THREE.Vector3 | undefined {
+    function collision(amin, amax, bmin, bmax): number | undefined {
+        let imin = Math.max(amin, bmin);
+        let imax = Math.min(amax, bmax);
+        return (imin > imax) ? null : (imin + imax) * 0.5;
+    }
+
+    let ix = collision(a.min.x, a.max.x, b.min.x, b.min.x);
+    if (ix === null) {
+        return null;
+    }
+    let iy = collision(a.min.y, a.max.y, b.min.y, b.min.y);
+    if (iy === null) {
+        return null;
+    }
+    let iz = collision(a.min.z, a.max.z, b.min.z, b.min.z);
+    if (iz === null) {
+        return null;
+    }
+    return new THREE.Vector3(ix, iy, iz);
 }
 
 // Describes a single coordinate system in the world.
@@ -137,7 +182,7 @@ class Coordinates {
         return new CoordinatesRelationBuilder();
     }
 
-    convertP(pos: THREE.Vector3, target: Coordinates) : THREE.Vector3 {
+    convertP(pos: THREE.Vector3, target: Coordinates): THREE.Vector3 {
         if (target === this) {
             return pos;
         } else {
@@ -149,7 +194,7 @@ class Coordinates {
         }
     }
 
-    covnertD(dir: THREE.Vector3, target: Coordinates) : THREE.Vector3 {
+    convertD(dir: THREE.Vector3, target: Coordinates): THREE.Vector3 {
         return dir;
     }
 }

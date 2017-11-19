@@ -178,7 +178,7 @@ export default class View3DClient {
         _.each(this.model.rails, rail => {
             let mesh = new THREE.Mesh(this.cad_models['S60C-' + rail.type]);
             mesh.material = new THREE.MeshLambertMaterial({});
-            mesh.position.copy(rail.coord.convertP(rail.bound.center(), this.model.coord));
+            mesh.position.copy(rail.cadCoord.convertP(new THREE.Vector3(0,0,0), this.model.coord));
             this.scene.add(mesh);
         });
         _.each(this.model.workers, worker => {
