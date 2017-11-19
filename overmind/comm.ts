@@ -1,9 +1,14 @@
 import _ from 'underscore';
 
 // Need to use window.require: https://github.com/railsware/bozon/issues/40
-const SerialPort = window.require('serialport');
+declare var window: any;
+const SerialPort: any = window.require('serialport');
 
 export default class WorkerBridge {
+    private path: string;
+    private port: any;
+    private isOpen: boolean;
+    
     constructor(handle_packet) {
         this.path = '/dev/ttyUSB0';
         this.port = new SerialPort(this.path, {

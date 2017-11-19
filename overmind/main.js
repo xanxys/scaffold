@@ -6,7 +6,7 @@ require('bootstrap');
 import _ from 'underscore';
 import Vue from 'vue/dist/vue.js';
 import {Line} from 'vue-chartjs';
-import Bridge from './comm.js';
+import Bridge from './comm.ts';
 import WorkerPool from './worker-pool.ts';
 import View3DClient from './view-3d-client.ts';
 import ScaffoldModel from './scaffold-model.ts';
