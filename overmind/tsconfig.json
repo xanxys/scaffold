@@ -4,7 +4,9 @@
         "module": "es6",
         "target": "es6",
         "outDir": "./app/build/de-ts",
-        "sourceMap": true
+        "sourceMap": true,
+        // Allow importing legacy JS libraries
+        "allowSyntheticDefaultImports": true
     },
     "include": [
         "**/*.ts"

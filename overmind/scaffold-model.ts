@@ -1,12 +1,19 @@
 
-// TODO: Figure out proper way to do this.
-declare const THREE : any;
+import * as THREE from 'three';
 
+// TODO: Figure out proper way to do this.
+// declare const THREE : any;
+
+/*
 namespace THREE {
     export interface Vector3 {
-
+        clone(): Vector3;
+        add(Vector3): Vector3;
+        sub(Vector3): Vector3;
+        multiplyScalar(number): Vector3;
     }
 }
+*/
 
 // Scaffold inferred / target world model.
 // Captures lowest level of physics scaffold cares.
@@ -122,6 +129,9 @@ class AABB {
         return this.max.clone().add(this.min).multiplyScalar(0.5);
     }
 
+    size(): THREE.Vector3 {
+        return this.max.clone().sub(this.min);
+    }
 }
 
 // Describes a single coordinate system in the world.
