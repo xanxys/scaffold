@@ -9,7 +9,7 @@ import {Line} from 'vue-chartjs';
 import Bridge from './comm.ts';
 import WorkerPool from './worker-pool.ts';
 import View3DClient from './view-3d-client.ts';
-import ScaffoldModel from './scaffold-model.ts';
+import {ScaffoldModel} from './scaffold-model.ts';
 
 // Components.
 import PaneControl from './pane-control.vue';

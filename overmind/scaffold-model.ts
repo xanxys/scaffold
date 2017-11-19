@@ -9,9 +9,10 @@ import * as THREE from 'three';
 // However, multiple instances of this can exist esp. for planning / simulation.
 //
 // Assumes z=0 is floor.
-export default class ScaffoldModel {
+export class ScaffoldModel {
     coord: Coordinates;
     rails: Array<ScaffoldThing>;
+    workers: Array<any>;
 
     constructor() {
         this.coord = new Coordinates();
@@ -58,7 +59,7 @@ export default class ScaffoldModel {
 
 // A thing (mostly rigid) that should be tracked in scaffold world model.
 // Can have internal state.
-interface ScaffoldThing {
+export interface ScaffoldThing {
     type: string;
     coord: Coordinates;
     ports: Array<Port>;
@@ -66,10 +67,10 @@ interface ScaffoldThing {
 }
 
 // Something that is connected to wireless network and can act on comands.
-interface Active {
+export interface Active {
 }
 
-class S60RailStraight implements ScaffoldThing {
+export class S60RailStraight implements ScaffoldThing {
     type: string;
     coord: Coordinates;
     ports: Array<Port>;
@@ -83,7 +84,7 @@ class S60RailStraight implements ScaffoldThing {
     }
 }
 
-class S60RailFeederWide implements ScaffoldThing {
+export class S60RailFeederWide implements ScaffoldThing {
     type: string;
     coord: Coordinates;
     ports: Array<Port>;

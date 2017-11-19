@@ -3,7 +3,7 @@ import _ from 'underscore';
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import TrackballControls from 'three.trackball';
-import ScaffoldModel from './scaffold-model';
+import {ScaffoldModel, S60RailStraight} from './scaffold-model';
 
 let STLLoader: any = LoaderFactory(THREE);
 
@@ -13,7 +13,7 @@ const PRIM_COLOR_HOVER = 0x286090;
 // ViewModel / View.
 // Since we update all frame all the time, we don't care about MVVM framework / bindings etc.
 export default class View3DClient {
-    model: any;
+    model: ScaffoldModel;
 
     // Unabstracted jQuery UI things.
     windowElem: any;
@@ -23,9 +23,9 @@ export default class View3DClient {
     // internal control state.
     animating: boolean;
 
-    renderer: any;
-    camera: any;
-    scene: any;
+    renderer: THREE.WebGLRenderer;
+    camera: THREE.PerspectiveCamera;
+    scene: THREE.Scene;
     scaffold_view: any;
     controls: any;
 
@@ -146,15 +146,13 @@ export default class View3DClient {
             let obj = isects[0].object;
 
             if (add_rs) {
-                this.model.rails.push({
-                    type: "RS",
-                    center: new THREE.Vector3(0, 0.12, 0.03),
-                    ori: new THREE.Vector3(0, 0, 1),
-                    id: 2,
-                });
+                let rail = new S60RailStraight();
+                rail.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0, 0.12, 0));
+                this.model.rails.push(rail);
                 this.regen_scaffold_view();
+                
+                add_rs = false;
             }
-            add_rs = false;
         });
 
         this.addRsElem.click(ev => {
@@ -188,7 +186,6 @@ export default class View3DClient {
             mesh.material = new THREE.MeshLambertMaterial({
                 color: PRIM_COLOR
             });
-            mesh.position.z = this.model.zofs;
             this.scene.add(mesh);
         });
 
