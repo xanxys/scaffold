@@ -176,19 +176,29 @@ function aabb_collision(a: AABB, b: AABB): THREE.Vector3 | undefined {
 class Coordinates {
 
     private parent: Coordinates;
-
-    private orient: THREE.Quaternion;
-    private offset: THREE.Vector3;
+    private transToParent: THREE.Matrix4;
 
     // TODO: Replace with more friendly interface once relationBuilder is done.
     unsafeSetParent(parent: Coordinates, offset: THREE.Vector3, orient?: THREE.Quaternion) {
         this.parent = parent;
-        this.offset = offset;
-        this.orient = orient || new THREE.Quaternion(0, 0, 0, 1);
+        let trans = new THREE.Matrix4().identity();
+        if (orient !== undefined) {
+            trans.makeRotationFromQuaternion(orient);
+        }
+        trans.setPosition(offset);
+        this.transToParent = trans;
     }
 
-    relationTo(parent: Coordinates): CoordinatesRelationBuilder {
-        return new CoordinatesRelationBuilder();
+    // unsafeSetParentInRelationTo(parent: Coordinates, offset: THREE.V)
+
+    unsafeSetParentWithRelation(parent: Coordinates, ref: Coordinates): RelationBuilder {
+        return new RelationBuilder(ref, transFromRefToNew => {
+            // m(this->parent) = m(ref->parent) * m(ref->this)^-1
+            let transNewToRef = new THREE.Matrix4().getInverse(transFromRefToNew);
+
+            this.transToParent = transNewToRef.premultiply(ref.getTransformTo(parent));
+            this.parent = parent;
+        });
     }
 
     convertP(pos: THREE.Vector3, target: Coordinates): THREE.Vector3 {
@@ -198,14 +208,13 @@ class Coordinates {
             if (this.parent === null) {
                 throw "Failed to convert between Coordinates";
             } else {
-                return this.parent.convertP(
-                    pos.clone().applyQuaternion(this.orient).add(this.offset), target);
+                return this.parent.convertP(pos.clone().applyMatrix4(this.transToParent), target);
             }
         }
     }
 
     convertD(dir: THREE.Vector3, target: Coordinates): THREE.Vector3 {
-        return dir.clone().applyQuaternion(this.orient);
+        return dir.clone().applyQuaternion(new THREE.Quaternion().setFromRotationMatrix(this.transToParent));
     }
 
     getTransformTo(target: Coordinates): THREE.Matrix4 {
@@ -215,24 +224,84 @@ class Coordinates {
             if (this.parent === null) {
                 throw "Failed to convert between Coordinates";
             } else {
-                let fToParent = new THREE.Matrix4().makeRotationFromQuaternion(this.orient).setPosition(this.offset);
-                return fToParent.premultiply(this.parent.getTransformTo(target));
+                return this.transToParent.clone().premultiply(this.parent.getTransformTo(target));
             }
         }
     }
 }
 
-class CoordinatesRelationBuilder {
+/**
+ * Constraints based transform calculator, to intuitively align two objects' Coordinates.
+ */
+class RelationBuilder {
 
-    // TODO: Implement these.
-    orient(origDir: THREE.Vector3, targDir: THREE.Vector3): CoordinatesRelationBuilder {
+    private ptPair: [THREE.Vector3, THREE.Vector3];
+    private dirPairs: Array<[THREE.Vector3, THREE.Vector3]> = [];
+
+    constructor(private coordRef: Coordinates, private afterBuild?: ((trans :THREE.Matrix4) => any)) {}
+
+    alignPt(ptNew: THREE.Vector3, ptRef: THREE.Vector3): RelationBuilder {
+        this.ptPair = [ptNew, ptRef];
         return this;
     }
 
-    align(origPos: THREE.Vector3, targDir: THREE.Vector3): CoordinatesRelationBuilder {
+    /**
+     * You need to call this exactly twice with different (ideally orthogonal) vectors
+     * in order to properly specify orientation.
+     */
+    alignDir(dirNew: THREE.Vector3, dirRef: THREE.Vector3): RelationBuilder {
+        this.dirPairs.push([dirNew, dirRef]);
         return this;
     }
 
-    fix() {
+    build() {
+        this.afterBuild(this.getTransformToRef());
+    }
+
+    /**
+     * @returns transform M such that (M*new = ref and satifies given constraints).
+     */ 
+    getTransformToRef(): THREE.Matrix4 {
+        if (this.dirPairs.length !== 2) {
+            throw "Under- or over- constrained RelationBuilder. Needs exactly 2 alignDir() calls.";
+        }
+
+        // Apply orthogonalization.
+        this.dirPairs.push([
+            new THREE.Vector3().crossVectors(this.dirPairs[0][0], this.dirPairs[1][0]).normalize(),
+            new THREE.Vector3().crossVectors(this.dirPairs[0][1], this.dirPairs[1][1]).normalize(),
+        ]);
+        this.dirPairs[0] = [
+            new THREE.Vector3().crossVectors(this.dirPairs[2][0], this.dirPairs[0][0]).normalize(),
+            new THREE.Vector3().crossVectors(this.dirPairs[2][1], this.dirPairs[0][1]).normalize(),
+        ];
+        this.dirPairs[1] = [
+            new THREE.Vector3().copy(this.dirPairs[1][0]).normalize(),
+            new THREE.Vector3().copy(this.dirPairs[1][1]).normalize()
+        ];
+
+        // dirs are now orth-normal unit vectors.
+        // We want to get rotation R such that,
+        // R (dir0N dir1N dir2N) = (dir0R dir1R dir2R)  (dir are column vectors).
+        // R = MR * MN^-1
+        let mNew = this.columns(this.dirPairs[0][0], this.dirPairs[1][0], this.dirPairs[2][0]);
+        let mRef = this.columns(this.dirPairs[0][1], this.dirPairs[1][1], this.dirPairs[2][1]);
+        let mNewInv = new THREE.Matrix3().getInverse(mNew, true);
+        let mTrans = mRef.multiply(mNewInv);
+
+        // Now resole point alignment constraint.
+        // (mTrans, mOfs) * ptN = ptR
+        // mOfs = ptR - mTrans * ptN
+        let mOfs = this.ptPair[1].clone().sub(this.ptPair[0].applyMatrix3(mTrans));
+
+        return new THREE.Matrix4().extractRotation(mTrans).setPosition(mOfs);
+    }
+
+    private columns(v0: THREE.Vector3, v1: THREE.Vector3, v2: THREE.Vector3): THREE.Matrix3 {
+        return new THREE.Matrix3().set(
+            v0.x, v1.x, v2.x,
+            v0.y, v1.y, v2.y,
+            v0.z, v1.z, v2.z
+        );
     }
 }
