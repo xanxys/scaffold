@@ -202,7 +202,7 @@ class View3DClient {
             total: 4,
             loaded: 0
         };
-        _.each(['S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH'], (name) => {
+        _.each(['S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH', 'S60C-FDW-RS'], (name) => {
             _this.stl_loader.load('./models/' + name + '.stl', (geom) => {
                 geom.scale(1e-3, 1e-3, 1e-3);
                 this.cad_models[name] = geom;

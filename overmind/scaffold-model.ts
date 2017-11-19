@@ -35,6 +35,11 @@ export default class ScaffoldModel {
 
         this.rails[0].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0));
         this.rails[1].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0.06, 0));
+
+
+        let fd = new S60RailFeederWide();
+        fd.coord.unsafeSetParent(this.coord, new THREE.Vector3(0.1, 0, 0));
+        this.rails.push(fd);
     }
 
     get_worker_pos() {}
@@ -85,8 +90,18 @@ class S60RailStraight implements ScaffoldThing {
     }
 }
 
-class S60RailFeederWide {
-
+class S60RailFeederWide implements ScaffoldThing {
+    type: string;
+    coord: Coordinates;
+    ports: Array<Port>;
+    bound: AABB;
+    
+    constructor() {
+        this.type = "FDW-RS";
+        this.coord = new Coordinates();
+        this.ports = [];
+        this.bound = new AABB(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.22, 0.045, 0.067));
+    }
 }
 
 class S60Builder {
