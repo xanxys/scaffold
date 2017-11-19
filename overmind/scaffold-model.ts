@@ -118,7 +118,8 @@ export class S60RailFeederWide implements ScaffoldThing {
         this.bound = new AABB(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.22, 0.045, 0.067));
 
         this.cadCoord = new Coordinates();
-        this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0));
+        this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.038),
+            new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
     }
 }
 
@@ -170,12 +171,15 @@ function aabb_collision(a: AABB, b: AABB): THREE.Vector3 | undefined {
 class Coordinates {
 
     private parent: Coordinates;
+
+    private orient: THREE.Quaternion;
     private offset: THREE.Vector3;
 
     // TODO: Replace with more friendly interface once relationBuilder is done.
-    unsafeSetParent(parent: Coordinates, offset: THREE.Vector3) {
+    unsafeSetParent(parent: Coordinates, offset: THREE.Vector3, orient?: THREE.Quaternion) {
         this.parent = parent;
         this.offset = offset;
+        this.orient = orient || new THREE.Quaternion(0, 0, 0, 1);
     }
 
     relationTo(parent: Coordinates): CoordinatesRelationBuilder {
@@ -189,13 +193,27 @@ class Coordinates {
             if (this.parent === null) {
                 throw "Failed to convert between Coordinates";
             } else {
-                return this.parent.convertP(pos.clone().add(this.offset), target);
+                return this.parent.convertP(
+                    pos.clone().applyQuaternion(this.orient).add(this.offset), target);
             }
         }
     }
 
     convertD(dir: THREE.Vector3, target: Coordinates): THREE.Vector3 {
-        return dir;
+        return dir.clone().applyQuaternion(this.orient);
+    }
+
+    getTransformTo(target: Coordinates): THREE.Matrix4 {
+        if (target == this) {
+            return new THREE.Matrix4();
+        } else {
+            if (this.parent === null) {
+                throw "Failed to convert between Coordinates";
+            } else {
+                let fToParent = new THREE.Matrix4().makeRotationFromQuaternion(this.orient).setPosition(this.offset);
+                return fToParent.premultiply(this.parent.getTransformTo(target));
+            }
+        }
     }
 }
 
