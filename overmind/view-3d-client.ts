@@ -1,5 +1,3 @@
-
-import * as _ from 'underscore';
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import * as TrackballControls from 'three.trackball';
@@ -179,23 +177,16 @@ export default class View3DClient {
     regen_scaffold_view() {
         this.scaffold_view.remove(this.scaffold_view.children);
 
-        _.each(this.model.rails, rail => {
+        this.model.rails.forEach(rail => {
             let mesh = new THREE.Mesh(this.cad_models['S60C-' + rail.type]);
             mesh.material = new THREE.MeshLambertMaterial({});
             console.log(rail.cadCoord.getTransformTo(this.model.coord));
             mesh.applyMatrix(rail.cadCoord.getTransformTo(this.model.coord));
             this.scene.add(mesh);
         });
-        _.each(this.model.workers, worker => {
-            let mesh = new THREE.Mesh(this.cad_models['S60C-T']);
-            mesh.material = new THREE.MeshLambertMaterial({
-                color: PRIM_COLOR
-            });
-            this.scene.add(mesh);
-        });
 
         this.cache_point_geom = new THREE.SphereBufferGeometry(0.006, 16, 12);
-        _.each(this.model.get_points(), point => {
+        this.model.get_points().forEach(point => {
             if (!point.open) {
                 return;
             }

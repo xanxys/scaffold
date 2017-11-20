@@ -3,7 +3,6 @@ import $ from 'jquery';
 global.jQuery = $;
 require('bootstrap');
 
-import _ from 'underscore';
 import Vue from 'vue/dist/vue.js';
 import {Line} from 'vue-chartjs';
 import Bridge from './comm.ts';
@@ -25,12 +24,12 @@ Vue.component('line-chart', {
     },
     methods: {
         render() {
-            let xydata = _.map(this.data, (v, ix) => ({
+            let xydata = this.data.map((v, ix) => ({
                 x: ix,
                 y: v
             }));
             this.renderChart({
-                labels: _.map(this.data, (v, ix) => ix),
+                labels: this.data.map((v, ix) => ix),
                 datasets: [{
                     label: "T",
                     data: xydata,
