@@ -19,11 +19,11 @@ export class ScaffoldModel {
 
         this.rails = [
             new S60RailStraight(),
-            new S60RailStraight(),
+            // new S60RailStraight(),
         ];
 
         this.rails[0].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.02));
-        this.rails[1].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0.06, 0.02));
+        // this.rails[1].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0.06, 0.02));
 
         let fd = new S60RailFeederWide();
         fd.coord.unsafeSetParent(this.coord, new THREE.Vector3(0.1, 0, 0));
@@ -45,7 +45,6 @@ export class ScaffoldModel {
                 };
             })); 
         });
-        console.log(port_points);
         return port_points;
     }
 
@@ -195,12 +194,15 @@ class Coordinates {
 
     // unsafeSetParentInRelationTo(parent: Coordinates, offset: THREE.V)
 
+    /**
+     * Usage:
+     * newCoord.unsafeSetParentWithRelation(someRandomSharedParent, existingRef)
+     *   .alignX(newX, existingX)
+     *   .build();
+     */
     unsafeSetParentWithRelation(parent: Coordinates, ref: Coordinates): RelationBuilder {
-        return new RelationBuilder(transFromRefToNew => {
-            // m(this->parent) = m(ref->parent) * m(ref->this)^-1
-            let transNewToRef = new THREE.Matrix4().getInverse(transFromRefToNew);
-
-            this.transToParent = transNewToRef.premultiply(ref.getTransformTo(parent));
+        return new RelationBuilder(transFromNewToRef => {
+            this.transToParent = transFromNewToRef.clone().premultiply(ref.getTransformTo(parent));
             this.parent = parent;
         });
     }
