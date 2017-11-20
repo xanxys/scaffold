@@ -1,8 +1,8 @@
 
-import _ from 'underscore';
+import * as _ from 'underscore';
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
-import TrackballControls from 'three.trackball';
+import * as TrackballControls from 'three.trackball';
 import {ScaffoldModel, S60RailStraight} from './scaffold-model';
 
 let STLLoader: any = LoaderFactory(THREE);
@@ -138,7 +138,7 @@ export default class View3DClient {
                 let orgRail = obj.userData.rail;
                 let orgPort = obj.userData.port;
                 newRail.coord.unsafeSetParentWithRelation(this.model.coord, orgRail.coord)
-                    .alignPt(newRail.ports[0].pos, orgPort.pos.clone().setZ(-0.1))
+                    .alignPt(newRail.ports[0].pos, orgPort.pos)
                     .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
                     .alignDir(newRail.ports[0].up, orgPort.up)
                     .build();

@@ -1,4 +1,4 @@
-import _ from 'underscore';
+import * as _ from 'underscore';
 
 // Need to use window.require: https://github.com/railsware/bozon/issues/40
 declare var window: any;
