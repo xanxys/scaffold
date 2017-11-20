@@ -17,13 +17,11 @@ export class ScaffoldModel {
     constructor() {
         this.coord = new Coordinates("world");
 
-        this.rails = [
-            new S60RailStraight(),
-            // new S60RailStraight(),
-        ];
+        this.rails = [];
 
-        this.rails[0].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.02));
-        // this.rails[1].coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0.06, 0.02));
+        let rs = new S60RailStraight();
+        rs.coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.02));
+        this.rails.push(rs);
 
         let fd = new S60RailFeederWide();
         fd.coord.unsafeSetParent(this.coord, new THREE.Vector3(0.1, 0, 0));
@@ -247,7 +245,7 @@ export class RelationBuilder {
     constructor(private afterBuild?: ((trans :THREE.Matrix4) => any)) {}
 
     alignPt(ptNew: THREE.Vector3, ptRef: THREE.Vector3): RelationBuilder {
-        this.ptPair = [ptNew, ptRef];
+        this.ptPair = [ptNew.clone(), ptRef.clone()];
         return this;
     }
 
@@ -256,7 +254,7 @@ export class RelationBuilder {
      * in order to properly specify orientation.
      */
     alignDir(dirNew: THREE.Vector3, dirRef: THREE.Vector3): RelationBuilder {
-        this.dirPairs.push([dirNew, dirRef]);
+        this.dirPairs.push([dirNew.clone(), dirRef.clone()]);
         return this;
     }
 
@@ -299,7 +297,7 @@ export class RelationBuilder {
         // Now resole point alignment constraint.
         // (mTrans, mOfs) * ptN = ptR
         // mOfs = ptR - mTrans * ptN
-        let mOfs = this.ptPair[1].clone().sub(this.ptPair[0].applyMatrix4(mTrans));
+        let mOfs = this.ptPair[1].sub(this.ptPair[0].applyMatrix4(mTrans));
         return mTrans.setPosition(mOfs);
     }
 
