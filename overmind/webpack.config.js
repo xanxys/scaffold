@@ -14,28 +14,31 @@ module.exports = {
     },
 
     module: {
-        loaders: [{
-            test: /\.vue$/,
-            loader: 'vue-loader'
-        }, {
-            test: /\.(png|jpg|gif|svg)$/,
-            loader: 'file-loader',
-            query: {
-                name: '[name].[ext]?[hash]'
-            }
-        }, {
-            test: /\.js$/,
-            exclude: /node_modules/,
-            loader: "babel-loader",
-            query: {
-                presets: ['es2015']
-            }
-        },
-        {
-            test: /\.ts$/,
-            loader: "ts-loader",
-        },
-        ]
+        loaders: [
+            {
+                test: /\.vue$/,
+                loader: 'vue-loader'
+            },
+            {
+                test: /\.(png|jpg|gif|svg)$/,
+                loader: 'file-loader',
+                query: {
+                    name: '[name].[ext]?[hash]'
+                }
+            },
+            {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                loader: "babel-loader",
+                query: {
+                    presets: ['es2015']
+                }
+            },
+            {
+                test: /\.ts$/,
+                loader: "ts-loader",
+            },
+        ],
     },
 
     resolve: {

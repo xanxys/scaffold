@@ -134,9 +134,15 @@ export default class View3DClient {
             let obj = isects[0].object;
 
             if (add_rs) {
-                let rail = new S60RailStraight();
-                rail.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0, 0.12, 0));
-                this.model.rails.push(rail);
+                let newRail = new S60RailStraight();
+                let orgRail = obj.userData.rail;
+                let orgPort = obj.userData.port;
+                newRail.coord.unsafeSetParentWithRelation(this.model.coord, orgRail.coord)
+                    .alignPt(newRail.ports[0].pos, orgPort.pos.clone().setZ(-0.1))
+                    .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
+                    .alignDir(newRail.ports[0].up, orgPort.up)
+                    .build();
+                this.model.rails.push(newRail);
                 this.regen_scaffold_view();
                 
                 add_rs = false;
@@ -195,7 +201,10 @@ export default class View3DClient {
             }
             let mesh = new THREE.Mesh();
             mesh.name = 'ui';
-            mesh.userData = {};
+            mesh.userData = {
+                rail: point.rail,
+                port: point.port
+            };
             mesh.geometry = this.cache_point_geom;
             mesh.material = new THREE.MeshBasicMaterial({
                 color: PRIM_COLOR,

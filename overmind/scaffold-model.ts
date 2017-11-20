@@ -15,7 +15,7 @@ export class ScaffoldModel {
     workers: Array<any>;
 
     constructor() {
-        this.coord = new Coordinates();
+        this.coord = new Coordinates("world");
 
         this.rails = [
             new S60RailStraight(),
@@ -38,6 +38,8 @@ export class ScaffoldModel {
             port_points = port_points.concat(rail.ports.map(port => {
                 return {
                     open: true,
+                    rail: rail,
+                    port: port,
                     pos: rail.coord.convertP(port.pos, this.coord),
                     normal: rail.coord.convertD(port.up, this.coord)
                 };
@@ -91,7 +93,7 @@ export class S60RailStraight implements ScaffoldThing {
     
     constructor() {
         this.type = "RS";
-        this.coord = new Coordinates();
+        this.coord = new Coordinates("RS");
         this.ports = [
             new Port(new THREE.Vector3(0, -0.03, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, -1, 0)),
             new Port(new THREE.Vector3(0, 0.03, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 1, 0))
@@ -113,7 +115,7 @@ export class S60RailFeederWide implements ScaffoldThing {
     
     constructor() {
         this.type = "FDW-RS";
-        this.coord = new Coordinates();
+        this.coord = new Coordinates("FDW");
         this.ports = [0, 0.06, 0.06 + 0.035, 0.06 + 0.035 * 2, 0.06 + 0.035 * 3].map(xoffset => {
             return new Port(
                 new THREE.Vector3(0.135 - xoffset, -0.022, 0.067),
@@ -178,6 +180,8 @@ class Coordinates {
     private parent: Coordinates;
     private transToParent: THREE.Matrix4;
 
+    constructor(public name?: string) {}
+
     // TODO: Replace with more friendly interface once relationBuilder is done.
     unsafeSetParent(parent: Coordinates, offset: THREE.Vector3, orient?: THREE.Quaternion) {
         this.parent = parent;
@@ -192,7 +196,7 @@ class Coordinates {
     // unsafeSetParentInRelationTo(parent: Coordinates, offset: THREE.V)
 
     unsafeSetParentWithRelation(parent: Coordinates, ref: Coordinates): RelationBuilder {
-        return new RelationBuilder(ref, transFromRefToNew => {
+        return new RelationBuilder(transFromRefToNew => {
             // m(this->parent) = m(ref->parent) * m(ref->this)^-1
             let transNewToRef = new THREE.Matrix4().getInverse(transFromRefToNew);
 
@@ -214,7 +218,7 @@ class Coordinates {
     }
 
     convertD(dir: THREE.Vector3, target: Coordinates): THREE.Vector3 {
-        return dir.clone().applyQuaternion(new THREE.Quaternion().setFromRotationMatrix(this.transToParent));
+        return dir.clone().applyMatrix3(new THREE.Matrix3().setFromMatrix4(this.transToParent));
     }
 
     getTransformTo(target: Coordinates): THREE.Matrix4 {
@@ -233,12 +237,12 @@ class Coordinates {
 /**
  * Constraints based transform calculator, to intuitively align two objects' Coordinates.
  */
-class RelationBuilder {
+export class RelationBuilder {
 
     private ptPair: [THREE.Vector3, THREE.Vector3];
     private dirPairs: Array<[THREE.Vector3, THREE.Vector3]> = [];
 
-    constructor(private coordRef: Coordinates, private afterBuild?: ((trans :THREE.Matrix4) => any)) {}
+    constructor(private afterBuild?: ((trans :THREE.Matrix4) => any)) {}
 
     alignPt(ptNew: THREE.Vector3, ptRef: THREE.Vector3): RelationBuilder {
         this.ptPair = [ptNew, ptRef];
@@ -272,12 +276,12 @@ class RelationBuilder {
             new THREE.Vector3().crossVectors(this.dirPairs[0][1], this.dirPairs[1][1]).normalize(),
         ]);
         this.dirPairs[0] = [
-            new THREE.Vector3().crossVectors(this.dirPairs[2][0], this.dirPairs[0][0]).normalize(),
-            new THREE.Vector3().crossVectors(this.dirPairs[2][1], this.dirPairs[0][1]).normalize(),
+            new THREE.Vector3().copy(this.dirPairs[0][0]).normalize(),
+            new THREE.Vector3().copy(this.dirPairs[0][1]).normalize()
         ];
         this.dirPairs[1] = [
-            new THREE.Vector3().copy(this.dirPairs[1][0]).normalize(),
-            new THREE.Vector3().copy(this.dirPairs[1][1]).normalize()
+            new THREE.Vector3().crossVectors(this.dirPairs[2][0], this.dirPairs[0][0]).normalize(),
+            new THREE.Vector3().crossVectors(this.dirPairs[2][1], this.dirPairs[0][1]).normalize(),
         ];
 
         // dirs are now orth-normal unit vectors.
@@ -286,22 +290,23 @@ class RelationBuilder {
         // R = MR * MN^-1
         let mNew = this.columns(this.dirPairs[0][0], this.dirPairs[1][0], this.dirPairs[2][0]);
         let mRef = this.columns(this.dirPairs[0][1], this.dirPairs[1][1], this.dirPairs[2][1]);
-        let mNewInv = new THREE.Matrix3().getInverse(mNew, true);
+        let mNewInv = new THREE.Matrix4().getInverse(mNew, true);
+
         let mTrans = mRef.multiply(mNewInv);
 
         // Now resole point alignment constraint.
         // (mTrans, mOfs) * ptN = ptR
         // mOfs = ptR - mTrans * ptN
-        let mOfs = this.ptPair[1].clone().sub(this.ptPair[0].applyMatrix3(mTrans));
-
-        return new THREE.Matrix4().extractRotation(mTrans).setPosition(mOfs);
+        let mOfs = this.ptPair[1].clone().sub(this.ptPair[0].applyMatrix4(mTrans));
+        return mTrans.setPosition(mOfs);
     }
 
-    private columns(v0: THREE.Vector3, v1: THREE.Vector3, v2: THREE.Vector3): THREE.Matrix3 {
-        return new THREE.Matrix3().set(
-            v0.x, v1.x, v2.x,
-            v0.y, v1.y, v2.y,
-            v0.z, v1.z, v2.z
+    private columns(v0: THREE.Vector3, v1: THREE.Vector3, v2: THREE.Vector3): THREE.Matrix4 {
+        return new THREE.Matrix4().set(
+            v0.x, v1.x, v2.x, 0,
+            v0.y, v1.y, v2.y, 0,
+            v0.z, v1.z, v2.z, 0,
+            0, 0, 0, 1
         );
     }
 }

@@ -42,6 +42,11 @@ cd ./overmind
 npm start
 ```
 
+To run unit tests:
+```
+npm test
+```
+
 ## Requirements
 
 Re-creating
