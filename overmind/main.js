@@ -7,7 +7,7 @@ import Vue from 'vue/dist/vue.js';
 import {Line} from 'vue-chartjs';
 import Bridge from './comm.ts';
 import WorkerPool from './worker-pool.ts';
-import View3DClient from './view-3d-client.ts';
+import {WorldView, WorldViewModel} from './view-3d-client.ts';
 import {ScaffoldModel} from './scaffold-model.ts';
 
 // Components.
@@ -70,8 +70,12 @@ function flash_status() {
 const worker_pool = new WorkerPool();
 
 let model = new ScaffoldModel();
-let client = new View3DClient(model, $(window), $('#viewport'), $('#add_rs'));
-client.start();
+
+let viewModel = new WorldViewModel(model, $('#add_rs'), $('#add_rh'), $('#add_rr'));
+let worldView = new WorldView(model, $(window), $('#viewport'), viewModel);
+viewModel.bindView(worldView);
+
+worldView.start();
 
 new Vue({
     el: '#tab_workers',
@@ -168,7 +172,7 @@ new Vue({
         update_pane(new_active) {
             if (this.active_pane === 'Plan') {
                 $('#tab_plan').hide();
-                client.stop();
+                worldView.stop();
             } else if (this.active_pane === 'Workers') {
                 $('#tab_workers').hide();
             }
@@ -177,8 +181,8 @@ new Vue({
 
             if (new_active === 'Plan') {
                 $('#tab_plan').show();
-                client.reinitialize_controls();
-                client.start();
+                worldView.reinitialize_controls();
+                worldView.start();
             } else if (this.active_pane === 'Workers') {
                 $('#tab_workers').show();
             }

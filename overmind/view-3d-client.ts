@@ -1,22 +1,75 @@
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import * as TrackballControls from 'three.trackball';
-import {ScaffoldModel, S60RailStraight} from './scaffold-model';
+import {ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator} from './scaffold-model';
 
 let STLLoader: any = LoaderFactory(THREE);
 
 const PRIM_COLOR = 0x3498db;
 const PRIM_COLOR_HOVER = 0x286090;
 
-// ViewModel / View.
-// Since we update all frame all the time, we don't care about MVVM framework / bindings etc.
-export default class View3DClient {
+enum ClickOpState {
+    None,
+    AddRs,
+    AddRh,
+    AddRr,
+}
+
+export class WorldViewModel {
+    private state = ClickOpState.None;
+    private view: WorldView
+
+    constructor(private model, addRsElem, addRhElem, addRrElem) {
+        addRsElem.click(ev => {
+            this.state = ClickOpState.AddRs;
+        });
+        addRhElem.click(ev => {
+            this.state = ClickOpState.AddRh;
+        });
+        addRrElem.click(ev => {
+            this.state = ClickOpState.AddRr;
+        });
+    }
+
+    bindView(view: WorldView) {
+        this.view = view;
+    }
+
+    onClickUiObject(obj: any) {
+        let newRail = null;
+        switch (this.state) {
+            case ClickOpState.AddRs:
+                newRail = new S60RailStraight();
+                break;
+            case ClickOpState.AddRh:
+                newRail = new S60RailHelix();
+                break;
+            case ClickOpState.AddRr:
+                newRail = new S60RailRotator();
+                break;
+        }
+
+        if (newRail !== null) {
+            let orgRail = obj.userData.rail;
+            let orgPort = obj.userData.port;
+            newRail.coord.unsafeSetParentWithRelation(this.model.coord, orgRail.coord)
+                .alignPt(newRail.ports[0].pos, orgPort.pos)
+                .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
+                .alignDir(newRail.ports[0].up, orgPort.up)
+                .build();
+            this.model.rails.push(newRail);
+            this.view.regen_scaffold_view();
+        }
+    }
+}
+
+// Renders ScaffoldModel directly, but uses WorldViewModel for model edit / other UI interactions.
+export class WorldView {
     model: ScaffoldModel;
 
     // Unabstracted jQuery UI things.
     windowElem: any;
     viewportElem: any;
-    addRsElem: any;
 
     // internal control state.
     animating: boolean;
@@ -32,11 +85,13 @@ export default class View3DClient {
     cad_models: any;
     cache_point_geom: THREE.BufferGeometry;
 
-    constructor(model, windowElem, viewportElem, addRsElem) {
+    viewModel: WorldViewModel;
+
+    constructor(model, windowElem, viewportElem, viewModel) {
         this.model = model;
         this.windowElem = windowElem;
         this.viewportElem = viewportElem;
-        this.addRsElem = addRsElem;
+        this.viewModel = viewModel;
 
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 7);
         this.camera.up = new THREE.Vector3(0, 0, 1);
@@ -130,25 +185,7 @@ export default class View3DClient {
             }
 
             let obj = isects[0].object;
-
-            if (add_rs) {
-                let newRail = new S60RailStraight();
-                let orgRail = obj.userData.rail;
-                let orgPort = obj.userData.port;
-                newRail.coord.unsafeSetParentWithRelation(this.model.coord, orgRail.coord)
-                    .alignPt(newRail.ports[0].pos, orgPort.pos)
-                    .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
-                    .alignDir(newRail.ports[0].up, orgPort.up)
-                    .build();
-                this.model.rails.push(newRail);
-                this.regen_scaffold_view();
-                
-                add_rs = false;
-            }
-        });
-
-        this.addRsElem.click(ev => {
-            add_rs = true;
+            this.viewModel.onClickUiObject(obj);
         });
 
         this.update_projection();

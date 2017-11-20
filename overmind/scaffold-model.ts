@@ -102,6 +102,52 @@ export class S60RailStraight implements ScaffoldThing {
     }
 }
 
+export class S60RailHelix implements ScaffoldThing {
+    type: string;
+    coord: Coordinates;
+    ports: Array<Port>;
+    bound: AABB;
+
+    cadCoord: Coordinates;
+    
+    constructor() {
+        this.type = "RH";
+        this.coord = new Coordinates("RH");
+        this.ports = [
+            new Port(new THREE.Vector3(0, -0.03, 0), new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, -1, 0)),
+            new Port(new THREE.Vector3(0, 0.03, 0), new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 1, 0))
+        ];
+        this.bound = new AABB(new THREE.Vector3(-0.02, -0.03, -0.02), new THREE.Vector3(0.02, 0.03, 0.02));
+
+        this.cadCoord = new Coordinates();
+        this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.025, 0));
+    }
+}
+
+export class S60RailRotator implements ScaffoldThing {
+    type: string;
+    coord: Coordinates;
+    ports: Array<Port>;
+    bound: AABB;
+
+    cadCoord: Coordinates;
+    
+    constructor() {
+        this.type = "RR";
+        this.coord = new Coordinates("RR");
+        this.ports = [
+            new Port(new THREE.Vector3(0, -0.03, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, -1, 0)),
+            new Port(new THREE.Vector3(0, 0.03, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 1, 0)),
+            new Port(new THREE.Vector3(-0.03, 0, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(-1, 0, 0)),
+            new Port(new THREE.Vector3(0.03, 0, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)),
+        ];
+        this.bound = new AABB(new THREE.Vector3(-0.03, -0.03, 2), new THREE.Vector3(0.03, 0.03, 0.02));
+
+        this.cadCoord = new Coordinates();
+        this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.03, 0));
+    }
+}
+
 export class S60RailFeederWide implements ScaffoldThing {
     type: string;
     coord: Coordinates;
