@@ -65,6 +65,9 @@ export class WorldViewModel {
 
 // Renders ScaffoldModel directly, but uses WorldViewModel for model edit / other UI interactions.
 export class WorldView {
+    private static readonly WIDTH = 1000;
+    private static readonly HEIGHT = 800;
+
     model: ScaffoldModel;
 
     // Unabstracted jQuery UI things.
@@ -134,10 +137,10 @@ export class WorldView {
             antialias: true
         });
 
-        this.renderer.setSize(800, 600);
+        this.renderer.setSize(WorldView.WIDTH, WorldView.HEIGHT);
         this.renderer.setClearColor('#aac');
-        this.viewportElem.width(800);
-        this.viewportElem.height(600);
+        this.viewportElem.width(WorldView.WIDTH);
+        this.viewportElem.height(WorldView.HEIGHT);
         this.viewportElem.append(this.renderer.domElement);
 
         this.reinitialize_controls();
@@ -260,7 +263,7 @@ export class WorldView {
     }
 
     update_projection() {
-        this.camera.aspect = 800 / 600;
+        this.camera.aspect = WorldView.WIDTH / WorldView.HEIGHT;
         this.camera.updateProjectionMatrix();
     }
 
