@@ -1,11 +1,11 @@
 <template>
     <div id="sidepanel" class="col-md-3" style="background-color: #333; height: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">
-        <pane-control name="Plan" v-bind:active="active_pane" v-on:change="update_pane"/>
+        <pane-control name="Plan" v-bind:active="activePane" v-on:change="update_pane"/>
         <div id="plan">
             <plan-summary v-bind:model="model"/>
         </div>
 
-        <pane-control name="Workers" v-bind:active="active_pane" v-on:change="update_pane"/>
+        <pane-control name="Workers" v-bind:active="activePane" v-on:change="update_pane"/>
         <div id="workers">
             <table>
             <tbody>
@@ -36,12 +36,12 @@ export default {
     },
     data() {
         return {
-            active_pane: "Workers",
-            unit_ref_now: new Date(),
+            activePane: "Workers",
+            unitRefNow: new Date(),
         };
     },
     created() {
-        this.timer = setInterval(() => this.unit_ref_now = new Date(), 800);
+        this.timer = setInterval(() => this.unitRefNow = new Date(), 800);
     },
     computed: {
         has_uninit() {
@@ -51,27 +51,27 @@ export default {
             if (this.workerPool.last_uninit === null) {
                 return "All workers have good addresses so far.";
             } else {
-                let stale = this.unit_ref_now - this.workerPool.last_uninit;
+                let stale = this.unitRefNow - this.workerPool.last_uninit;
                 return "SrcAddr=0 observed ${staleness*1e-3} seconds ago.";
             }
         },
     },
     methods: {
-        update_pane(new_active) {
-            if (this.active_pane === 'Plan') {
+        update_pane(newActive) {
+            if (this.activePane === 'Plan') {
                 $('#tab_plan').hide();
                 this.worldView.stop();
-            } else if (this.active_pane === 'Workers') {
+            } else if (this.activePane === 'Workers') {
                 $('#tab_workers').hide();
             }
 
-            this.active_pane = new_active;
+            this.activePane = newActive;
 
-            if (new_active === 'Plan') {
+            if (newActive === 'Plan') {
                 $('#tab_plan').show();
                 this.worldView.reinitialize_controls();
                 this.worldView.start();
-            } else if (this.active_pane === 'Workers') {
+            } else if (this.activePane === 'Workers') {
                 $('#tab_workers').show();
             }
         }

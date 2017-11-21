@@ -1,8 +1,10 @@
 <template>
     <div id="tab_workers">
-        <a v-if="!raw_enabled" style="color: #f0ad4e" href="#" v-on:click="set_raw_enabled(true)"><i class="material-icons">warning</i>Show raw actions</a>
-        <a v-if="raw_enabled"  style="color: #eee" href="#" v-on:click="set_raw_enabled(false)">Hide raw actions</a>
-        <worker-card v-for="worker in pool.workers" v-bind:worker="worker" v-bind:show_raw="raw_enabled"/>
+        <a v-if="!rawEnabled" style="color: #f0ad4e" href="#" v-on:click="setRawEnabled(true)">
+            <i class="material-icons">warning</i>Show raw actions
+        </a>
+        <a v-if="rawEnabled"  style="color: #eee" href="#" v-on:click="setRawEnabled(false)">Hide raw actions</a>
+        <worker-card v-for="worker in pool.workers" :key="worker.addr" v-bind:worker="worker" v-bind:show_raw="raw_enabled"/>
     </div>
 </template>
 
@@ -18,12 +20,12 @@ export default {
     },
     data() {
         return {
-            raw_enabled: false
+            rawEnabled: false
         };
     },
     methods: {
-        set_raw_enabled(st) {
-            this.raw_enabled = st;
+        setRawEnabled(st) {
+            this.rawEnabled = st;
         }
     }
 }

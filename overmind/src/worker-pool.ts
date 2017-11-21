@@ -1,24 +1,35 @@
 import Identicon from 'identicon.js';
 import md5 from 'md5';
+import {Packet} from './comm';
+
+interface Worker {
+    addr: number;
+    wtype?: string;
+    identicon: Identicon;
+    messages: Array<any>;
+    out: Array<any>;
+    power: any;
+    readings: Array<any>;
+}
 
 export default class WorkerPool {
-    workers: Array<any>;
-    last_uninit: any;
+    workers: Array<Worker>;
+    lastUninit?: Date;
 
     constructor() {
         this.workers = [];
-        this.last_uninit = null;
+        this.lastUninit = null;
     }
 
-    handle_datagram(packet) {
+    handle_datagram(packet: Packet) {
         if (packet.src === 0) {
-            this.last_uninit = new Date();
+            this.lastUninit = new Date();
             return;
         }
 
         let worker = this.workers.find(w => w.addr === packet.src);
         if (worker !== undefined) {
-            this.handle_datagram_in_worker(worker, packet);
+            this.handleDatagramInWorker(worker, packet);
         } else {
             let worker = {
                 addr: packet.src,
@@ -33,12 +44,12 @@ export default class WorkerPool {
                 power: {},
                 readings: [],
             };
-            this.handle_datagram_in_worker(worker, packet);
+            this.handleDatagramInWorker(worker, packet);
             this.workers.push(worker);
         }
     }
 
-    handle_datagram_in_worker(worker, packet) {
+    handleDatagramInWorker(worker: Worker, packet: Packet) {
         console.log(packet);
         let message: any = {
             status: 'known', // known, unknown, corrupt

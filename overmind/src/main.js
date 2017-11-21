@@ -4,7 +4,7 @@ global.jQuery = $;
 require('bootstrap');
 
 import Vue from 'vue/dist/vue.js';
-import Bridge from './comm.ts';
+import {WorkerBridge} from './comm.ts';
 import WorkerPool from './worker-pool.ts';
 import {WorldView, WorldViewModel} from './view-3d-client.ts';
 import {ScaffoldModel} from './scaffold-model.ts';
@@ -19,7 +19,7 @@ Vue.component('the-sidepanel', TheSidepanel);
 import TheTabWorker from './the-tab-worker.vue';
 Vue.component('the-tab-worker', TheTabWorker);
 
-const bridge = new Bridge(packet => {
+const bridge = new WorkerBridge(packet => {
     flash_status();
     if (packet.datagram !== null) {
         worker_pool.handle_datagram(packet);

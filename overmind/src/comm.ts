@@ -4,12 +4,24 @@ import * as _ from 'underscore';
 declare var window: any;
 const SerialPort: any = window.require('serialport');
 
-export default class WorkerBridge {
+export interface Packet {
+    raw_data: any;
+
+    // Decoded overmind protocol.
+    src?: number;
+    src_ts?: number;
+    datagram?: Uint8Array;
+
+    // Decoded datagram JSON.
+    data?: any;
+}
+
+export class WorkerBridge {
     private path: string;
     private port: any;
     private isOpen: boolean;
     
-    constructor(handle_packet) {
+    constructor(handle_packet: (packet:Packet) => void) {
         this.path = '/dev/ttyUSB0';
         this.port = new SerialPort(this.path, {
             baudRate: 115200
@@ -52,7 +64,7 @@ export default class WorkerBridge {
         });
     }
 
-    send_command(command, addr = 0xffffffff) {
+    send_command(command, addr = 0xffffffff): void {
         let buffer = new ArrayBuffer(2 + 4 + command.length);
         let header = new DataView(buffer);
         header.setUint8(0, 0x78); // TWELITE addr: default child
@@ -67,7 +79,7 @@ export default class WorkerBridge {
     }
 }
 
-function decode_hex(hex) {
+function decode_hex(hex: string): ArrayBuffer {
     let buffer = new ArrayBuffer(hex.length / 2);
     let view = new Uint8Array(buffer);
     for (let ix = 0; ix < hex.length; ix += 2) {
@@ -76,6 +88,6 @@ function decode_hex(hex) {
     return buffer;
 }
 
-function encode_hex(buffer) {
+function encode_hex(buffer: ArrayBuffer): string {
     return _.map(new Uint8Array(buffer), b => (b >> 4).toString(16) + (b & 0xf).toString(16)).join('').toUpperCase();
 }
