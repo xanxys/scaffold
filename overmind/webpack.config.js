@@ -5,10 +5,10 @@ module.exports = {
 
     target: 'electron',
 
-    entry: './main.js',
+    entry: './src/main.js',
 
     output: {
-        path: __dirname + '/app/build',
+        path: __dirname + '/build',
         publicPath: 'build/',
         filename: 'bundle.js'
     },

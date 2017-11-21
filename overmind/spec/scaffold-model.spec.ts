@@ -1,7 +1,7 @@
 
 // cf. https://stackoverflow.com/questions/39020022/angular-2-unit-tests-cannot-find-name-describe/39945169#39945169
 import {} from 'jasmine';
-import {RelationBuilder} from "../scaffold-model";
+import {RelationBuilder} from "../src/scaffold-model";
 
 import * as THREE from 'three';
 
