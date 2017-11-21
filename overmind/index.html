@@ -10,32 +10,14 @@
 
 <body style="background-color: #444">
     <div>
-        <nav class="navbar navbar-default" style="background-color: #222; border-radius: 3px;">
-            <div class="container-fluid">
-                <div class="navbar-header" >
-                  <a class="navbar-brand" href="#">S60C</a>
-                </div>
-                <div class="collapse navbar-collapse" id="nav">
-                    <ul class="nav navbar-nav">
-                        <li id="conn-status"><p class="navbar-text"><span v-bind:class="status_class"><i id="conn-icon" class="material-icons">wifi_tethering</i>{{status}}</span> {{path}}</p></li>
-
-                        <li><a href="#" v-on:click="refresh_now" title="Refresh now"><span style="padding-top: 7px" class="glyphicon glyphicon-refresh"></span></a></li>
-                        <li class="dropdown" style="margin-left:-10px; padding-top:9px">
-                            <a class="dropdown-toggle" data-toggle="dropdown" role="button">{{refresh_ago}}<span class="caret"></span></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="#" v-on:click="set_ref_period(5)">Refresh every 5sec</a></li>
-                                <li><a href="#" v-on:click="set_ref_period(15)">Refresh every 15sec</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li><a href="#" v-on:click="set_ref_period(null)">Disable Auto-refresh</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
+        <div id="app">
+            <the-toolbar v-bind:bridge="bridge"></the-toolbar>
+        </div>
+        
 
         <div class="container-fluid">
             <div class="row" style="margin-left: 0">
+                <!-- sidepanel -->
                 <div id="sidepanel" class="col-md-3" style="background-color: #333; height: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">
                     <pane-control name="Plan" v-bind:active="active_pane" v-on:change="update_pane"></pane-control>
                     <div id="plan">
@@ -57,6 +39,7 @@
                     </div>
                 </div>
 
+                <!-- modal main content -->
                 <div class="col-md-9">
                     <div id="tab_plan" style="display: none">
                         <div style="display:flex; align-items: center">
@@ -67,14 +50,13 @@
                             <button id="add_rr" class="btn btn-default">RR</button>
                             <button id="remove" class="btn btn-default"><i class="material-icons">delete_forever</i></button>
                         </div>
-                        
                         <div id="viewport"></div>
                     </div>
 
                     <div id="tab_workers">
                         <a v-if="!raw_enabled" style="color: #f0ad4e" href="#" v-on:click="set_raw_enabled(true)"><i class="material-icons">warning</i>Show raw actions</a>
                         <a v-if="raw_enabled"  style="color: #eee" href="#" v-on:click="set_raw_enabled(false)">Hide raw actions</a>
-                        <worker-card v-bind:worker="worker" v-bind:show_raw="raw_enabled" v-for="worker in pool.workers"></worker-card>
+                        <worker-card v-for="worker in pool.workers" v-bind:worker="worker" v-bind:show_raw="raw_enabled"></worker-card>
                     </div>
                 </div>
             </div>

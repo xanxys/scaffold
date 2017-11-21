@@ -10,13 +10,19 @@ import WorkerPool from './worker-pool.ts';
 import {WorldView, WorldViewModel} from './view-3d-client.ts';
 import {ScaffoldModel} from './scaffold-model.ts';
 
-// Components.
-import PlanSummary from './plan-summary.vue';
-import PaneControl from './pane-control.vue';
+// Components
+import TheToolbar from './the-toolbar.vue';
+Vue.component('the-toolbar', TheToolbar);
+
 import WorkerCard from './worker-card.vue';
-Vue.component('plan-summary', PlanSummary);
-Vue.component('pane-control', PaneControl);
 Vue.component('worker-card', WorkerCard);
+
+import PlanSummary from './plan-summary.vue';
+Vue.component('plan-summary', PlanSummary);
+
+import PaneControl from './pane-control.vue';
+Vue.component('pane-control', PaneControl);
+
 
 Vue.component('line-chart', {
     extends: Line,
@@ -93,58 +99,10 @@ new Vue({
 });
 
 new Vue({
-    el: '#nav',
+    el: '#app',
     data: {
-        port: bridge,
-        ref_now: new Date(),
-        last_refresh: null,
-        period: 15
+        bridge: bridge,
     },
-    created() {
-        this.timer = setInterval(() => {
-            this.ref_now = new Date();
-            if (this.last_refresh == null || (this.period != null && this.ref_now - this.last_refresh > this.period * 1e3)) {
-                this.refresh_now();
-            }
-        }, 1000);
-    },
-    computed: {
-        refresh_ago() {
-            let autoref = (this.period !== null) ? `(auto: every ${this.period} sec)` : '(auto disabled)'
-            if (this.last_refresh !== null) {
-                let delta_sec = Math.floor(Math.max(0, this.ref_now - this.last_refresh) * 1e-3);
-                return `Last refreshed ${delta_sec} sec ago ${autoref}`;
-            } else {
-                return `Never refreshed ${autoref}`;
-            }
-        },
-        status() {
-            if (this.port.isOpen) {
-                return 'connected';
-            } else {
-                return 'cutoff'
-            }
-        },
-        status_class() {
-            if (this.port.isOpen) {
-                return 'text-success';
-            } else {
-                return 'text-muted';
-            }
-        },
-        path() {
-            return this.port.path;
-        }
-    },
-    methods: {
-        refresh_now() {
-            bridge.send_command('p');
-            this.last_refresh = new Date();
-        },
-        set_ref_period(period) {
-            this.period = period;
-        }
-    }
 });
 
 new Vue({
