@@ -220,7 +220,6 @@ export class WorldView {
         this.model.rails.forEach(rail => {
             let mesh = new THREE.Mesh(this.cad_models['S60C-' + rail.type]);
             mesh.material = new THREE.MeshLambertMaterial({});
-            console.log(rail.cadCoord.getTransformTo(this.model.coord));
             mesh.applyMatrix(rail.cadCoord.getTransformTo(this.model.coord));
             this.scene.add(mesh);
         });

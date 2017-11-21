@@ -4,7 +4,6 @@ global.jQuery = $;
 require('bootstrap');
 
 import Vue from 'vue/dist/vue.js';
-import {Line} from 'vue-chartjs';
 import Bridge from './comm.ts';
 import WorkerPool from './worker-pool.ts';
 import {WorldView, WorldViewModel} from './view-3d-client.ts';
@@ -23,7 +22,7 @@ Vue.component('plan-summary', PlanSummary);
 import PaneControl from './pane-control.vue';
 Vue.component('pane-control', PaneControl);
 
-
+import {Line} from 'vue-chartjs';
 Vue.component('line-chart', {
     extends: Line,
     props: ['data', 'options'],
