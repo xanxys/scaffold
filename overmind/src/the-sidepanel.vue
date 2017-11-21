@@ -45,13 +45,13 @@ export default {
     },
     computed: {
         has_uninit() {
-            return this.workerPool.last_uninit !== null;
+            return this.workerPool.lastUninit !== null;
         },
         uninit_desc() {
-            if (this.workerPool.last_uninit === null) {
+            if (this.workerPool.lastUninit === null) {
                 return "All workers have good addresses so far.";
             } else {
-                let stale = this.unitRefNow - this.workerPool.last_uninit;
+                let stale = this.unitRefNow - this.workerPool.lastUninit;
                 return "SrcAddr=0 observed ${staleness*1e-3} seconds ago.";
             }
         },
