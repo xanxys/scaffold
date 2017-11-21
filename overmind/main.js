@@ -11,8 +11,10 @@ import {WorldView, WorldViewModel} from './view-3d-client.ts';
 import {ScaffoldModel} from './scaffold-model.ts';
 
 // Components.
+import PlanSummary from './plan-summary.vue';
 import PaneControl from './pane-control.vue';
 import WorkerCard from './worker-card.vue';
+Vue.component('plan-summary', PlanSummary);
 Vue.component('pane-control', PaneControl);
 Vue.component('worker-card', WorkerCard);
 
@@ -149,6 +151,7 @@ new Vue({
     el: '#sidepanel',
     data: {
         active_pane: "Workers",
+        model: model,
         worker_pool: worker_pool,
         unit_ref_now: new Date(),
     },

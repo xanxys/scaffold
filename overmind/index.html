@@ -38,24 +38,9 @@
             <div class="row" style="margin-left: 0">
                 <div id="sidepanel" class="col-md-3" style="background-color: #333; height: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">
                     <pane-control name="Plan" v-bind:active="active_pane" v-on:change="update_pane"></pane-control>
-
-                    <table class="table">
-                        <tr>
-                            <td>FDW</td>
-                            <td>3</td>
-                        <tr>
-                            <td>RS</td>
-                            <td>3</td>
-                        </tr>
-                        <tr>
-                            <td>RH</td>
-                            <td>0</td>
-                        </tr>
-                        <tr>
-                            <td>RR</td>
-                            <td>0</td>
-                        </tr>
-                    </table>
+                    <div id="plan">
+                        <plan-summary v-bind:model="model"></plan-summary>
+                    </div>
 
                     <pane-control name="Workers" v-bind:active="active_pane" v-on:change="update_pane"></pane-control>
                     <div id="workers">
