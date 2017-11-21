@@ -147,7 +147,7 @@
                 </button>
                 O:{{worker.out[1][1]}}
 
-                <line-chart :width="300" :height="200" :data="worker.readings"></line-chart>
+                <line-chart :width="300" :height="200" :data="worker.readings"/>
             </div>
           </div>
         </div>
@@ -172,6 +172,44 @@
 </template>
 
 <script>
+import Vue from 'vue';
+import {Line} from 'vue-chartjs';
+Vue.component('line-chart', {
+    extends: Line,
+    props: ['data', 'options'],
+    mounted() {
+        this.render();
+    },
+    methods: {
+        render() {
+            let xydata = this.data.map((v, ix) => ({
+                x: ix,
+                y: v
+            }));
+            this.renderChart({
+                labels: this.data.map((v, ix) => ix),
+                datasets: [{
+                    label: "T",
+                    data: xydata,
+                    borderColor: "rgba(100,180,220,1)",
+                    backgroundColor: "rgba(100,180,220,0.3)",
+                }]
+            }, {
+                cubicInterpolationMode: "monotone",
+                responsive: false,
+                maintainAspectRatio: false
+            });
+            console.log(xydata);
+        }
+    },
+    watch: {
+        data: function() {
+            this._chart.destroy();
+            this.render();
+        }
+    }
+});
+
 export default {
     props: ['worker', 'show_raw'],
     data() {

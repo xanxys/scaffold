@@ -96,7 +96,7 @@ export class WorldView {
         this.viewportElem = viewportElem;
         this.viewModel = viewModel;
 
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 7);
+        this.camera = new THREE.PerspectiveCamera(75, WorldView.WIDTH / WorldView.HEIGHT, 0.01, 7);
         this.camera.up = new THREE.Vector3(0, 0, 1);
         this.camera.position.x = 0.3;
         this.camera.position.y = 0.3;
@@ -131,19 +131,6 @@ export class WorldView {
 
         this.scaffold_view = new THREE.Object3D();
         this.scene.add(this.scaffold_view);
-
-        // start canvas
-        this.renderer = new THREE.WebGLRenderer({
-            antialias: true
-        });
-
-        this.renderer.setSize(WorldView.WIDTH, WorldView.HEIGHT);
-        this.renderer.setClearColor('#aac');
-        this.viewportElem.width(WorldView.WIDTH);
-        this.viewportElem.height(WorldView.HEIGHT);
-        this.viewportElem.append(this.renderer.domElement);
-
-        this.reinitialize_controls();
 
         this.windowElem.resize(() => {
             this.update_projection();
@@ -192,6 +179,18 @@ export class WorldView {
         });
 
         this.update_projection();
+    }
+    
+    startRenderer() {
+        this.renderer = new THREE.WebGLRenderer({antialias: true});
+
+        this.renderer.setSize(WorldView.WIDTH, WorldView.HEIGHT);
+        this.renderer.setClearColor('#aac');
+        this.viewportElem.width(WorldView.WIDTH);
+        this.viewportElem.height(WorldView.HEIGHT);
+        this.viewportElem.append(this.renderer.domElement);
+
+        this.reinitialize_controls();
     }
 
     loadModel(name) {
