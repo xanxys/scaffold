@@ -41,33 +41,18 @@
 
                     <table class="table">
                         <tr>
-                            <th></th>
-                            <th>free</th>
-                            <th>in transit</th>
-                            <th>fixed</th>
-                        </tr>
+                            <td>FDW</td>
+                            <td>3</td>
                         <tr>
                             <td>RS</td>
                             <td>3</td>
-                            <td>0</td>
-                            <td>0</td>
                         </tr>
                         <tr>
                             <td>RH</td>
                             <td>0</td>
-                            <td>0</td>
-                            <td>0</td>
                         </tr>
                         <tr>
                             <td>RR</td>
-                            <td>0</td>
-                            <td>0</td>
-                            <td>0</td>
-                        </tr>
-                        <tr>
-                            <td>screw</td>
-                            <td>10</td>
-                            <td>1</td>
                             <td>0</td>
                         </tr>
                     </table>
@@ -89,9 +74,15 @@
 
                 <div class="col-md-9">
                     <div id="tab_plan" style="display: none">
-                        <button id="add_rs" class="btn btn-default">+RS</button>
-                        <button id="add_rh" class="btn btn-default">+RH</button>
-                        <button id="add_rr" class="btn btn-default">+RR</button>
+                        <div style="display:flex; align-items: center">
+                            <i class="material-icons">add_box</i>
+                            <button id="add_fdw" class="btn btn-default">FDW</button>
+                            <button id="add_rs" class="btn btn-default">RS</button>
+                            <button id="add_rh" class="btn btn-default">RH</button>
+                            <button id="add_rr" class="btn btn-default">RR</button>
+                            <button id="remove" class="btn btn-default"><i class="material-icons">delete_forever</i></button>
+                        </div>
+                        
                         <div id="viewport"></div>
                     </div>
 
