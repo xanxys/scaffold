@@ -70,6 +70,14 @@ export class WorldView {
     private static readonly WIDTH = 1000;
     private static readonly HEIGHT = 800;
 
+    private static readonly LAYER_DEFAULT = 1;
+
+    // Layers where intersectible objects resides.
+    private static readonly LAYER_UI = 2;
+
+    // Layers where intersectible && clickable objects resides.
+    private static readonly LAYER_CLICKABLE = 3;
+
     model: ScaffoldModel;
 
     // Unabstracted jQuery UI things.
@@ -176,9 +184,21 @@ export class WorldView {
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(ev_pos_normalized, this.camera);
         
-        const isects = raycaster.intersectObject(this.scene, true);
+        const maskIsect = new THREE.Layers();
+        maskIsect.set(WorldView.LAYER_UI);
 
-        if (isects.length > 0 && isects[0].object.name === 'ui') {
+        const maskClickable = new THREE.Layers();
+        maskClickable.set(WorldView.LAYER_CLICKABLE);
+
+        const targets = [];
+        this.scene.traverse(object => {
+            if (object.layers.test(maskIsect)) {
+                targets.push(object);
+            }
+        });
+        const isects = raycaster.intersectObjects(targets);
+
+        if (isects.length > 0 && isects[0].object.layers.test(maskClickable)) {
             return isects[0];
         }
     }
@@ -233,7 +253,6 @@ export class WorldView {
                 return;
             }
             let mesh = new THREE.Mesh();
-            mesh.name = 'ui';
             mesh.userData = {
                 rail: point.rail,
                 port: point.port
@@ -245,6 +264,8 @@ export class WorldView {
                 transparent: true,
             });
             mesh.position.copy(point.pos);
+            mesh.layers.enable(WorldView.LAYER_UI);
+            mesh.layers.enable(WorldView.LAYER_CLICKABLE);
             this.scene.add(mesh);
         });
     }
@@ -262,6 +283,7 @@ export class WorldView {
         const table = new THREE.Mesh(new THREE.BoxGeometry(1, 1, tableThickness), tableMaterial);
         table.position.z = -tableThickness / 2;
         table.receiveShadow = true;
+        table.layers.enable(WorldView.LAYER_UI);
         this.scene.add(table);
     }
 
