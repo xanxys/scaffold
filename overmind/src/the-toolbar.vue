@@ -8,14 +8,14 @@
                 <ul class="nav navbar-nav">
                     <li id="conn-status"><p class="navbar-text"><span v-bind:class="status_class"><i id="conn-icon" class="material-icons">wifi_tethering</i>{{status}}</span> {{path}}</p></li>
 
-                    <li><a href="#" v-on:click="refresh_now" title="Refresh now"><span style="padding-top: 7px" class="glyphicon glyphicon-refresh"></span></a></li>
+                    <li><a href="#" v-on:click="refreshNow" title="Refresh now"><span style="padding-top: 7px" class="glyphicon glyphicon-refresh"></span></a></li>
                     <li class="dropdown" style="margin-left:-10px; padding-top:9px">
                         <a class="dropdown-toggle" data-toggle="dropdown" role="button">{{refresh_ago}}<span class="caret"></span></a>
                         <ul class="dropdown-menu">
-                            <li><a href="#" v-on:click="set_ref_period(5)">Refresh every 5sec</a></li>
-                            <li><a href="#" v-on:click="set_ref_period(15)">Refresh every 15sec</a></li>
+                            <li><a href="#" v-on:click="setRefPeriod(5)">Refresh every 5sec</a></li>
+                            <li><a href="#" v-on:click="setRefPeriod(15)">Refresh every 15sec</a></li>
                             <li role="separator" class="divider"></li>
-                            <li><a href="#" v-on:click="set_ref_period(null)">Disable Auto-refresh</a></li>
+                            <li><a href="#" v-on:click="setRefPeriod(null)">Disable Auto-refresh</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -31,24 +31,24 @@ export default {
         return {
             port: this.bridge.port,
             ref_now: new Date(),
-            last_refresh: null,
+            lastRefresh: null,
             period: 15
         };
     },
     created() {
         this.timer = setInterval(() => {
             this.ref_now = new Date();
-            if (this.last_refresh == null || (this.period != null && this.ref_now - this.last_refresh > this.period * 1e3)) {
-                this.refresh_now();
+            if (this.lastRefresh == null || (this.period != null && this.ref_now - this.lastRefresh > this.period * 1e3)) {
+                this.refreshNow();
             }
         }, 1000);
     },
     computed: {
         refresh_ago() {
             let autoref = (this.period !== null) ? `(auto: every ${this.period} sec)` : '(auto disabled)'
-            if (this.last_refresh !== null) {
-                let delta_sec = Math.floor(Math.max(0, this.ref_now - this.last_refresh) * 1e-3);
-                return `Last refreshed ${delta_sec} sec ago ${autoref}`;
+            if (this.lastRefresh !== null) {
+                let deltaSec = Math.floor(Math.max(0, this.ref_now - this.lastRefresh) * 1e-3);
+                return `Last refreshed ${deltaSec} sec ago ${autoref}`;
             } else {
                 return `Never refreshed ${autoref}`;
             }
@@ -72,11 +72,11 @@ export default {
         }
     },
     methods: {
-        refresh_now() {
-            this.bridge.send_command('p');
-            this.last_refresh = new Date();
+        refreshNow() {
+            this.bridge.sendCommand('p');
+            this.lastRefresh = new Date();
         },
-        set_ref_period(period) {
+        setRefPeriod(period) {
             this.period = period;
         }
     }

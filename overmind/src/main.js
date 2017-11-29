@@ -22,7 +22,7 @@ Vue.component('the-tab-worker', TheTabWorker);
 const bridge = new WorkerBridge(packet => {
     flash_status();
     if (packet.datagram !== null) {
-        worker_pool.handle_datagram(packet);
+        workerPool.handleDatagram(packet);
     }
 });
 
@@ -63,4 +63,4 @@ appVm._data.worldView = worldView;
 
 
 // For console debugging.
-global.send_command = (c, a) => bridge.send_command(c, a);
+global.sendCommand = (c, a) => bridge.sendCommand(c, a);

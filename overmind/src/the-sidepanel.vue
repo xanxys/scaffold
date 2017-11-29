@@ -69,7 +69,7 @@ export default {
 
             if (newActive === 'Plan') {
                 $('#tab_plan').show();
-                this.worldView.reinitialize_controls();
+                this.worldView.reinitializeControls();
                 this.worldView.start();
             } else if (this.activePane === 'Workers') {
                 $('#tab_workers').show();

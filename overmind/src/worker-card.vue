@@ -225,7 +225,7 @@ export default {
             head: msg,
             desc: msg,
           });
-          send_command(msg, this.worker.addr);
+          sendCommand(msg, this.worker.addr);
         },
 
         send_palette() {

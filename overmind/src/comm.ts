@@ -9,7 +9,7 @@ export interface Packet {
 
     // Decoded overmind protocol.
     src?: number;
-    src_ts?: number;
+    srcTs?: number;
     datagram?: Uint8Array;
 
     // Decoded datagram JSON.
@@ -51,7 +51,7 @@ export class WorkerBridge {
             };
 
             if (data.startsWith(':7801')) {
-                let ovm_packet = decode_hex(data.slice(':7801'.length, -2 /* csum */));
+                let ovm_packet = decodeHex(data.slice(':7801'.length, -2 /* csum */));
 
                 packet.src = new DataView(ovm_packet).getUint32(0);
                 packet.src_ts = new DataView(ovm_packet).getUint32(4);
@@ -64,7 +64,7 @@ export class WorkerBridge {
         });
     }
 
-    send_command(command: string, addr = 0xffffffff): void {
+    sendCommand(command: string, addr = 0xffffffff): void {
         let buffer = new ArrayBuffer(2 + 4 + command.length);
         let header = new DataView(buffer);
         header.setUint8(0, 0x78); // TWELITE addr: default child
@@ -73,13 +73,13 @@ export class WorkerBridge {
         let body = new Uint8Array(buffer, 2 + 4);
         body.set(_.map(command, ch => ch.charCodeAt(0)));
 
-        let final_command = ':' + encode_hex(buffer) + 'X\r\n';
+        let final_command = ':' + encodeHex(buffer) + 'X\r\n';
         console.log('send', final_command);
         this.port.write(final_command);
     }
 }
 
-function decode_hex(hex: string): ArrayBuffer {
+function decodeHex(hex: string): ArrayBuffer {
     let buffer = new ArrayBuffer(hex.length / 2);
     let view = new Uint8Array(buffer);
     for (let ix = 0; ix < hex.length; ix += 2) {
@@ -88,6 +88,6 @@ function decode_hex(hex: string): ArrayBuffer {
     return buffer;
 }
 
-function encode_hex(buffer: ArrayBuffer): string {
+function encodeHex(buffer: ArrayBuffer): string {
     return _.map(new Uint8Array(buffer), b => (b >> 4).toString(16) + (b & 0xf).toString(16)).join('').toUpperCase();
 }

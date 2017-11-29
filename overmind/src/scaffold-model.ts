@@ -31,12 +31,12 @@ export class ScaffoldModel {
         this.rails.push(fd);
     }
 
-    get_worker_pos() { }
+    getWorkerPos() { }
 
-    get_points() {
-        let port_points = [];
+    getPoints() {
+        let portPoints = [];
         this.rails.forEach(rail => {
-            port_points = port_points.concat(rail.ports.map(port => {
+            portPoints = portPoints.concat(rail.ports.map(port => {
                 return {
                     open: true,
                     rail: rail,
@@ -46,7 +46,7 @@ export class ScaffoldModel {
                 };
             }));
         });
-        return port_points;
+        return portPoints;
     }
 
     // Returns (pos, human readable error string).
@@ -57,9 +57,9 @@ export class ScaffoldModel {
         const size = this.rails.length;
         for (let i = 0; i < size; i++) {
             for (let j = i + 1; j < size; j++) {
-                let collision_pt = aabb_collision(this.rails[i].bound, this.rails[j].bound);
-                if (collision_pt !== null) {
-                    errors.push([collision_pt, "collision"]);
+                let collisionPt = aabbCollision(this.rails[i].bound, this.rails[j].bound);
+                if (collisionPt !== null) {
+                    errors.push([collisionPt, "collision"]);
                 }
             }
         }
@@ -200,7 +200,7 @@ class AABB {
     }
 }
 
-function aabb_collision(a: AABB, b: AABB): THREE.Vector3 | undefined {
+function aabbCollision(a: AABB, b: AABB): THREE.Vector3 | undefined {
     function collision(amin, amax, bmin, bmax): number | undefined {
         let imin = Math.max(amin, bmin);
         let imax = Math.min(amax, bmax);

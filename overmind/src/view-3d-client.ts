@@ -58,7 +58,7 @@ export class WorldViewModel {
                 .alignDir(newRail.ports[0].up, orgPort.up)
                 .build();
             this.model.rails.push(newRail);
-            this.view.regen_scaffold_view();
+            this.view.regenScaffoldView();
         }
     }
 }
@@ -85,10 +85,10 @@ export class WorldView {
     scaffoldView: any;
     controls: any;
 
-    texture_loader: any;
-    stl_loader: any;
-    cad_models: Map<string, THREE.Geometry>;
-    cache_point_geom: THREE.BufferGeometry;
+    textureLoader: any;
+    stlLoader: any;
+    cadModels: Map<string, THREE.Geometry>;
+    cachePointGeom: THREE.BufferGeometry;
 
     viewModel: WorldViewModel;
 
@@ -121,21 +121,21 @@ export class WorldView {
             }));
         this.scene.add(bg);
 
-        this.texture_loader = new THREE.TextureLoader();
-        this.stl_loader = new STLLoader();
+        this.textureLoader = new THREE.TextureLoader();
+        this.stlLoader = new STLLoader();
 
         // Model derived things.
-        this.add_table();
+        this.addTable();
 
-        this.cad_models = new Map();
+        this.cadModels = new Map();
         const model_names = ['S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH', 'S60C-FDW-RS'];
-        Promise.all(model_names.map(name => this.loadModel(name))).then(geoms => this.regen_scaffold_view());
+        Promise.all(model_names.map(name => this.loadModel(name))).then(geoms => this.regenScaffoldView());
 
         this.scaffoldView = new THREE.Object3D();
         this.scene.add(this.scaffoldView);
 
         this.windowElem.resize(() => {
-            this.update_projection();
+            this.updateProjection();
         });
 
         let prev_hover_object = null;
@@ -166,7 +166,7 @@ export class WorldView {
             this.viewModel.onClickUiObject(isect.object);
         });
 
-        this.update_projection();
+        this.updateProjection();
     }
 
     private getIntersection(ev: MouseEvent): any {
@@ -175,6 +175,7 @@ export class WorldView {
 
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(ev_pos_normalized, this.camera);
+        
         const isects = raycaster.intersectObject(this.scene, true);
 
         if (isects.length > 0 && isects[0].object.name === 'ui') {
@@ -191,22 +192,24 @@ export class WorldView {
         this.viewportElem.height(WorldView.HEIGHT);
         this.viewportElem.append(this.renderer.domElement);
 
-        this.reinitialize_controls();
+        this.reinitializeControls();
     }
 
-    loadModel(name) {
+    private loadModel(name) {
         return new Promise(resolve => {
-            this.stl_loader.load('./models/' + name + '.stl', geom => {
+            this.stlLoader.load('./models/' + name + '.stl', geom => {
                 geom.scale(1e-3, 1e-3, 1e-3);
-                this.cad_models[name] = geom;
+                this.cadModels[name] = geom;
                 resolve(geom);
             });
         });
     }
 
-    // This needs to be called when the element is visibled (i.e. tab is switched.)
-    // Otherwise control.js internal DOM element size is meesed up and gets broken.
-    reinitialize_controls() {
+    /**
+     * This needs to be called when the element is visibled (i.e. tab is switched.)
+     * Otherwise control.js internal DOM element size is meesed up and gets broken.
+     */
+    reinitializeControls() {
         this.controls = new TrackballControls(this.camera, this.renderer.domElement);
         this.controls.noZoom = false;
         this.controls.noPan = false;
@@ -214,18 +217,18 @@ export class WorldView {
         this.controls.maxDistance = 2;
     }
 
-    regen_scaffold_view() {
+    regenScaffoldView() {
         this.scaffoldView.remove(this.scaffoldView.children);
 
         this.model.rails.forEach(rail => {
-            let mesh = new THREE.Mesh(this.cad_models['S60C-' + rail.type]);
+            let mesh = new THREE.Mesh(this.cadModels['S60C-' + rail.type]);
             mesh.material = new THREE.MeshLambertMaterial({});
             mesh.applyMatrix(rail.cadCoord.getTransformTo(this.model.coord));
             this.scene.add(mesh);
         });
 
-        this.cache_point_geom = new THREE.SphereBufferGeometry(0.006, 16, 12);
-        this.model.get_points().forEach(point => {
+        this.cachePointGeom = new THREE.SphereBufferGeometry(0.006, 16, 12);
+        this.model.getPoints().forEach(point => {
             if (!point.open) {
                 return;
             }
@@ -235,7 +238,7 @@ export class WorldView {
                 rail: point.rail,
                 port: point.port
             };
-            mesh.geometry = this.cache_point_geom;
+            mesh.geometry = this.cachePointGeom;
             mesh.material = new THREE.MeshBasicMaterial({
                 color: PRIM_COLOR,
                 opacity: 0.5,
@@ -246,40 +249,41 @@ export class WorldView {
         });
     }
 
-    add_table() {
-        let table_material = new THREE.MeshLambertMaterial({
-            map: this.texture_loader.load('texture/wood.jpg')
+    private addTable() {
+        let tableMaterial = new THREE.MeshLambertMaterial({
+            map: this.textureLoader.load('texture/wood.jpg')
         });
 
-        table_material.map.wrapS = table_material.map.wrapT = THREE.RepeatWrapping;
-        table_material.map.repeat.set(2, 2);
+        tableMaterial.map.wrapS = THREE.RepeatWrapping;
+        tableMaterial.map.wrapT = THREE.RepeatWrapping;
+        tableMaterial.map.repeat.set(2, 2);
 
-        const table_thickness = 0.03;
-        let table = new THREE.Mesh(new THREE.BoxGeometry(1, 1, table_thickness), table_material);
-        table.position.z = -table_thickness / 2;
+        const tableThickness = 0.03;
+        const table = new THREE.Mesh(new THREE.BoxGeometry(1, 1, tableThickness), tableMaterial);
+        table.position.z = -tableThickness / 2;
         table.receiveShadow = true;
         this.scene.add(table);
     }
 
-    update_projection() {
+    private updateProjection() {
         this.camera.aspect = WorldView.WIDTH / WorldView.HEIGHT;
         this.camera.updateProjectionMatrix();
     }
 
     /* UI Utils */
-    _animate() {
+    private animate() {
         // note: three.js includes requestAnimationFrame shim
         if (!this.animating) {
             return;
         }
-        requestAnimationFrame(() => this._animate());
+        requestAnimationFrame(() => this.animate());
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
 
     start() {
         this.animating = true;
-        this._animate();
+        this.animate();
     }
 
     stop() {

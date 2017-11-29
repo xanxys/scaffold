@@ -21,7 +21,7 @@ export default class WorkerPool {
         this.lastUninit = null;
     }
 
-    handle_datagram(packet: Packet) {
+    handleDatagram(packet: Packet) {
         if (packet.src === 0) {
             this.lastUninit = new Date();
             return;
@@ -53,7 +53,7 @@ export default class WorkerPool {
         console.log(packet);
         let message: any = {
             status: 'known', // known, unknown, corrupt
-            timestamp: packet.src_ts / 1e3,
+            timestamp: packet.srcTs / 1e3,
         };
         if (packet.data === null) {
             message.status = 'corrupt';
