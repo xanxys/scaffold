@@ -57,7 +57,7 @@ export class WorldViewModel {
                 .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
                 .alignDir(newRail.ports[0].up, orgPort.up)
                 .build();
-            this.model.rails.push(newRail);
+            this.model.addRail(newRail);
             this.view.regenScaffoldView();
         }
     }
@@ -238,20 +238,21 @@ export class WorldView {
     }
 
     regenScaffoldView() {
-        this.scaffoldView.remove(this.scaffoldView.children);
+        // Because of .remove impl, we need to reverse traversal order.
+        for (let i = this.scaffoldView.children.length - 1; i >= 0; i--) {
+            this.scaffoldView.remove(this.scaffoldView.children[i]);
+        }
 
-        this.model.rails.forEach(rail => {
+        this.model.getRails().forEach(rail => {
             let mesh = new THREE.Mesh(this.cadModels['S60C-' + rail.type]);
             mesh.material = new THREE.MeshLambertMaterial({});
             mesh.applyMatrix(rail.cadCoord.getTransformTo(this.model.coord));
-            this.scene.add(mesh);
+            this.scaffoldView.add(mesh);
         });
 
         this.cachePointGeom = new THREE.SphereBufferGeometry(0.006, 16, 12);
-        this.model.getPoints().forEach(point => {
-            if (!point.open) {
-                return;
-            }
+        console.log("Open ports", this.model.getOpenPorts().length);
+        this.model.getOpenPorts().forEach(point => {
             let mesh = new THREE.Mesh();
             mesh.userData = {
                 rail: point.rail,
@@ -266,7 +267,7 @@ export class WorldView {
             mesh.position.copy(point.pos);
             mesh.layers.enable(WorldView.LAYER_UI);
             mesh.layers.enable(WorldView.LAYER_CLICKABLE);
-            this.scene.add(mesh);
+            this.scaffoldView.add(mesh);
         });
     }
 

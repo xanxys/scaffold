@@ -14,7 +14,7 @@ import * as THREE from 'three';
  */ 
 export class ScaffoldModel {
     coord: Coordinates;
-    rails: Array<ScaffoldThing>;
+    private rails: Array<ScaffoldThing>;
     workers: Array<any>;
 
     constructor() {
@@ -31,14 +31,19 @@ export class ScaffoldModel {
         this.rails.push(fd);
     }
 
-    getWorkerPos() { }
+    getRails(): Array<ScaffoldThing> {
+        return this.rails;
+    }
 
-    getPoints() {
+    addRail(rail: ScaffoldThing) {
+        this.rails.push(rail);
+    }
+
+    getOpenPorts() {
         let portPoints = [];
         this.rails.forEach(rail => {
             portPoints = portPoints.concat(rail.ports.map(port => {
                 return {
-                    open: true,
                     rail: rail,
                     port: port,
                     pos: rail.coord.convertP(port.pos, this.coord),
@@ -46,7 +51,14 @@ export class ScaffoldModel {
                 };
             }));
         });
-        return portPoints;
+
+        // Get open ports. Open == having no other port in proximity.
+        const eps = 1e-2;
+        return portPoints.filter((port, ix) => 
+            portPoints.every((otherPort, otherIx) => {
+                return ix === otherIx || port.pos.distanceTo(otherPort.pos) > eps;
+            })
+        );
     }
 
     // Returns (pos, human readable error string).
