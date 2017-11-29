@@ -20,8 +20,8 @@ export class WorkerBridge {
     private path: string;
     private port: any;
     private isOpen: boolean;
-    
-    constructor(handle_packet: (packet:Packet) => void) {
+
+    constructor(handle_packet: (packet: Packet) => void) {
         this.path = '/dev/ttyUSB0';
         this.port = new SerialPort(this.path, {
             baudRate: 115200
@@ -51,20 +51,20 @@ export class WorkerBridge {
             };
 
             if (data.startsWith(':7801')) {
-                let ovm_packet = decode_hex(data.slice(':7801'.length, -2 /* csum */ ));
+                let ovm_packet = decode_hex(data.slice(':7801'.length, -2 /* csum */));
 
                 packet.src = new DataView(ovm_packet).getUint32(0);
                 packet.src_ts = new DataView(ovm_packet).getUint32(4);
                 packet.datagram = new Uint8Array(ovm_packet, 8);
                 try {
                     packet.data = JSON.parse(String.fromCharCode.apply(String, packet.datagram));
-                } catch (e) {}
+                } catch (e) { }
             }
             handle_packet(packet);
         });
     }
 
-    send_command(command, addr = 0xffffffff): void {
+    send_command(command: string, addr = 0xffffffff): void {
         let buffer = new ArrayBuffer(2 + 4 + command.length);
         let header = new DataView(buffer);
         header.setUint8(0, 0x78); // TWELITE addr: default child

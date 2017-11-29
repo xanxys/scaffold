@@ -63,7 +63,9 @@ export class WorldViewModel {
     }
 }
 
-// Renders ScaffoldModel directly, but uses WorldViewModel for model edit / other UI interactions.
+/**
+ * Renders ScaffoldModel directly, but uses WorldViewModel for model edit / other UI interactions.
+ */
 export class WorldView {
     private static readonly WIDTH = 1000;
     private static readonly HEIGHT = 800;
@@ -80,12 +82,12 @@ export class WorldView {
     renderer: THREE.WebGLRenderer;
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
-    scaffold_view: any;
+    scaffoldView: any;
     controls: any;
 
     texture_loader: any;
     stl_loader: any;
-    cad_models: any;
+    cad_models: Map<string, THREE.Geometry>;
     cache_point_geom: THREE.BufferGeometry;
 
     viewModel: WorldViewModel;
@@ -125,18 +127,16 @@ export class WorldView {
         // Model derived things.
         this.add_table();
 
-        this.cad_models = {};
+        this.cad_models = new Map();
         const model_names = ['S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH', 'S60C-FDW-RS'];
         Promise.all(model_names.map(name => this.loadModel(name))).then(geoms => this.regen_scaffold_view());
 
-        this.scaffold_view = new THREE.Object3D();
-        this.scene.add(this.scaffold_view);
+        this.scaffoldView = new THREE.Object3D();
+        this.scene.add(this.scaffoldView);
 
         this.windowElem.resize(() => {
             this.update_projection();
         });
-
-        let add_rs = false;
 
         let prev_hover_object = null;
         this.viewportElem.mousemove(ev => {
@@ -215,7 +215,7 @@ export class WorldView {
     }
 
     regen_scaffold_view() {
-        this.scaffold_view.remove(this.scaffold_view.children);
+        this.scaffoldView.remove(this.scaffoldView.children);
 
         this.model.rails.forEach(rail => {
             let mesh = new THREE.Mesh(this.cad_models['S60C-' + rail.type]);

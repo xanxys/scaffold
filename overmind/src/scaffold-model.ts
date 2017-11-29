@@ -1,14 +1,17 @@
 
 import * as THREE from 'three';
 
-// Scaffold inferred / target world model.
-// Captures lowest level of physics scaffold cares.
-// Currently, that is static rigid inteference models & rail connections.
-//
-// Things inside this is mutable, to make rendering more performant.
-// However, multiple instances of this can exist esp. for planning / simulation.
-//
-// Assumes z=0 is floor.
+/**
+ * Scaffold inferred / target world model.
+ * 
+ * Captures lowest level of physics scaffold cares.
+ * Currently, that is static rigid inteference models & rail connections.
+ * 
+ * Things inside this is mutable, to make rendering more performant.
+ * However, multiple instances of this can exist esp. for planning / simulation.
+ * 
+ * Assumes z=0 is floor.
+ */ 
 export class ScaffoldModel {
     coord: Coordinates;
     rails: Array<ScaffoldThing>;
@@ -28,7 +31,7 @@ export class ScaffoldModel {
         this.rails.push(fd);
     }
 
-    get_worker_pos() {}
+    get_worker_pos() { }
 
     get_points() {
         let port_points = [];
@@ -41,7 +44,7 @@ export class ScaffoldModel {
                     pos: rail.coord.convertP(port.pos, this.coord),
                     normal: rail.coord.convertD(port.up, this.coord)
                 };
-            })); 
+            }));
         });
         return port_points;
     }
@@ -64,8 +67,10 @@ export class ScaffoldModel {
     }
 }
 
-// A thing (mostly rigid) that should be tracked in scaffold world model.
-// Can have internal state.
+/**
+ * A thing (mostly rigid) that should be tracked in scaffold world model.
+ * Can have internal state.
+ */ 
 export interface ScaffoldThing {
     type: string;
     coord: Coordinates;
@@ -87,7 +92,7 @@ export class S60RailStraight implements ScaffoldThing {
 
     // TODO: refactor cad reference into this class?
     cadCoord: Coordinates;
-    
+
     constructor() {
         this.type = "RS";
         this.coord = new Coordinates("RS");
@@ -109,7 +114,7 @@ export class S60RailHelix implements ScaffoldThing {
     bound: AABB;
 
     cadCoord: Coordinates;
-    
+
     constructor() {
         this.type = "RH";
         this.coord = new Coordinates("RH");
@@ -131,7 +136,7 @@ export class S60RailRotator implements ScaffoldThing {
     bound: AABB;
 
     cadCoord: Coordinates;
-    
+
     constructor() {
         this.type = "RR";
         this.coord = new Coordinates("RR");
@@ -155,7 +160,7 @@ export class S60RailFeederWide implements ScaffoldThing {
     bound: AABB;
 
     cadCoord: Coordinates;
-    
+
     constructor() {
         this.type = "FDW-RS";
         this.coord = new Coordinates("FDW");
@@ -223,7 +228,7 @@ class Coordinates {
     private parent: Coordinates;
     private transToParent: THREE.Matrix4;
 
-    constructor(public name?: string) {}
+    constructor(public name?: string) { }
 
     // TODO: Replace with more friendly interface once relationBuilder is done.
     unsafeSetParent(parent: Coordinates, offset: THREE.Vector3, orient?: THREE.Quaternion) {
@@ -288,7 +293,7 @@ export class RelationBuilder {
     private ptPair: [THREE.Vector3, THREE.Vector3];
     private dirPairs: Array<[THREE.Vector3, THREE.Vector3]> = [];
 
-    constructor(private afterBuild?: ((trans :THREE.Matrix4) => any)) {}
+    constructor(private afterBuild?: ((trans: THREE.Matrix4) => any)) { }
 
     alignPt(ptNew: THREE.Vector3, ptRef: THREE.Vector3): RelationBuilder {
         this.ptPair = [ptNew.clone(), ptRef.clone()];
@@ -310,7 +315,7 @@ export class RelationBuilder {
 
     /**
      * @returns transform M such that (M*new = ref and satifies given constraints).
-     */ 
+     */
     getTransformToRef(): THREE.Matrix4 {
         if (this.dirPairs.length !== 2) {
             throw "Under- or over- constrained RelationBuilder. Needs exactly 2 alignDir() calls.";

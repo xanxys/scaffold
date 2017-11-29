@@ -1,6 +1,6 @@
 import Identicon from 'identicon.js';
 import md5 from 'md5';
-import {Packet} from './comm';
+import { Packet } from './comm';
 
 interface Worker {
     addr: number;
