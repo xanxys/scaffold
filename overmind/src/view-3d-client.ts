@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import * as TrackballControls from 'three.trackball';
-import {ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator} from './scaffold-model';
+import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator } from './scaffold-model';
 
 let STLLoader: any = LoaderFactory(THREE);
 
@@ -140,15 +140,10 @@ export class WorldView {
 
         let prev_hover_object = null;
         this.viewportElem.mousemove(ev => {
-            let ev_pos_normalized = new THREE.Vector2(
-                ev.offsetX / this.viewportElem.width() * 2 - 1, -(ev.offsetY / this.viewportElem.height() * 2 - 1));
-
-            let raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(ev_pos_normalized, this.camera);
-            let isects = raycaster.intersectObject(this.scene, true);
+            const isect = this.getIntersection(ev);
             let curr_hover_object = null;
-            if (isects.length > 0 && isects[0].object.name === 'ui') {
-                curr_hover_object = isects[0].object;
+            if (isect != undefined) {
+                curr_hover_object = isect.object;
             }
 
             if (curr_hover_object !== prev_hover_object) {
@@ -164,25 +159,31 @@ export class WorldView {
         });
 
         this.viewportElem.click(ev => {
-            let ev_pos_normalized = new THREE.Vector2(
-                ev.offsetX / this.viewportElem.width() * 2 - 1, -(ev.offsetY / this.viewportElem.height() * 2 - 1));
-
-            let raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(ev_pos_normalized, this.camera);
-            let isects = raycaster.intersectObject(this.scene, true);
-            if (isects.length === 0 || isects[0].object.name !== 'ui') {
+            const isect = this.getIntersection(ev);
+            if (isect == undefined) {
                 return;
             }
-
-            let obj = isects[0].object;
-            this.viewModel.onClickUiObject(obj);
+            this.viewModel.onClickUiObject(isect.object);
         });
 
         this.update_projection();
     }
-    
+
+    private getIntersection(ev: MouseEvent): any {
+        const ev_pos_normalized = new THREE.Vector2(
+            ev.offsetX / this.viewportElem.width() * 2 - 1, -(ev.offsetY / this.viewportElem.height() * 2 - 1));
+
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(ev_pos_normalized, this.camera);
+        const isects = raycaster.intersectObject(this.scene, true);
+
+        if (isects.length > 0 && isects[0].object.name === 'ui') {
+            return isects[0];
+        }
+    }
+
     startRenderer() {
-        this.renderer = new THREE.WebGLRenderer({antialias: true});
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
 
         this.renderer.setSize(WorldView.WIDTH, WorldView.HEIGHT);
         this.renderer.setClearColor('#aac');
