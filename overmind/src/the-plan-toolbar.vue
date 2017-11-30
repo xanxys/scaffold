@@ -28,7 +28,6 @@ export default {
         },
         addRr() {
             this.viewmodel.setState(ClickOpState.AddRr);
-
         },
         remove() {
             this.viewmodel.setState(ClickOpState.Remove);

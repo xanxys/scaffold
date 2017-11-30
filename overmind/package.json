@@ -37,7 +37,7 @@
     "vue-class-component": "^6.1.0",
     "vue-loader": "^13.0.4",
     "vue-property-decorator": "^6.0.0",
-    "vue-template-compiler": "^2.4.2",
+    "vue-template-compiler": "^2.5.9",
     "vue-ts-loader": "0.0.3",
     "webpack": "^3.5.5"
   },
@@ -53,7 +53,7 @@
     "three.trackball": "0.0.1",
     "twitter-bootstrap": "^2.1.1",
     "underscore": "^1.8.3",
-    "vue": "^2.4.2",
+    "vue": "^2.5.9",
     "vue-chartjs": "^2.8.2"
   }
 }
