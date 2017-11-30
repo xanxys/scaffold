@@ -172,7 +172,7 @@ export class S60RailRotator implements ScaffoldThing {
             new Port(new THREE.Vector3(-0.03, 0, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(-1, 0, 0)),
             new Port(new THREE.Vector3(0.03, 0, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)),
         ];
-        this.bound = new AABB(new THREE.Vector3(-0.03, -0.03, 2), new THREE.Vector3(0.03, 0.03, 0.02));
+        this.bound = new AABB(new THREE.Vector3(-0.03, -0.03, -0.01), new THREE.Vector3(0.03, 0.03, 0.02));
 
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.03, 0));
