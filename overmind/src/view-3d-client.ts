@@ -144,7 +144,7 @@ export class WorldView {
 
         this.cadModels = new Map();
         const model_names = ['S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH', 'S60C-FDW-RS'];
-        Promise.all(model_names.map(name => this.loadModel(name))).then(geoms => this.regenScaffoldView());
+        Promise.all(model_names.map(name => this.loadModel(name))).then(geoms => this.regenScaffoldView(ClickOpState.None));
 
         this.scaffoldView = new THREE.Object3D();
         this.scene.add(this.scaffoldView);
