@@ -1,6 +1,6 @@
 <template>
 <h2>{{name}}
-  <button v-bind:class="{active: active === name}" v-on:click="activate" class="btn btn-default" style="float: right" title="Expand details"><span class="glyphicon glyphicon-chevron-right"></span></button>
+  <button v-bind:class="{active: active === name}" v-on:click="activate" class="pane-button btn btn-default" style="float: right" title="Expand details"><span class="glyphicon glyphicon-chevron-right"></span></button>
 </h2>
 </template>
 
@@ -20,11 +20,11 @@ export default {
 </script>
 
 <style>
-button {
+button.pane-button  {
   transition: opacity 0.1s linear;
 }
 
-button.active {
+button.pane-button.active {
     z-index: 100;
     position: relative;
 

@@ -1,10 +1,10 @@
 <template>
     <div style="display:flex; align-items: center">
         <i class="material-icons">add_box</i>
-        <button v-on:click="addRs" class="btn btn-default">RS</button>
-        <button v-on:click="addRh" class="btn btn-default">RH</button>
-        <button v-on:click="addRr" class="btn btn-default">RR</button>
-        <button v-on:click="remove" class="btn btn-default"><i class="material-icons">delete_forever</i></button>
+        <button v-on:click="addRs" class="btn btn-default" v-bind:class="{'active': isAddRs}">RS</button>
+        <button v-on:click="addRh" class="btn btn-default" v-bind:class="{'active': isAddRh}">RH</button>
+        <button v-on:click="addRr" class="btn btn-default" v-bind:class="{'active': isAddRr}">RR</button>
+        <button v-on:click="remove" class="btn btn-default" v-bind:class="{'active': isRemove}"><i class="material-icons">delete_forever</i></button>
     </div>
 </template>
 
@@ -17,7 +17,8 @@ export default {
     components: {
     },
     data() {
-        return {};
+        return {
+        };
     },
     methods: {
         addRs() {
@@ -31,6 +32,20 @@ export default {
         },
         remove() {
             this.viewmodel.setState(ClickOpState.Remove);
+        }
+    },
+    computed: {
+        isAddRs() {
+            return this.viewmodel.state === ClickOpState.AddRs;
+        },
+        isAddRh() {
+            return this.viewmodel.state === ClickOpState.AddRh;
+        },
+        isAddRr() {
+            return this.viewmodel.state === ClickOpState.AddRr;
+        },
+        isRemove() {
+            return this.viewmodel.state === ClickOpState.Remove;
         }
     }
 }

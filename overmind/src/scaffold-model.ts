@@ -40,7 +40,10 @@ export class ScaffoldModel {
     }
 
     removeRail(rail: ScaffoldThing) {
-
+        const ix = this.rails.findIndex(r => r === rail);
+        if (ix >= 0) {
+            this.rails.splice(ix, 1);
+        }
     }
 
     getOpenPorts() {

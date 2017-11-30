@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import * as TrackballControls from 'three.trackball';
-import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator } from './scaffold-model';
+import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing } from './scaffold-model';
 
 let STLLoader: any = LoaderFactory(THREE);
 
@@ -28,6 +28,7 @@ export class WorldViewModel {
 
     setState(state: ClickOpState) {
         this.state = state;
+        this.view.regenScaffoldView(state);
     }
 
     bindView(view: WorldView) {
@@ -35,30 +36,37 @@ export class WorldViewModel {
     }
 
     onClickUiObject(obj: any) {
-        let newRail = null;
         switch (this.state) {
             case ClickOpState.AddRs:
-                newRail = new S60RailStraight();
+                this.addRail(obj, new S60RailStraight());
                 break;
             case ClickOpState.AddRh:
-                newRail = new S60RailHelix();
+                this.addRail(obj, new S60RailHelix());
                 break;
             case ClickOpState.AddRr:
-                newRail = new S60RailRotator();
+                this.addRail(obj, new S60RailRotator());
+                break;
+            case ClickOpState.Remove:
+                this.removeRail(obj);
                 break;
         }
+    }
 
-        if (newRail !== null) {
-            let orgRail = obj.userData.rail;
-            let orgPort = obj.userData.port;
-            newRail.coord.unsafeSetParentWithRelation(this.model.coord, orgRail.coord)
-                .alignPt(newRail.ports[0].pos, orgPort.pos)
-                .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
-                .alignDir(newRail.ports[0].up, orgPort.up)
-                .build();
-            this.model.addRail(newRail);
-            this.view.regenScaffoldView();
-        }
+    private addRail(obj: any, newRail: ScaffoldThing) {
+        let orgRail = obj.userData.rail;
+        let orgPort = obj.userData.port;
+        newRail.coord.unsafeSetParentWithRelation(this.model.coord, orgRail.coord)
+            .alignPt(newRail.ports[0].pos, orgPort.pos)
+            .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
+            .alignDir(newRail.ports[0].up, orgPort.up)
+            .build();
+        this.model.addRail(newRail);
+        this.view.regenScaffoldView(this.state);
+    }
+
+    private removeRail(obj: any) {
+        this.model.removeRail(obj.userData.rail);
+        this.view.regenScaffoldView(this.state);
     }
 }
 
@@ -236,7 +244,7 @@ export class WorldView {
         this.controls.maxDistance = 2;
     }
 
-    regenScaffoldView() {
+    regenScaffoldView(state: ClickOpState) {
         // Because of .remove impl, we need to reverse traversal order.
         for (let i = this.scaffoldView.children.length - 1; i >= 0; i--) {
             this.scaffoldView.remove(this.scaffoldView.children[i]);
@@ -251,40 +259,42 @@ export class WorldView {
 
         this.cachePointGeom = new THREE.SphereBufferGeometry(0.006, 16, 12);
 
-        this.model.getOpenPorts().forEach(point => {
-            let mesh = new THREE.Mesh();
-            mesh.userData = {
-                rail: point.rail,
-                port: point.port
-            };
-            mesh.geometry = this.cachePointGeom;
-            mesh.material = new THREE.MeshBasicMaterial({
-                color: PRIM_COLOR,
-                opacity: 0.5,
-                transparent: true,
+        if (state === ClickOpState.AddRs || state === ClickOpState.AddRh || state === ClickOpState.AddRr) {
+            this.model.getOpenPorts().forEach(point => {
+                let mesh = new THREE.Mesh();
+                mesh.userData = {
+                    rail: point.rail,
+                    port: point.port
+                };
+                mesh.geometry = this.cachePointGeom;
+                mesh.material = new THREE.MeshBasicMaterial({
+                    color: PRIM_COLOR,
+                    opacity: 0.5,
+                    transparent: true,
+                });
+                mesh.position.copy(point.pos);
+                mesh.layers.enable(WorldView.LAYER_UI);
+                mesh.layers.enable(WorldView.LAYER_CLICKABLE);
+                this.scaffoldView.add(mesh);
             });
-            mesh.position.copy(point.pos);
-            mesh.layers.enable(WorldView.LAYER_UI);
-            mesh.layers.enable(WorldView.LAYER_CLICKABLE);
-            this.scaffoldView.add(mesh);
-        });
-
-        this.model.getDeletionPoints().forEach(point => {
-            let mesh = new THREE.Mesh();
-            mesh.userData = {
-                rail: point.rail,
-            };
-            mesh.geometry = this.cachePointGeom;
-            mesh.material = new THREE.MeshBasicMaterial({
-                color: "red",
-                opacity: 0.5,
-                transparent: true,
+        } else if (state === ClickOpState.Remove) {
+            this.model.getDeletionPoints().forEach(point => {
+                let mesh = new THREE.Mesh();
+                mesh.userData = {
+                    rail: point.rail,
+                };
+                mesh.geometry = this.cachePointGeom;
+                mesh.material = new THREE.MeshBasicMaterial({
+                    color: "red",
+                    opacity: 0.5,
+                    transparent: true,
+                });
+                mesh.position.copy(point.pos);
+                mesh.layers.enable(WorldView.LAYER_UI);
+                mesh.layers.enable(WorldView.LAYER_CLICKABLE);
+                this.scaffoldView.add(mesh);
             });
-            mesh.position.copy(point.pos);
-            mesh.layers.enable(WorldView.LAYER_UI);
-            mesh.layers.enable(WorldView.LAYER_CLICKABLE);
-            this.scaffoldView.add(mesh);
-        });
+        }
     }
 
     private addTable() {
