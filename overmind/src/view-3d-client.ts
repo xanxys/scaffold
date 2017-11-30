@@ -8,27 +8,26 @@ let STLLoader: any = LoaderFactory(THREE);
 const PRIM_COLOR = 0x3498db;
 const PRIM_COLOR_HOVER = 0x286090;
 
-enum ClickOpState {
+export enum ClickOpState {
     None,
     AddRs,
     AddRh,
     AddRr,
+    Remove,
 }
 
+/**
+ * A viewmodel used by both View3DClient and the-plan-toolbar.
+ */
 export class WorldViewModel {
     private state = ClickOpState.None;
     private view: WorldView
 
-    constructor(private model, addRsElem, addRhElem, addRrElem) {
-        addRsElem.click(ev => {
-            this.state = ClickOpState.AddRs;
-        });
-        addRhElem.click(ev => {
-            this.state = ClickOpState.AddRh;
-        });
-        addRrElem.click(ev => {
-            this.state = ClickOpState.AddRr;
-        });
+    constructor(private model) {
+    }
+
+    setState(state: ClickOpState) {
+        this.state = state;
     }
 
     bindView(view: WorldView) {
@@ -183,7 +182,7 @@ export class WorldView {
 
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(ev_pos_normalized, this.camera);
-        
+
         const maskIsect = new THREE.Layers();
         maskIsect.set(WorldView.LAYER_UI);
 
@@ -251,7 +250,7 @@ export class WorldView {
         });
 
         this.cachePointGeom = new THREE.SphereBufferGeometry(0.006, 16, 12);
-        console.log("Open ports", this.model.getOpenPorts().length);
+
         this.model.getOpenPorts().forEach(point => {
             let mesh = new THREE.Mesh();
             mesh.userData = {
@@ -261,6 +260,23 @@ export class WorldView {
             mesh.geometry = this.cachePointGeom;
             mesh.material = new THREE.MeshBasicMaterial({
                 color: PRIM_COLOR,
+                opacity: 0.5,
+                transparent: true,
+            });
+            mesh.position.copy(point.pos);
+            mesh.layers.enable(WorldView.LAYER_UI);
+            mesh.layers.enable(WorldView.LAYER_CLICKABLE);
+            this.scaffoldView.add(mesh);
+        });
+
+        this.model.getDeletionPoints().forEach(point => {
+            let mesh = new THREE.Mesh();
+            mesh.userData = {
+                rail: point.rail,
+            };
+            mesh.geometry = this.cachePointGeom;
+            mesh.material = new THREE.MeshBasicMaterial({
+                color: "red",
                 opacity: 0.5,
                 transparent: true,
             });

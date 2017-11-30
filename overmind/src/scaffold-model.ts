@@ -11,7 +11,7 @@ import * as THREE from 'three';
  * However, multiple instances of this can exist esp. for planning / simulation.
  * 
  * Assumes z=0 is floor.
- */ 
+ */
 export class ScaffoldModel {
     coord: Coordinates;
     private rails: Array<ScaffoldThing>;
@@ -39,6 +39,10 @@ export class ScaffoldModel {
         this.rails.push(rail);
     }
 
+    removeRail(rail: ScaffoldThing) {
+
+    }
+
     getOpenPorts() {
         let portPoints = [];
         this.rails.forEach(rail => {
@@ -54,11 +58,18 @@ export class ScaffoldModel {
 
         // Get open ports. Open == having no other port in proximity.
         const eps = 1e-2;
-        return portPoints.filter((port, ix) => 
+        return portPoints.filter((port, ix) =>
             portPoints.every((otherPort, otherIx) => {
                 return ix === otherIx || port.pos.distanceTo(otherPort.pos) > eps;
             })
         );
+    }
+
+    getDeletionPoints() {
+        return this.rails.map(rail => ({
+            rail: rail,
+            pos: rail.coord.convertP(rail.bound.center(), this.coord),
+        }));
     }
 
     // Returns (pos, human readable error string).
@@ -82,7 +93,7 @@ export class ScaffoldModel {
 /**
  * A thing (mostly rigid) that should be tracked in scaffold world model.
  * Can have internal state.
- */ 
+ */
 export interface ScaffoldThing {
     type: string;
     coord: Coordinates;

@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <title>Scaffold Overmind</title>
     <link href="css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 </head>
 
 <body style="background-color: #444">
     <div id="app">
         <the-toolbar v-bind:bridge="bridge"></the-toolbar>
-        
+
         <div class="container-fluid">
             <div class="row" style="margin-left: 0">
                 <the-sidepanel v-bind:model="model" v-bind:worker-pool="workerPool" v-bind:world-view="worldView"></the-sidepanel>
@@ -19,14 +19,7 @@
                 <!-- modal main content -->
                 <div class="col-md-9">
                     <div id="tab_plan" style="display: none">
-                        <div style="display:flex; align-items: center">
-                            <i class="material-icons">add_box</i>
-                            <button id="add_fdw" class="btn btn-default">FDW</button>
-                            <button id="add_rs" class="btn btn-default">RS</button>
-                            <button id="add_rh" class="btn btn-default">RH</button>
-                            <button id="add_rr" class="btn btn-default">RR</button>
-                            <button id="remove" class="btn btn-default"><i class="material-icons">delete_forever</i></button>
-                        </div>
+                        <the-plan-toolbar v-bind:viewmodel="worldViewModel"></the-plan-toolbar>
                         <div id="viewport"></div>
                     </div>
 
