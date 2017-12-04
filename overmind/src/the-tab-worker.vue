@@ -4,7 +4,7 @@
             <i class="material-icons">warning</i>Show raw actions
         </a>
         <a v-if="rawEnabled"  style="color: #eee" href="#" v-on:click="setRawEnabled(false)">Hide raw actions</a>
-        <worker-card v-for="worker in pool.workers" :key="worker.addr" v-bind:worker="worker" v-bind:show_raw="raw_enabled"/>
+        <worker-card v-for="worker in pool.workers" :key="worker.addr" v-bind:worker="worker" v-bind:show_raw="rawEnabled"/>
     </div>
 </template>
 

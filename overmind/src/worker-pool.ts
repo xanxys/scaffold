@@ -1,5 +1,5 @@
-import Identicon from 'identicon.js';
-import md5 from 'md5';
+import * as Identicon from 'identicon.js';
+import * as md5 from 'md5';
 import { Packet } from './comm';
 
 interface Worker {
