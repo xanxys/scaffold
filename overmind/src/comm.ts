@@ -24,7 +24,7 @@ export class WorkerBridge {
     constructor() {
     }
 
-    open(handleUpdate: (br: WorkerBridge) => void, handle_packet: (packet: Packet) => void): void {
+    open(handleUpdate: (br: WorkerBridge) => void, handlePacket: (packet: Packet) => void): void {
         this.port = new SerialPort(this.path, {
             baudRate: 115200
         }, err => {
@@ -42,11 +42,11 @@ export class WorkerBridge {
         parser.on('data', data => {
             data = data.trim();
 
-            let packet = {
+            let packet: Packet = {
                 raw_data: data,
                 // Decoded overmind protocol.
                 src: null,
-                src_ts: null,
+                srcTs: null,
                 datagram: null,
                 // Decoded datagram JSON.
                 data: null,
@@ -56,13 +56,13 @@ export class WorkerBridge {
                 let ovm_packet = decodeHex(data.slice(':7801'.length, -2 /* csum */));
 
                 packet.src = new DataView(ovm_packet).getUint32(0);
-                packet.src_ts = new DataView(ovm_packet).getUint32(4);
+                packet.srcTs = new DataView(ovm_packet).getUint32(4);
                 packet.datagram = new Uint8Array(ovm_packet, 8);
                 try {
                     packet.data = JSON.parse(String.fromCharCode.apply(String, packet.datagram));
                 } catch (e) { }
             }
-            handle_packet(packet);
+            handlePacket(packet);
         });
     }
 
