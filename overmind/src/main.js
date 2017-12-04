@@ -4,10 +4,10 @@ global.jQuery = $;
 require('bootstrap');
 
 import Vue from 'vue/dist/vue.js';
-import {WorkerBridge} from './comm.ts';
+import { WorkerBridge } from './comm.ts';
 import WorkerPool from './worker-pool.ts';
-import {WorldView, WorldViewModel} from './view-3d-client.ts';
-import {ScaffoldModel} from './scaffold-model.ts';
+import { WorldView, WorldViewModel } from './view-3d-client.ts';
+import { ScaffoldModel } from './scaffold-model.ts';
 
 // Components
 import TheToolbar from './the-toolbar.vue';
@@ -22,12 +22,7 @@ Vue.component('the-plan-toolbar', ThePlanToolbar);
 import TheTabWorker from './the-tab-worker.vue';
 Vue.component('the-tab-worker', TheTabWorker);
 
-const bridge = new WorkerBridge(packet => {
-    flash_status();
-    if (packet.datagram !== null) {
-        workerPool.handleDatagram(packet);
-    }
-});
+const bridge = new WorkerBridge();
 
 // TODO: Move to the-toolbar.vue
 function flash_status() {
@@ -52,6 +47,18 @@ let appVm = new Vue({
         worldViewModel: viewModel,
     },
 });
+
+bridge.open(
+    br => {
+        console.log(br, br.isOpen);
+        appVm.$forceUpdate();
+    },
+    packet => {
+        flash_status();
+        if (packet.datagram !== null) {
+            workerPool.handleDatagram(packet);
+        }
+    });
 
 //// HUGE HACK
 // Something about WebGL needs this to be placed after new Vue(...).

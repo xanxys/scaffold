@@ -17,12 +17,14 @@ export interface Packet {
 }
 
 export class WorkerBridge {
-    private path: string;
     private port: any;
-    private isOpen: boolean;
+    path = '/dev/ttyUSB0';
+    isOpen = false;
 
-    constructor(handle_packet: (packet: Packet) => void) {
-        this.path = '/dev/ttyUSB0';
+    constructor() {
+    }
+
+    open(handleUpdate: (br: WorkerBridge) => void, handle_packet: (packet: Packet) => void): void {
         this.port = new SerialPort(this.path, {
             baudRate: 115200
         }, err => {
@@ -32,8 +34,8 @@ export class WorkerBridge {
                 console.log('serial port ok');
                 this.isOpen = true;
             }
+            handleUpdate(this);
         });
-        this.isOpen = false;
 
         const parser = new SerialPort.parsers.Readline();
         this.port.pipe(parser);

@@ -29,16 +29,15 @@ export default {
     props: ['bridge'],
     data() {
         return {
-            port: this.bridge.port,
-            ref_now: new Date(),
+            refNow: new Date(),
             lastRefresh: null,
             period: 15
         };
     },
     created() {
         this.timer = setInterval(() => {
-            this.ref_now = new Date();
-            if (this.lastRefresh == null || (this.period != null && this.ref_now - this.lastRefresh > this.period * 1e3)) {
+            this.refNow = new Date();
+            if (this.lastRefresh == null || (this.period != null && this.refNow - this.lastRefresh > this.period * 1e3)) {
                 this.refreshNow();
             }
         }, 1000);
@@ -47,28 +46,28 @@ export default {
         refresh_ago() {
             let autoref = (this.period !== null) ? `(auto: every ${this.period} sec)` : '(auto disabled)'
             if (this.lastRefresh !== null) {
-                let deltaSec = Math.floor(Math.max(0, this.ref_now - this.lastRefresh) * 1e-3);
+                let deltaSec = Math.floor(Math.max(0, this.refNow - this.lastRefresh) * 1e-3);
                 return `Last refreshed ${deltaSec} sec ago ${autoref}`;
             } else {
                 return `Never refreshed ${autoref}`;
             }
         },
         status() {
-            if (this.port.isOpen) {
+            if (this.bridge.isOpen) {
                 return 'connected';
             } else {
                 return 'cutoff'
             }
         },
         status_class() {
-            if (this.port.isOpen) {
+            if (this.bridge.isOpen) {
                 return 'text-success';
             } else {
                 return 'text-muted';
             }
         },
         path() {
-            return this.port.path;
+            return this.bridge.path;
         }
     },
     methods: {
