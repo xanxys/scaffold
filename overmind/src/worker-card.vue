@@ -157,7 +157,7 @@
            <tbody style="max-height: 250px; overflow-y: auto; display: block">
              <tr v-for="msg in worker.messages"
                   v-bind:class="{'success': msg.status == 'command', 'default': msg.status == 'known', 'warning': msg.status == 'unknown', 'danger': msg.status == 'corrupt'}" v-bind:title="msg.desc">
-               <td>{{msg.timestamp.toFixed(3)}}</td>
+               <td>{{msg.timestamp === null ? 'N/A' : msg.timestamp.toFixed(3)}}</td>
                <td>{{msg.head}}
                  <div v-if="msg.status != 'known' && msg.status != 'command'">
                    <pre>{{msg.desc}}</pre>
