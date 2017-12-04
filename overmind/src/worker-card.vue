@@ -90,39 +90,39 @@
             <div v-if="worker.wtype === 'builder'" style="overflow:hidden">
                 <div style="float:left">
                     <h4>D</h4>
-                    <button v-on:click="command('e400b10')" class="btn btn-default" title="update">
+                    <button v-on:click="command('e400b15')" class="btn btn-default" title="update">
                         <span class="glyphicon glyphicon-arrow-up"></span>
                     </button>
                     <br/>
 
-                    <button v-on:click="command('e400b20')" class="btn btn-default" title="update">
+                    <button v-on:click="command('e400b27')" class="btn btn-default" title="update">
                       <span class="glyphicon glyphicon-arrow-down"></span>
                     </button> {{worker.out[0][1]}}
                     <br/>
-                    <button v-on:click="command('e400b22')" class="btn btn-warning" title="update">
+                    <button v-on:click="command('e400b30')" class="btn btn-warning" title="update">
                       <span class="glyphicon glyphicon-arrow-down"></span>
                     </button>
                 </div>
                 <div style="float:left">
                     <h4>SCR</h4>
-                    <button v-on:click="command('e300a11')" class="btn btn-default" title="update">
+                    <button v-on:click="command('e300a10')" class="btn btn-default" title="update">
                       <span class="glyphicon glyphicon-arrow-up"></span>
                     </button>
                     <br/>
-                    <button v-on:click="command('e300a29')" class="btn btn-default" title="update">
+                    <button v-on:click="command('e300a27')" class="btn btn-default" title="update">
                       <span class="glyphicon glyphicon-arrow-down"></span>
                     </button> {{worker.out[0][0]}}
                 </div>
                 <div style="float:left">
                     <h4>S</h4> {{worker.out[1][2]}}
                     <br/>
-                    <button v-on:click="command('e1s100')" class="btn btn-default" title="unfasten screw">
+                    <button v-on:click="command('e1s-100')" class="btn btn-default" title="unfasten screw">
                       unlock
                     </button>
                     <button v-on:click="command('e1s0')" class="btn btn-default" title="stop screw">
                       <span class="glyphicon glyphicon-stop"></span>
                     </button>
-                    <button v-on:click="command('e1s-100')" class="btn btn-default" title="fasten screw">
+                    <button v-on:click="command('e1s100')" class="btn btn-default" title="fasten screw">
                       lock
                     </button>
                 </div>
