@@ -19,6 +19,9 @@ Vue.component('the-sidepanel', TheSidepanel);
 import ThePlanToolbar from './the-plan-toolbar.vue';
 Vue.component('the-plan-toolbar', ThePlanToolbar);
 
+import Timeline from './timeline.vue';
+Vue.component('timeline', Timeline);
+
 import TheTabWorker from './the-tab-worker.vue';
 Vue.component('the-tab-worker', TheTabWorker);
 

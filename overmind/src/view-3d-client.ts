@@ -75,7 +75,7 @@ export class WorldViewModel {
  */
 export class WorldView {
     private static readonly WIDTH = 1000;
-    private static readonly HEIGHT = 800;
+    private static readonly HEIGHT = 600;
 
     private static readonly LAYER_DEFAULT = 1;
 
