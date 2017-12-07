@@ -50,7 +50,6 @@
     "serialport": "^5.0.0",
     "three": "^0.84.0",
     "three-stl-loader": "^1.0.6",
-    "three.trackball": "0.0.1",
     "twitter-bootstrap": "^2.1.1",
     "underscore": "^1.8.3",
     "vue": "^2.5.9",

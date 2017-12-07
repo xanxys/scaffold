@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
-import * as TrackballControls from 'three.trackball';
+import * as OrthographicTrackballControls from './ortho-trackball-controls.js';
 import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing } from './scaffold-model';
 
 let STLLoader: any = LoaderFactory(THREE);
@@ -95,7 +95,7 @@ export class WorldView {
     animating: boolean;
 
     renderer: THREE.WebGLRenderer;
-    camera: THREE.PerspectiveCamera;
+    camera: THREE.OrthographicCamera;
     scene: THREE.Scene;
     scaffoldView: any;
     controls: any;
@@ -113,7 +113,9 @@ export class WorldView {
         this.viewportElem = viewportElem;
         this.viewModel = viewModel;
 
-        this.camera = new THREE.PerspectiveCamera(75, WorldView.WIDTH / WorldView.HEIGHT, 0.01, 7);
+        let aspect = WorldView.WIDTH / WorldView.HEIGHT;
+        this.camera = new THREE.OrthographicCamera(
+            -0.5 * aspect, 0.5 * aspect, 0.5, -0.5, -1, 100);
         this.camera.up = new THREE.Vector3(0, 0, 1);
         this.camera.position.x = 0.3;
         this.camera.position.y = 0.3;
@@ -237,11 +239,13 @@ export class WorldView {
      * Otherwise control.js internal DOM element size is meesed up and gets broken.
      */
     reinitializeControls() {
-        this.controls = new TrackballControls(this.camera, this.renderer.domElement);
+        this.controls = new OrthographicTrackballControls(this.camera, this.renderer.domElement);
+        /*
         this.controls.noZoom = false;
         this.controls.noPan = false;
         this.controls.zoomSpeed = 0.1;
         this.controls.maxDistance = 2;
+        */
     }
 
     regenScaffoldView(state: ClickOpState) {
@@ -315,7 +319,7 @@ export class WorldView {
     }
 
     private updateProjection() {
-        this.camera.aspect = WorldView.WIDTH / WorldView.HEIGHT;
+        // this.camera.aspect = WorldView.WIDTH / WorldView.HEIGHT;
         this.camera.updateProjectionMatrix();
     }
 
