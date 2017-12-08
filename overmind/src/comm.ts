@@ -1,5 +1,3 @@
-import * as _ from 'underscore';
-
 // Need to use window.require: https://github.com/railsware/bozon/issues/40
 declare var window: any;
 const SerialPort: any = window.require('serialport');
@@ -73,7 +71,7 @@ export class WorkerBridge {
         header.setUint8(1, 0x01); // TWELITE command: Serial
         header.setUint32(2, addr); // OVM addr
         let body = new Uint8Array(buffer, 2 + 4);
-        body.set(_.map(command, ch => ch.charCodeAt(0)));
+        body.set(Array.from(command).map(ch => ch.charCodeAt(0)));
 
         let final_command = ':' + encodeHex(buffer) + 'X\r\n';
         console.log('send', final_command);
@@ -91,5 +89,5 @@ function decodeHex(hex: string): ArrayBuffer {
 }
 
 function encodeHex(buffer: ArrayBuffer): string {
-    return _.map(new Uint8Array(buffer), b => (b >> 4).toString(16) + (b & 0xf).toString(16)).join('').toUpperCase();
+    return Array.from(new Uint8Array(buffer)).map(b => (b >> 4).toString(16) + (b & 0xf).toString(16)).join('').toUpperCase();
 }
