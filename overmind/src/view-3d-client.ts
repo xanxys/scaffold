@@ -145,7 +145,11 @@ export class WorldView {
         this.addTable();
 
         this.cadModels = new Map();
-        const model_names = ['S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH', 'S60C-FDW-RS_fixed', 'S60C-FDW-RS_stage'];
+        const model_names = [
+            'S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH',
+            'S60C-FDW-RS_fixed', 'S60C-FDW-RS_stage',
+            'S60C-TB_fixed', 'S60C-TB_darm', 'S60C-TB_mhead',
+        ];
         Promise.all(model_names.map(name => this.loadModel(name))).then(geoms => this.regenScaffoldView(ClickOpState.None));
 
         this.scaffoldView = new THREE.Object3D();
@@ -248,9 +252,33 @@ export class WorldView {
             this.scaffoldView.remove(this.scaffoldView.children[i]);
         }
 
-        this.model.getRails().forEach(rail => {
+        const cachePointGeomSmall = new THREE.SphereBufferGeometry(0.003, 16, 12);
+        function createSmallPt(color = 0x000000) {
+            let mesh = new THREE.Mesh();
+            mesh.geometry = cachePointGeomSmall;
+            mesh.material = new THREE.MeshBasicMaterial({
+                color: color,
+                opacity: 0.5,
+                transparent: true,
+            });
+            return mesh;
+        }
+        function attachAxisGuide(obj) {
+            let px = createSmallPt(0xff0000);
+            obj.add(px);
+            px.position.x = 0.01;
+
+            let py = createSmallPt(0x00ff00);
+            obj.add(py);
+            py.position.y = 0.01;
+
+            let pz = createSmallPt(0x0000ff);
+            obj.add(pz);
+            pz.position.z = 0.01;
+        }
+        this.model.getThings().forEach(thing => {
             let obj = null;
-            if (rail.type === 'FDW-RS') {
+            if (thing.type === 'FDW-RS') {
                 const mesh = new THREE.Mesh(this.cadModels['S60C-FDW-RS_fixed']);
                 mesh.material = new THREE.MeshLambertMaterial({});
 
@@ -259,12 +287,32 @@ export class WorldView {
 
                 mesh.add(stage);
                 obj = mesh;
+            } else if (thing.type === 'TB') {
+                const mesh = new THREE.Mesh(this.cadModels['S60C-TB_fixed']);
+                mesh.material = new THREE.MeshLambertMaterial({});
+                attachAxisGuide(mesh);
+
+                const darm = new THREE.Mesh(this.cadModels['S60C-TB_darm']);
+                darm.material = new THREE.MeshLambertMaterial({ 'color': new THREE.Color(0x888888) });
+                darm.rotateZ(Math.PI/2);
+                darm.rotateX(Math.PI/2);
+                darm.position.set(-5e-3, 0.03, 0.02);
+                mesh.add(darm);
+                
+                const mhead = new THREE.Mesh(this.cadModels['S60C-TB_mhead']);
+                mhead.material = new THREE.MeshLambertMaterial({ 'color': new THREE.Color(0x888888) });
+                mhead.rotateZ(Math.PI/2);
+                mhead.rotateX(Math.PI/2);
+                mhead.position.set(0.028, 0.03, 0.03);
+                mesh.add(mhead);
+
+                obj = mesh;
             } else {
-                let mesh = new THREE.Mesh(this.cadModels['S60C-' + rail.type]);
+                let mesh = new THREE.Mesh(this.cadModels['S60C-' + thing.type]);
                 mesh.material = new THREE.MeshLambertMaterial({});
                 obj = mesh;
             }
-            obj.applyMatrix(rail.cadCoord.getTransformTo(this.model.coord));
+            obj.applyMatrix(thing.cadCoord.getTransformTo(this.model.coord));
             this.scaffoldView.add(obj);
         });
 

@@ -21,7 +21,7 @@ export default {
     computed: {
         counts() {
             let cnt = new Map();
-            this.model.rails.forEach(rail => cnt.set(rail.type, 1 + (cnt.get(rail.type) || 0)));
+            this.model.getThings().forEach(thing => cnt.set(thing.type, 1 + (cnt.get(thing.type) || 0)));
 
             let data = [];
             for (let [ty, c] of cnt) {

@@ -14,28 +14,29 @@ import * as THREE from 'three';
  */
 export class ScaffoldModel {
     coord: Coordinates;
-    private rails: Array<ScaffoldThing>;
-    workers: Array<any>;
+    private things: Array<ScaffoldThing>;
 
     constructor() {
         this.coord = new Coordinates("world");
 
-        this.rails = [];
+        this.things = [];
 
         let rs = new S60RailStraight();
         rs.coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.02));
-        this.rails.push(rs);
+        this.things.push(rs);
 
         let fd = new S60RailFeederWide();
         fd.coord.unsafeSetParent(this.coord, new THREE.Vector3(0.1, 0, 0));
-        this.rails.push(fd);
+        this.things.push(fd);
 
-        this.workers = [];
+        let tb = new S60TrainBuilder();
+        tb.coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.1));
+        this.things.push(tb);
     }
 
     encode(): any {
         return {
-            rails: this.rails.map(rail => rail.encode())
+            rails: this.things.map(rail => rail.encode())
         };
     }
 
@@ -44,24 +45,24 @@ export class ScaffoldModel {
         return model;
     }
 
-    getRails(): Array<ScaffoldThing> {
-        return this.rails;
+    getThings(): Array<ScaffoldThing> {
+        return this.things;
     }
 
     addRail(rail: ScaffoldThing) {
-        this.rails.push(rail);
+        this.things.push(rail);
     }
 
     removeRail(rail: ScaffoldThing) {
-        const ix = this.rails.findIndex(r => r === rail);
+        const ix = this.things.findIndex(r => r === rail);
         if (ix >= 0) {
-            this.rails.splice(ix, 1);
+            this.things.splice(ix, 1);
         }
     }
 
     getOpenPorts() {
         let portPoints = [];
-        this.rails.forEach(rail => {
+        this.things.forEach(rail => {
             portPoints = portPoints.concat(rail.ports.map(port => {
                 return {
                     rail: rail,
@@ -82,7 +83,7 @@ export class ScaffoldModel {
     }
 
     getDeletionPoints() {
-        return this.rails.map(rail => ({
+        return this.things.map(rail => ({
             rail: rail,
             pos: rail.coord.convertP(rail.bound.center(), this.coord),
         }));
@@ -93,10 +94,10 @@ export class ScaffoldModel {
     checkErrors(): Array<[THREE.Vector3, string]> {
         let errors = [];
 
-        const size = this.rails.length;
+        const size = this.things.length;
         for (let i = 0; i < size; i++) {
             for (let j = i + 1; j < size; j++) {
-                let collisionPt = aabbCollision(this.rails[i].bound, this.rails[j].bound);
+                let collisionPt = aabbCollision(this.things[i].bound, this.things[j].bound);
                 if (collisionPt !== null) {
                     errors.push([collisionPt, "collision"]);
                 }
@@ -239,6 +240,32 @@ export class S60RailFeederWide implements ScaffoldThing {
     encode(): any {
         return {
             'type': 'FDW-RS',
+        };
+    }
+}
+
+export class S60TrainBuilder implements ScaffoldThing {
+    type: string;
+    coord: Coordinates;
+    ports: Array<Port>;
+    bound: AABB;
+
+    cadCoord: Coordinates;
+
+    constructor() {
+        this.type = "TB";
+        this.coord = new Coordinates("TB");
+        this.ports = [];
+        this.bound = new AABB(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.22, 0.045, 0.067));
+
+        this.cadCoord = new Coordinates();
+        this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.038),
+            new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
+    }
+
+    encode(): any {
+        return {
+            'type': 'TB',
         };
     }
 }
