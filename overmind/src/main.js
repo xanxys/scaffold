@@ -53,7 +53,6 @@ let appVm = new Vue({
 
 bridge.open(
     br => {
-        console.log(br, br.isOpen);
         appVm.$forceUpdate();
     },
     packet => {

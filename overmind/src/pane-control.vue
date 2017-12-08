@@ -8,11 +8,10 @@
 export default {
     props: ['name', 'active'],
     data() {
-        return {}
+        return {};
     },
     methods: {
         activate() {
-            this.active = this.name;
             this.$emit('change', this.name);
         }
     }

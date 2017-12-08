@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
-import * as OrthographicTrackballControls from './ortho-trackball-controls.js';
+import * as OrthoTrackballControls from './ortho-trackball-controls.js';
 import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing } from './scaffold-model';
 
 let STLLoader: any = LoaderFactory(THREE);
@@ -239,13 +239,7 @@ export class WorldView {
      * Otherwise control.js internal DOM element size is meesed up and gets broken.
      */
     reinitializeControls() {
-        this.controls = new OrthographicTrackballControls(this.camera, this.renderer.domElement);
-        /*
-        this.controls.noZoom = false;
-        this.controls.noPan = false;
-        this.controls.zoomSpeed = 0.1;
-        this.controls.maxDistance = 2;
-        */
+        this.controls = new OrthoTrackballControls(this.camera, this.renderer.domElement);
     }
 
     regenScaffoldView(state: ClickOpState) {
@@ -261,7 +255,7 @@ export class WorldView {
                 mesh.material = new THREE.MeshLambertMaterial({});
 
                 const stage = new THREE.Mesh(this.cadModels['S60C-FDW-RS_stage']);
-                stage.material = new THREE.MeshLambertMaterial({'color': new THREE.Color(0x888888)});
+                stage.material = new THREE.MeshLambertMaterial({ 'color': new THREE.Color(0x888888) });
 
                 mesh.add(stage);
                 obj = mesh;
@@ -332,7 +326,6 @@ export class WorldView {
     }
 
     private updateProjection() {
-        // this.camera.aspect = WorldView.WIDTH / WorldView.HEIGHT;
         this.camera.updateProjectionMatrix();
     }
 

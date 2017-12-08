@@ -27,9 +27,9 @@ export class WorkerBridge {
             baudRate: 115200
         }, err => {
             if (err !== null) {
-                console.log('serial port error', err);
+                console.error('serial port error', err);
             } else {
-                console.log('serial port ok');
+                console.info('serial port ok');
                 this.isOpen = true;
             }
             handleUpdate(this);
