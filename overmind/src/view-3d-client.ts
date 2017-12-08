@@ -145,7 +145,7 @@ export class WorldView {
         this.addTable();
 
         this.cadModels = new Map();
-        const model_names = ['S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH', 'S60C-FDW-RS'];
+        const model_names = ['S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH', 'S60C-FDW-RS_fixed', 'S60C-FDW-RS_stage'];
         Promise.all(model_names.map(name => this.loadModel(name))).then(geoms => this.regenScaffoldView(ClickOpState.None));
 
         this.scaffoldView = new THREE.Object3D();
@@ -255,10 +255,23 @@ export class WorldView {
         }
 
         this.model.getRails().forEach(rail => {
-            let mesh = new THREE.Mesh(this.cadModels['S60C-' + rail.type]);
-            mesh.material = new THREE.MeshLambertMaterial({});
-            mesh.applyMatrix(rail.cadCoord.getTransformTo(this.model.coord));
-            this.scaffoldView.add(mesh);
+            let obj = null;
+            if (rail.type === 'FDW-RS') {
+                const mesh = new THREE.Mesh(this.cadModels['S60C-FDW-RS_fixed']);
+                mesh.material = new THREE.MeshLambertMaterial({});
+
+                const stage = new THREE.Mesh(this.cadModels['S60C-FDW-RS_stage']);
+                stage.material = new THREE.MeshLambertMaterial({'color': new THREE.Color(0x888888)});
+
+                mesh.add(stage);
+                obj = mesh;
+            } else {
+                let mesh = new THREE.Mesh(this.cadModels['S60C-' + rail.type]);
+                mesh.material = new THREE.MeshLambertMaterial({});
+                obj = mesh;
+            }
+            obj.applyMatrix(rail.cadCoord.getTransformTo(this.model.coord));
+            this.scaffoldView.add(obj);
         });
 
         this.cachePointGeom = new THREE.SphereBufferGeometry(0.006, 16, 12);

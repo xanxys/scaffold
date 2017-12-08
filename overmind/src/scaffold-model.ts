@@ -29,6 +29,19 @@ export class ScaffoldModel {
         let fd = new S60RailFeederWide();
         fd.coord.unsafeSetParent(this.coord, new THREE.Vector3(0.1, 0, 0));
         this.rails.push(fd);
+
+        this.workers = [];
+    }
+
+    encode(): any {
+        return {
+            rails: this.rails.map(rail => rail.encode())
+        };
+    }
+
+    static decode(obj: any): ScaffoldModel {
+        const model = new ScaffoldModel();
+        return model;
     }
 
     getRails(): Array<ScaffoldThing> {
@@ -104,6 +117,8 @@ export interface ScaffoldThing {
     bound: AABB;
 
     cadCoord: Coordinates;
+
+    encode(): any;
 }
 
 // Something that is connected to wireless network and can act on comands.
@@ -131,6 +146,12 @@ export class S60RailStraight implements ScaffoldThing {
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.03, 0));
     }
+
+    encode(): any {
+        return {
+            'type': 'RS',
+        };
+    }
 }
 
 export class S60RailHelix implements ScaffoldThing {
@@ -152,6 +173,12 @@ export class S60RailHelix implements ScaffoldThing {
 
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.025, 0));
+    }
+
+    encode(): any {
+        return {
+            'type': 'RH',
+        };
     }
 }
 
@@ -177,6 +204,12 @@ export class S60RailRotator implements ScaffoldThing {
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.03, 0));
     }
+
+    encode(): any {
+        return {
+            'type': 'RR',
+        };
+    }
 }
 
 export class S60RailFeederWide implements ScaffoldThing {
@@ -201,6 +234,12 @@ export class S60RailFeederWide implements ScaffoldThing {
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.038),
             new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
+    }
+
+    encode(): any {
+        return {
+            'type': 'FDW-RS',
+        };
     }
 }
 
