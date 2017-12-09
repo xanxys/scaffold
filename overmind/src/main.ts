@@ -1,9 +1,9 @@
 import * as $ from 'jquery';
-
 import * as Vue from 'vue/dist/vue.js';
+import { WorldView, WorldViewModel } from './view-3d-client';
+
 import { WorkerBridge } from './comm';
 import WorkerPool from './worker-pool';
-import { WorldView, WorldViewModel } from './view-3d-client';
 
 import * as THREE from 'three';
 import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60RailFeederWide, S60TrainBuilder } from './scaffold-model';

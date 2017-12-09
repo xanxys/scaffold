@@ -11,7 +11,8 @@
         <button class="btn btn-primary" @click="simStart">Sim Start</button>
         <button class="btn btn-primary" @click="simStop">Sim Stop</button>
         |
-        <button class="btn btn-danger" @click="exec">Exec</button>
+        <button class="btn btn-danger" @click="exec">Exec</button>|
+        <span>T={{timeSec.toFixed(2)}}s</span>
     </div>
 </template>
 
@@ -26,6 +27,8 @@ export default {
         const scale = 25.0;
         return {
             simInterval: null,
+            timeOrigin: new Date(),
+            timeNow: new Date(),
             workers: [
                 {
                     name: "W1",
@@ -56,13 +59,21 @@ export default {
             ]
         };
     },
+    computed: {
+        timeSec() {
+            return (this.timeNow - this.timeOrigin) * 1e-3;
+        }
+    },
     methods: {
         simStart() {
             if (this.simInterval) {
                 clearInterval(this.simInterval);
             }
-            const timeOrigin = new Date();
-            this.simInterval = setInterval(() => this.planner.setTime((new Date() - timeOrigin) * 1e-3), 50);
+            this.timeOrigin = new Date();
+            this.simInterval = setInterval(() => {
+                this.timeNow = new Date();
+                this.planner.setTime(this.timeSec);
+            }, 50);
         },
         simStop() {
             if (this.simInterval) {
