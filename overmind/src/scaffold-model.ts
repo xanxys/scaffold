@@ -1,5 +1,39 @@
-
 import * as THREE from 'three';
+import * as LoaderFactory from 'three-stl-loader';
+
+let STLLoader: any = LoaderFactory(THREE);
+
+export class ScaffoldThingLoader {
+    private stlLoader: any;
+    private cadModels: Map<string, THREE.Geometry> = new Map();
+
+    constructor() {
+        this.stlLoader = new STLLoader();
+        const model_names = [
+            'S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH',
+            'S60C-FDW-RS_fixed', 'S60C-FDW-RS_stage',
+            'S60C-TB_fixed', 'S60C-TB_darm', 'S60C-TB_mhead',
+        ];
+        Promise.all(model_names.map(name => this.loadModel(name)));
+    }
+
+    create<T extends ScaffoldThing>(): Promise<T> {
+        return new Promise(resolve => {
+        });
+    }
+
+    private loadModel(name) {
+        return new Promise(resolve => {
+            const t0 = new Date();
+            this.stlLoader.load('./models/' + name + '.stl', geom => {
+                geom.scale(1e-3, 1e-3, 1e-3);
+                this.cadModels[name] = geom;
+                // console.log("Loading time", new Date() - t0, "ms");
+                resolve(geom);
+            });
+        });
+    }
+}
 
 /**
  * Scaffold inferred / target world model.
@@ -15,10 +49,10 @@ import * as THREE from 'three';
 export class ScaffoldModel {
     coord: Coordinates;
     private things: Array<ScaffoldThing>;
-
+    
     constructor() {
         this.coord = new Coordinates("world");
-        this.things = [];
+        this.things = [];        
     }
 
     encode(): any {
@@ -107,6 +141,9 @@ export interface ScaffoldThing {
 
     cadCoord: Coordinates;
 
+    //getCadModel(): THREE.Geometry;
+    // getCadModelSub(sub: string): THREE.Geometry;
+
     getRailSegments(): Array<RailSegment>;
 
     encode(): any;
@@ -128,7 +165,7 @@ export class S60RailStraight implements ScaffoldThing {
     // TODO: refactor cad reference into this class?
     cadCoord: Coordinates;
 
-    constructor() {
+    constructor(private cadModel: THREE.Geometry) {
         this.type = "RS";
         this.coord = new Coordinates("RS");
         this.ports = [
@@ -139,6 +176,14 @@ export class S60RailStraight implements ScaffoldThing {
 
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.03, 0));
+    }
+
+    getCadModel() {
+        return this.cadModel;
+    }
+
+    getCadModelSub(_) {
+        return null;
     }
 
     getRailSegments(): Array<RailSegment> {
