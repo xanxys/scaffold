@@ -18,20 +18,7 @@ export class ScaffoldModel {
 
     constructor() {
         this.coord = new Coordinates("world");
-
         this.things = [];
-
-        let rs = new S60RailStraight();
-        rs.coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.02));
-        this.things.push(rs);
-
-        let fd = new S60RailFeederWide();
-        fd.coord.unsafeSetParent(this.coord, new THREE.Vector3(0.1, 0, 0));
-        this.things.push(fd);
-
-        let tb = new S60TrainBuilder();
-        tb.coord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.1));
-        this.things.push(tb);
     }
 
     encode(): any {
@@ -235,6 +222,8 @@ export class S60RailFeederWide implements ScaffoldThing {
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.038),
             new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
+
+        this.paramx = 0.04;
     }
 
     encode(): any {
@@ -270,9 +259,6 @@ export class S60TrainBuilder implements ScaffoldThing {
     }
 }
 
-class S60Builder {
-
-}
 
 class Port {
     constructor(public pos: THREE.Vector3, public up: THREE.Vector3, public fwd: THREE.Vector3) {

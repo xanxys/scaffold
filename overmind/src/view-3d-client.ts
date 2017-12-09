@@ -284,6 +284,7 @@ export class WorldView {
 
                 const stage = new THREE.Mesh(this.cadModels['S60C-FDW-RS_stage']);
                 stage.material = new THREE.MeshLambertMaterial({ 'color': new THREE.Color(0x888888) });
+                stage.position.x = thing.paramx;
 
                 mesh.add(stage);
                 obj = mesh;

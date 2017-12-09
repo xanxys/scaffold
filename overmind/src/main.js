@@ -7,7 +7,10 @@ import Vue from 'vue/dist/vue.js';
 import { WorkerBridge } from './comm.ts';
 import WorkerPool from './worker-pool.ts';
 import { WorldView, WorldViewModel } from './view-3d-client.ts';
-import { ScaffoldModel } from './scaffold-model.ts';
+
+import * as THREE from 'three';
+import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60RailFeederWide, S60TrainBuilder } from './scaffold-model';
+import {FeederPlanner1D} from './planner.ts';
 
 // Components
 import TheToolbar from './the-toolbar.vue';
@@ -38,6 +41,24 @@ function flash_status() {
 
 const workerPool = new WorkerPool();
 const model = new ScaffoldModel();
+
+function initModel() {
+    let rs = new S60RailStraight();
+    rs.coord.unsafeSetParent(model.coord, new THREE.Vector3(0, 0, 0.02));
+    model.things.push(rs);
+
+    let fd = new S60RailFeederWide();
+    fd.coord.unsafeSetParent(model.coord, new THREE.Vector3(0.1, 0, 0));
+    model.things.push(fd);
+
+    let tb = new S60TrainBuilder();
+    tb.coord.unsafeSetParent(model.coord, new THREE.Vector3(0, 0, 0.1));
+    model.things.push(tb);
+
+    const planner = new FeederPlanner1D(model, fd, tb);
+}
+initModel();
+
 const viewModel = new WorldViewModel(model, $('#add_rs'), $('#add_rh'), $('#add_rr'));
 
 let appVm = new Vue({
