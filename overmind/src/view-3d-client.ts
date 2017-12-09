@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import * as OrthoTrackballControls from './ortho-trackball-controls.js';
-import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing } from './scaffold-model';
+import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60TrainBuilder, S60RailFeederWide } from './scaffold-model';
 
 let STLLoader: any = LoaderFactory(THREE);
 
@@ -99,6 +99,8 @@ export class WorldView {
     scene: THREE.Scene;
     scaffoldView: any;
     controls: any;
+
+    realtimeBindings: Array<any> = [];
 
     textureLoader: any;
     stlLoader: any;
@@ -276,6 +278,7 @@ export class WorldView {
             obj.add(pz);
             pz.position.z = 0.01;
         }
+        this.realtimeBindings = [];
         this.model.getThings().forEach(thing => {
             let obj = null;
             if (thing.type === 'FDW-RS') {
@@ -284,7 +287,7 @@ export class WorldView {
 
                 const stage = new THREE.Mesh(this.cadModels['S60C-FDW-RS_stage']);
                 stage.material = new THREE.MeshLambertMaterial({ 'color': new THREE.Color(0x888888) });
-                stage.position.x = thing.paramx;
+                this.realtimeBindings.push({apply: () => stage.position.x = (<S60RailFeederWide> thing).paramx});
 
                 mesh.add(stage);
                 obj = mesh;
@@ -316,6 +319,8 @@ export class WorldView {
             obj.applyMatrix(thing.cadCoord.getTransformTo(this.model.coord));
             this.scaffoldView.add(obj);
         });
+        // Run initial bindings to update model positions.
+        this.realtimeBindings.forEach(binding => binding.apply());
 
         this.cachePointGeom = new THREE.SphereBufferGeometry(0.006, 16, 12);
 
@@ -386,6 +391,7 @@ export class WorldView {
         }
         requestAnimationFrame(() => this.animate());
         this.controls.update();
+        this.realtimeBindings.forEach(binding => binding.apply());
         this.renderer.render(this.scene, this.camera);
     }
 

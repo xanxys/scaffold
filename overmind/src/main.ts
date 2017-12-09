@@ -28,9 +28,9 @@ export function runMain() {
         tb.coord.unsafeSetParent(model.coord, new THREE.Vector3(0, 0, 0.1));
         model.addRail(tb);
 
-        const planner = new FeederPlanner1D(model, fd, tb);
+        return new FeederPlanner1D(model, fd, tb);
     }
-    initModel();
+    const planner = initModel();
 
     const viewModel = new WorldViewModel(model);
 
@@ -42,6 +42,7 @@ export function runMain() {
             workerPool: workerPool,
             worldView: null,
             worldViewModel: viewModel,
+            planner: planner,
         },
     });
 

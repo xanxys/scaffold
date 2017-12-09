@@ -8,7 +8,10 @@
                 </span>
             </div>
         </div>
-        <button class="btn btn-primary" @click="exec">Exec</button>
+        <button class="btn btn-primary" @click="simStart">Sim Start</button>
+        <button class="btn btn-primary" @click="simStop">Sim Stop</button>
+        |
+        <button class="btn btn-danger" @click="exec">Exec</button>
     </div>
 </template>
 
@@ -16,12 +19,13 @@
 import Vue from 'vue';
 
 export default {
-    props: [],
+    props: ['planner'],
     components: {
     },
     data() {
         const scale = 25.0;
         return {
+            simInterval: null,
             workers: [
                 {
                     name: "W1",
@@ -53,8 +57,20 @@ export default {
         };
     },
     methods: {
+        simStart() {
+            if (this.simInterval) {
+                clearInterval(this.simInterval);
+            }
+            const timeOrigin = new Date();
+            this.simInterval = setInterval(() => this.planner.setTime((new Date() - timeOrigin) * 1e-3), 50);
+        },
+        simStop() {
+            if (this.simInterval) {
+                clearInterval(this.simInterval);
+                this.simInterval = null;
+            }
+        },
         exec() {
-
         }
     }
 }
