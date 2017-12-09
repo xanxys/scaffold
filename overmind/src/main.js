@@ -6,19 +6,19 @@ require('bootstrap');
 // Components
 import Vue from 'vue/dist/vue.js';
 
-import TheToolbar from './the-toolbar.vue';
+import TheToolbar from './components/the-toolbar.vue';
 Vue.component('the-toolbar', TheToolbar);
 
-import TheSidepanel from './the-sidepanel.vue';
+import TheSidepanel from './components/the-sidepanel.vue';
 Vue.component('the-sidepanel', TheSidepanel);
 
-import ThePlanToolbar from './the-plan-toolbar.vue';
+import ThePlanToolbar from './components/the-plan-toolbar.vue';
 Vue.component('the-plan-toolbar', ThePlanToolbar);
 
-import Timeline from './timeline.vue';
+import Timeline from './components/timeline.vue';
 Vue.component('timeline', Timeline);
 
-import TheTabWorker from './the-tab-worker.vue';
+import TheTabWorker from './components/the-tab-worker.vue';
 Vue.component('the-tab-worker', TheTabWorker);
 
 // Hand over exec to TypeScript land.
