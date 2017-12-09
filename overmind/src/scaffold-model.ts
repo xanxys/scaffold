@@ -165,7 +165,7 @@ export class S60RailStraight implements ScaffoldThing {
     // TODO: refactor cad reference into this class?
     cadCoord: Coordinates;
 
-    constructor(private cadModel: THREE.Geometry) {
+    constructor(private cadModel: THREE.Geometry = null) {
         this.type = "RS";
         this.coord = new Coordinates("RS");
         this.ports = [

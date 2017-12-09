@@ -1,3 +1,5 @@
+declare const global: any;
+
 import * as $ from 'jquery';
 import * as Vue from 'vue/dist/vue.js';
 import { WorldView, WorldViewModel } from './view-3d-client';
