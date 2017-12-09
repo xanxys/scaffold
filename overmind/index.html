@@ -10,21 +10,21 @@
 
 <body style="background-color: #444">
     <div id="app">
-        <the-toolbar v-bind:bridge="bridge"></the-toolbar>
+        <the-toolbar :bridge="bridge"></the-toolbar>
 
         <div class="container-fluid">
             <div class="row" style="margin-left: 0">
-                <the-sidepanel v-bind:model="model" v-bind:worker-pool="workerPool" v-bind:world-view="worldView"></the-sidepanel>
+                <the-sidepanel :model="model" :worker-pool="workerPool" :world-view="worldView"></the-sidepanel>
 
                 <!-- modal main content -->
                 <div class="col-md-9">
                     <div id="tab_plan" style="display: none">
-                        <the-plan-toolbar v-bind:viewmodel="worldViewModel"></the-plan-toolbar>
+                        <the-plan-toolbar :viewmodel="worldViewModel"></the-plan-toolbar>
                         <div id="viewport"></div>
                         <timeline :planner="planner"></timeline>
                     </div>
 
-                    <the-tab-worker v-bind:pool="workerPool"></the-tab-worker>
+                    <the-tab-worker :pool="workerPool"></the-tab-worker>
                 </div>
             </div>
         </div>
