@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import * as OrthoTrackballControls from './ortho-trackball-controls.js';
-import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60TrainBuilder, S60RailFeederWide } from './scaffold-model';
+import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60TrainBuilder, S60RailFeederWide, ScaffoldThingLoader } from './scaffold-model';
 import { Planner, FeederPlanner1D } from './planner';
 
 let STLLoader: any = LoaderFactory(THREE);
@@ -25,9 +25,11 @@ export class WorldViewModel {
     private view: WorldView;
     private showPhysics = false;
 
+    private loader: ScaffoldThingLoader;
     private planner?: Planner;
 
     constructor(private model) {
+        this.loader = new ScaffoldThingLoader();
     }
 
     setState(state: ClickOpState) {
@@ -36,20 +38,27 @@ export class WorldViewModel {
     }
 
     genFeederPlan() {
-        let rs = new S60RailStraight();
-        rs.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0, 0, 0.02));
-        this.model.addRail(rs);
-
-        let fd = new S60RailFeederWide();
-        fd.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0.1, 0, 0));
-        this.model.addRail(fd);
-
-        let tb = new S60TrainBuilder();
-        tb.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0.105, -0.022, 0));
-        this.model.addRail(tb);
-
-        this.planner = new FeederPlanner1D(this.model, fd, tb);
-        this.view.regenScaffoldView(ClickOpState.None);
+        Promise.all([
+            this.loader.create(S60RailStraight).then(rs => {
+                rs.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0, 0, 0.02));
+                this.model.addRail(rs);
+                return rs;
+            }),
+            this.loader.create(S60RailFeederWide).then(fd => {
+                fd.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0.1, 0, 0));
+                this.model.addRail(fd);
+                return fd;
+            }),
+            this.loader.create(S60TrainBuilder).then(tb => {
+                tb.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0.105, -0.022, 0));
+                this.model.addRail(tb);
+                return tb;
+            }),
+        ]).then(res => {
+            console.log(res);
+            this.planner = new FeederPlanner1D(this.model, <S60RailFeederWide>res[1], <S60TrainBuilder>res[2]);
+            this.view.regenScaffoldView(ClickOpState.None);
+        });
     }
 
     setTime(tSec: number) {
@@ -69,13 +78,13 @@ export class WorldViewModel {
     onClickUiObject(obj: any) {
         switch (this.state) {
             case ClickOpState.AddRs:
-                this.addRail(obj, new S60RailStraight());
+                this.loader.create(S60RailStraight).then(r => this.addRail(obj, r));
                 break;
             case ClickOpState.AddRh:
-                this.addRail(obj, new S60RailHelix());
+                this.loader.create(S60RailHelix).then(r => this.addRail(obj, r));
                 break;
             case ClickOpState.AddRr:
-                this.addRail(obj, new S60RailRotator());
+                this.loader.create(S60RailRotator).then(r => this.addRail(obj, r));
                 break;
             case ClickOpState.Remove:
                 this.removeRail(obj);
@@ -191,11 +200,10 @@ export class WorldView {
 
         this.cadModels = new Map();
         const model_names = [
-            'S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH',
-            'S60C-FDW-RS_fixed', 'S60C-FDW-RS_stage',
-            'S60C-TB_fixed', 'S60C-TB_darm', 'S60C-TB_mhead',
+            'S60C-FDW-RS_stage',
+            'S60C-TB_darm', 'S60C-TB_mhead',
         ];
-        Promise.all(model_names.map(name => this.loadModel(name))).then(geoms => this.regenScaffoldView(ClickOpState.None));
+        Promise.all(model_names.map(name => this.loadModel(name)));
 
         this.scaffoldView = new THREE.Object3D();
         this.scene.add(this.scaffoldView);
@@ -324,8 +332,9 @@ export class WorldView {
         this.realtimeBindings = [];
         this.model.getThings().forEach(thing => {
             let obj = null;
-            if (thing.type === 'FDW-RS') {
-                const mesh = new THREE.Mesh(this.cadModels['S60C-FDW-RS_fixed']);
+            let type = (<any>thing.constructor).type;
+            if (type === 'FDW-RS') {
+                const mesh = new THREE.Mesh(thing.cadModel);
                 mesh.material = new THREE.MeshLambertMaterial({});
 
                 // TODO: Migrate these into ScaffoldModel intead of having hierarchy here.
@@ -335,8 +344,8 @@ export class WorldView {
 
                 mesh.add(stage);
                 obj = mesh;
-            } else if (thing.type === 'TB') {
-                const mesh = new THREE.Mesh(this.cadModels['S60C-TB_fixed']);
+            } else if (type === 'TB') {
+                const mesh = new THREE.Mesh(thing.cadModel);
                 mesh.material = new THREE.MeshLambertMaterial({});
                 attachAxisGuide(mesh);
 
@@ -358,7 +367,7 @@ export class WorldView {
 
                 obj = mesh;
             } else {
-                let mesh = new THREE.Mesh(this.cadModels['S60C-' + thing.type]);
+                let mesh = new THREE.Mesh(thing.cadModel);
                 mesh.material = new THREE.MeshLambertMaterial({});
                 obj = mesh;
             }

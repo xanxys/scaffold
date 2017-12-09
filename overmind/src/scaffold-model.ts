@@ -5,20 +5,23 @@ let STLLoader: any = LoaderFactory(THREE);
 
 export class ScaffoldThingLoader {
     private stlLoader: any;
-    private cadModels: Map<string, THREE.Geometry> = new Map();
+    readonly cadModels: Map<string, THREE.Geometry> = new Map();
+    private loadingDone: Promise<any>;
 
     constructor() {
         this.stlLoader = new STLLoader();
-        const model_names = [
-            'S60C-T', 'S60C-RS', 'S60C-RR', 'S60C-RH',
-            'S60C-FDW-RS_fixed', 'S60C-FDW-RS_stage',
-            'S60C-TB_fixed', 'S60C-TB_darm', 'S60C-TB_mhead',
+        // TODO: Derive these from classes.
+        const modelNames = [
+            'S60C-RS', 'S60C-RR', 'S60C-RH',
+            'S60C-FDW-RS', 'S60C-FDW-RS_stage',
+            'S60C-TB', 'S60C-TB_darm', 'S60C-TB_mhead',
         ];
-        Promise.all(model_names.map(name => this.loadModel(name)));
+        this.loadingDone = Promise.all(modelNames.map(name => this.loadModel(name)));
     }
 
-    create<T extends ScaffoldThing>(): Promise<T> {
-        return new Promise(resolve => {
+    create<T extends ScaffoldThing>(newable: TypedNewable<T>): Promise<T> {
+        return this.loadingDone.then(_ => {
+            return new newable(this.cadModels['S60C-' + newable.type]);
         });
     }
 
@@ -35,6 +38,11 @@ export class ScaffoldThingLoader {
     }
 }
 
+interface TypedNewable<T> {
+    type: string;
+    new(geom: THREE.Geometry): T;
+}
+
 /**
  * Scaffold inferred / target world model.
  * 
@@ -49,10 +57,10 @@ export class ScaffoldThingLoader {
 export class ScaffoldModel {
     coord: Coordinates;
     private things: Array<ScaffoldThing>;
-    
+
     constructor() {
         this.coord = new Coordinates("world");
-        this.things = [];        
+        this.things = [];
     }
 
     encode(): any {
@@ -134,12 +142,12 @@ export class ScaffoldModel {
  * Can have internal state.
  */
 export interface ScaffoldThing {
-    type: string;
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
 
     cadCoord: Coordinates;
+    readonly cadModel: THREE.Geometry;
 
     //getCadModel(): THREE.Geometry;
     // getCadModelSub(sub: string): THREE.Geometry;
@@ -157,7 +165,7 @@ export class Active {
 }
 
 export class S60RailStraight implements ScaffoldThing {
-    type: string;
+    static readonly type = "RS";
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
@@ -165,8 +173,7 @@ export class S60RailStraight implements ScaffoldThing {
     // TODO: refactor cad reference into this class?
     cadCoord: Coordinates;
 
-    constructor(private cadModel: THREE.Geometry = null) {
-        this.type = "RS";
+    constructor(readonly cadModel: THREE.Geometry) {
         this.coord = new Coordinates("RS");
         this.ports = [
             new Port(new THREE.Vector3(0, -0.03, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, -1, 0)),
@@ -203,15 +210,15 @@ export class S60RailStraight implements ScaffoldThing {
 }
 
 export class S60RailHelix implements ScaffoldThing {
-    type: string;
+    static readonly type = "RH";
+
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
 
     cadCoord: Coordinates;
 
-    constructor() {
-        this.type = "RH";
+    constructor(readonly cadModel: THREE.Geometry) {
         this.coord = new Coordinates("RH");
         this.ports = [
             new Port(new THREE.Vector3(0, -0.03, 0), new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, -1, 0)),
@@ -240,15 +247,15 @@ export class S60RailHelix implements ScaffoldThing {
 }
 
 export class S60RailRotator implements ScaffoldThing {
-    type: string;
+    static readonly type = "RR";
+
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
 
     cadCoord: Coordinates;
 
-    constructor() {
-        this.type = "RR";
+    constructor(readonly cadModel: THREE.Geometry) {
         this.coord = new Coordinates("RR");
         this.ports = [
             new Port(new THREE.Vector3(0, -0.03, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, -1, 0)),
@@ -283,7 +290,7 @@ export class S60RailRotator implements ScaffoldThing {
 }
 
 export class S60RailFeederWide implements ScaffoldThing, Active {
-    type: string;
+    static readonly type = "FDW-RS";
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
@@ -294,8 +301,7 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
 
     paramx: number;
 
-    constructor() {
-        this.type = "FDW-RS";
+    constructor(readonly cadModel: THREE.Geometry) {
         this.coord = new Coordinates("FDW");
         this.ports = [0, 0.06, 0.06 + 0.035, 0.06 + 0.035 * 2, 0.06 + 0.035 * 3].map(xoffset => {
             return new Port(
@@ -334,7 +340,7 @@ class S60RFWStage implements ScaffoldThing {
 */
 
 export class S60TrainBuilder implements ScaffoldThing, Active {
-    type: string;
+    static readonly type = "TB";
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
@@ -343,8 +349,7 @@ export class S60TrainBuilder implements ScaffoldThing, Active {
 
     addr?: number;
 
-    constructor() {
-        this.type = "TB";
+    constructor(readonly cadModel: THREE.Geometry) {
         this.coord = new Coordinates("TB");
         this.ports = [];
         this.bound = new AABB(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.22, 0.045, 0.067));
