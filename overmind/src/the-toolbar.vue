@@ -6,7 +6,7 @@
             </div>
             <div class="collapse navbar-collapse" id="nav">
                 <ul class="nav navbar-nav">
-                    <li id="conn-status"><p class="navbar-text"><span v-bind:class="status_class"><i id="conn-icon" class="material-icons">wifi_tethering</i>{{status}}</span> {{path}}</p></li>
+                    <li id="conn-status"><p class="navbar-text"><span v-bind:class="status_class"><i v-bind:class="{'text-muted': isFlashing}" class="material-icons">wifi_tethering</i>{{status}}</span> {{path}}</p></li>
 
                     <li><a href="#" v-on:click="refreshNow" title="Refresh now"><span style="padding-top: 7px" class="glyphicon glyphicon-refresh"></span></a></li>
                     <li class="dropdown" style="margin-left:-10px; padding-top:9px">
@@ -68,6 +68,10 @@ export default {
         },
         path() {
             return this.bridge.path;
+        },
+        isFlashing() {
+            const now = new Date();
+            return (this.bridge.latestPacket && now > this.bridge.latestPacket && now - this.bridge.latestPacket < 0.1);
         }
     },
     methods: {

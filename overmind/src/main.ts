@@ -12,16 +12,6 @@ import { FeederPlanner1D } from './planner';
 
 export function runMain() {
     const bridge = new WorkerBridge();
-
-    // TODO: Move to the-toolbar.vue
-    function flash_status() {
-        let el: any = $('#conn-icon');
-        el.addClass('text-muted');
-        setTimeout(() => {
-            el.removeClass('text-muted');
-        }, 100);
-    }
-
     const workerPool = new WorkerPool();
     const model = new ScaffoldModel();
 
@@ -60,7 +50,6 @@ export function runMain() {
             appVm.$forceUpdate();
         },
         packet => {
-            flash_status();
             if (packet.datagram !== null) {
                 workerPool.handleDatagram(packet);
             }

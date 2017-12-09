@@ -18,6 +18,7 @@ export class WorkerBridge {
     private port: any;
     path = '/dev/ttyUSB0';
     isOpen = false;
+    latestPacket?: Date;
 
     constructor() {
     }
@@ -60,6 +61,8 @@ export class WorkerBridge {
                     packet.data = JSON.parse(String.fromCharCode.apply(String, packet.datagram));
                 } catch (e) { }
             }
+
+            this.latestPacket = new Date();
             handlePacket(packet);
         });
     }
