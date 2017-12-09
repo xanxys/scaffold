@@ -1,22 +1,22 @@
 <template>
     <div id="sidepanel" class="col-md-3" style="background-color: #333; height: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">
-        <pane-control name="Plan" v-bind:active="activePane" v-on:change="update_pane"/>
+        <pane-control name="Plan" :active="activePane" @change="update_pane"/>
         <div id="plan">
-            <plan-summary v-bind:model="model"/>
+            <plan-summary :model="model"/>
         </div>
 
-        <pane-control name="Workers" v-bind:active="activePane" v-on:change="update_pane"/>
+        <pane-control name="Workers" :active="activePane" @change="update_pane"/>
         <div id="workers">
             <table>
             <tbody>
                 <tr v-for="worker in workerPool.workers">
                 <td>
-                    <h4><img width="25" height="25" v-bind:src="'data:image/png;base64,' + worker.identicon.toString()"/> {{worker.wtype}} <span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h4>
+                    <h4><img width="25" height="25" :src="'data:image/png;base64,' + worker.identicon.toString()"/> {{worker.wtype}} <span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h4>
                 </td>
                 </tr>
             </tbody>
             </table>
-            <div v-bind:class="{'alert': true, 'alert-info': !has_uninit, 'alert-danger': has_uninit}" role="alert">{{uninit_desc}}</div>
+            <div :class="{'alert': true, 'alert-info': !has_uninit, 'alert-danger': has_uninit}" role="alert">{{uninit_desc}}</div>
         </div>
     </div>
 </template>

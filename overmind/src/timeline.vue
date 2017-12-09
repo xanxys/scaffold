@@ -1,14 +1,14 @@
 <template>
     <div>
         <div class="timeline" style="display: flex; flex-direction: column">
-            <div v-for="worker in workers" class="timeline-worker">
+            <div v-for="worker in workers" :key="worker.name" class="timeline-worker">
                 <span class="timeline-header">{{worker.name}}</span>
                 <span style="position: relative">
-                    <div class="timeline-action" v-for="task in worker.tasks" style="position:absolute; top: 0" v-bind:style="{left: task.init + 'px', width: task.dur + 'px'}">{{task.name}}</div>
+                    <div class="timeline-action" v-for="task in worker.tasks" style="position:absolute; top: 0" :style="{left: task.init + 'px', width: task.dur + 'px'}">{{task.name}}</div>
                 </span>
             </div>
         </div>
-        <button class="btn btn-primary" v-on:click="exec">Exec</button>
+        <button class="btn btn-primary" @click="exec">Exec</button>
     </div>
 </template>
 

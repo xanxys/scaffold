@@ -1,10 +1,10 @@
 <template>
     <div style="display:flex; align-items: center">
         <i class="material-icons">add_box</i>
-        <button v-on:click="addRs" class="btn btn-default" v-bind:class="{'active': isAddRs}">RS</button>
-        <button v-on:click="addRh" class="btn btn-default" v-bind:class="{'active': isAddRh}">RH</button>
-        <button v-on:click="addRr" class="btn btn-default" v-bind:class="{'active': isAddRr}">RR</button>
-        <button v-on:click="remove" class="btn btn-default" v-bind:class="{'active': isRemove}"><i class="material-icons">delete_forever</i></button>
+        <button @click="addRs" class="btn btn-default" :class="{'active': isAddRs}">RS</button>
+        <button @click="addRh" class="btn btn-default" :class="{'active': isAddRh}">RH</button>
+        <button @click="addRr" class="btn btn-default" :class="{'active': isAddRr}">RR</button>
+        <button @click="remove" class="btn btn-default" :class="{'active': isRemove}"><i class="material-icons">delete_forever</i></button>
     </div>
 </template>
 

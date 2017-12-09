@@ -1,10 +1,10 @@
 <template>
     <div id="tab_workers">
-        <a v-if="!rawEnabled" style="color: #f0ad4e" href="#" v-on:click="setRawEnabled(true)">
+        <a v-if="!rawEnabled" style="color: #f0ad4e" href="#" @click="setRawEnabled(true)">
             <i class="material-icons">warning</i>Show raw actions
         </a>
-        <a v-if="rawEnabled"  style="color: #eee" href="#" v-on:click="setRawEnabled(false)">Hide raw actions</a>
-        <worker-card v-for="worker in pool.workers" :key="worker.addr" v-bind:worker="worker" v-bind:show_raw="rawEnabled"/>
+        <a v-if="rawEnabled"  style="color: #eee" href="#" @click="setRawEnabled(false)">Hide raw actions</a>
+        <worker-card v-for="worker in pool.workers" :key="worker.addr" :worker="worker" :show_raw="rawEnabled"/>
     </div>
 </template>
 

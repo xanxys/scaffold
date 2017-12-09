@@ -1,6 +1,6 @@
 <template>
 <h2>{{name}}
-  <button v-bind:class="{active: active === name}" v-on:click="activate" class="pane-button btn btn-default" style="float: right" title="Expand details"><span class="glyphicon glyphicon-chevron-right"></span></button>
+  <button :class="{active: active === name}" @click="activate" class="pane-button btn btn-default" style="float: right" title="Expand details"><span class="glyphicon glyphicon-chevron-right"></span></button>
 </h2>
 </template>
 
