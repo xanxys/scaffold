@@ -20,7 +20,7 @@
 import Vue from 'vue';
 
 export default {
-    props: ['planner'],
+    props: ['viewmodel'],
     components: {
     },
     data() {
@@ -72,7 +72,7 @@ export default {
             this.timeOrigin = new Date();
             this.simInterval = setInterval(() => {
                 this.timeNow = new Date();
-                this.planner.setTime(this.timeSec);
+                this.viewmodel.setTime(this.timeSec);
             }, 50);
         },
         simStop() {

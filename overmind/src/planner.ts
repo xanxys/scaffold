@@ -16,6 +16,10 @@ export class FeederPlanner1D implements Planner {
     constructor(private model: ScaffoldModel, private feeder: S60RailFeederWide, private builder: S60TrainBuilder) {
     }
 
+    getPlan(): Promise<string> {
+        return Promise.resolve('fp1d-plan');
+    }
+
     setTime(tSec: number) {
         this.feeder.paramx = Math.cos(tSec * Math.PI / 2) * 0.05;
     }

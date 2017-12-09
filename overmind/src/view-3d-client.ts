@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import * as OrthoTrackballControls from './ortho-trackball-controls.js';
 import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60TrainBuilder, S60RailFeederWide } from './scaffold-model';
+import { Planner, FeederPlanner1D } from './planner';
 
 let STLLoader: any = LoaderFactory(THREE);
 
@@ -17,12 +18,14 @@ export enum ClickOpState {
 }
 
 /**
- * A viewmodel used by both View3DClient and the-plan-toolbar.
+ * A viewmodel used by both View3DClient, the-plan-toolbar, and timeline.
  */
 export class WorldViewModel {
     private state = ClickOpState.None;
     private view: WorldView;
     private showPhysics = false;
+
+    private planner?: Planner;
 
     constructor(private model) {
     }
@@ -30,6 +33,29 @@ export class WorldViewModel {
     setState(state: ClickOpState) {
         this.state = state;
         this.view.regenScaffoldView(state);
+    }
+
+    genFeederPlan() {
+        let rs = new S60RailStraight();
+        rs.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0, 0, 0.02));
+        this.model.addRail(rs);
+
+        let fd = new S60RailFeederWide();
+        fd.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0.1, 0, 0));
+        this.model.addRail(fd);
+
+        let tb = new S60TrainBuilder();
+        tb.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0.105, -0.022, 0));
+        this.model.addRail(tb);
+
+        this.planner = new FeederPlanner1D(this.model, fd, tb);
+        this.view.regenScaffoldView(ClickOpState.None);
+    }
+
+    setTime(tSec: number) {
+        if (this.planner !== null) {
+            this.planner.setTime(tSec);
+        }
     }
 
     togglePhysics() {
@@ -313,7 +339,7 @@ export class WorldView {
                 const mesh = new THREE.Mesh(this.cadModels['S60C-TB_fixed']);
                 mesh.material = new THREE.MeshLambertMaterial({});
                 attachAxisGuide(mesh);
-            
+
                 // TODO: Migrate these into ScaffoldModel intead of having hierarchy here.
                 const darm = new THREE.Mesh(this.cadModels['S60C-TB_darm']);
                 darm.material = new THREE.MeshLambertMaterial({ 'color': new THREE.Color(0x888888) });

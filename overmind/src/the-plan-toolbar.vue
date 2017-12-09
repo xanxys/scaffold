@@ -1,5 +1,8 @@
 <template>
     <div style="display:flex; align-items: center">
+        <i class="material-icons">playlist_add</i>
+        <button @click="genFeederPlan" class="btn btn-default">GenFeederPlan</button>
+
         <i class="material-icons">add_box</i>
         <button @click="addRs" class="btn btn-default" :class="{'active': isAddRs}">RS</button>
         <button @click="addRh" class="btn btn-default" :class="{'active': isAddRh}">RH</button>
@@ -26,6 +29,9 @@ export default {
         };
     },
     methods: {
+        genFeederPlan() {
+            this.viewmodel.genFeederPlan();
+        },
         addRs() {
             this.viewmodel.setState(ClickOpState.AddRs);
         },
