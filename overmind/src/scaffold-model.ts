@@ -208,6 +208,8 @@ export class S60RailFeederWide implements ScaffoldThing {
 
     cadCoord: Coordinates;
 
+    paramx: number;
+
     constructor() {
         this.type = "FDW-RS";
         this.coord = new Coordinates("FDW");
