@@ -21,7 +21,8 @@ export enum ClickOpState {
  */
 export class WorldViewModel {
     private state = ClickOpState.None;
-    private view: WorldView
+    private view: WorldView;
+    private showPhysics = false;
 
     constructor(private model) {
     }
@@ -29,6 +30,10 @@ export class WorldViewModel {
     setState(state: ClickOpState) {
         this.state = state;
         this.view.regenScaffoldView(state);
+    }
+
+    togglePhysics() {
+        this.showPhysics = !this.showPhysics;
     }
 
     bindView(view: WorldView) {
@@ -52,6 +57,10 @@ export class WorldViewModel {
         }
     }
 
+    getShowPhysics(): boolean {
+        return this.showPhysics;
+    }
+
     private addRail(obj: any, newRail: ScaffoldThing) {
         let orgRail = obj.userData.rail;
         let orgPort = obj.userData.port;
@@ -72,6 +81,11 @@ export class WorldViewModel {
 
 /**
  * Renders ScaffoldModel directly, but uses WorldViewModel for model edit / other UI interactions.
+ * 
+ * ScaffoldModel & THREE.Object3D Hierarchy Mapping:
+ * 
+ * ScaffoldThing and its subcomponents ------------------------ Object3D - CAD model
+ *                                                                 |-- attached physical elements
  */
 export class WorldView {
     private static readonly WIDTH = 1000;
@@ -84,6 +98,9 @@ export class WorldView {
 
     // Layers where intersectible && clickable objects resides.
     private static readonly LAYER_CLICKABLE = 3;
+
+    // Layers where abstract physical elements / interactions (ports, rail segment bindings etc.) are shown.
+    private static readonly LAYER_PHYSICS = 4;
 
     model: ScaffoldModel;
 
@@ -285,9 +302,10 @@ export class WorldView {
                 const mesh = new THREE.Mesh(this.cadModels['S60C-FDW-RS_fixed']);
                 mesh.material = new THREE.MeshLambertMaterial({});
 
+                // TODO: Migrate these into ScaffoldModel intead of having hierarchy here.
                 const stage = new THREE.Mesh(this.cadModels['S60C-FDW-RS_stage']);
                 stage.material = new THREE.MeshLambertMaterial({ 'color': new THREE.Color(0x888888) });
-                this.realtimeBindings.push({apply: () => stage.position.x = (<S60RailFeederWide> thing).paramx});
+                this.realtimeBindings.push({ apply: () => stage.position.x = (<S60RailFeederWide>thing).paramx });
 
                 mesh.add(stage);
                 obj = mesh;
@@ -295,18 +313,20 @@ export class WorldView {
                 const mesh = new THREE.Mesh(this.cadModels['S60C-TB_fixed']);
                 mesh.material = new THREE.MeshLambertMaterial({});
                 attachAxisGuide(mesh);
-
+            
+                // TODO: Migrate these into ScaffoldModel intead of having hierarchy here.
                 const darm = new THREE.Mesh(this.cadModels['S60C-TB_darm']);
                 darm.material = new THREE.MeshLambertMaterial({ 'color': new THREE.Color(0x888888) });
-                darm.rotateZ(Math.PI/2);
-                darm.rotateX(Math.PI/2);
+                darm.rotateZ(Math.PI / 2);
+                darm.rotateX(Math.PI / 2);
                 darm.position.set(-5e-3, 0.03, 0.02);
                 mesh.add(darm);
-                
+
+                // TODO: Migrate these into ScaffoldModel intead of having hierarchy here.
                 const mhead = new THREE.Mesh(this.cadModels['S60C-TB_mhead']);
                 mhead.material = new THREE.MeshLambertMaterial({ 'color': new THREE.Color(0x888888) });
-                mhead.rotateZ(Math.PI/2);
-                mhead.rotateX(Math.PI/2);
+                mhead.rotateZ(Math.PI / 2);
+                mhead.rotateX(Math.PI / 2);
                 mhead.position.set(0.028, 0.03, 0.03);
                 mesh.add(mhead);
 
@@ -324,6 +344,7 @@ export class WorldView {
 
         this.cachePointGeom = new THREE.SphereBufferGeometry(0.006, 16, 12);
 
+        // TODO: These UI elems should be children of scaffold objects.
         if (state === ClickOpState.AddRs || state === ClickOpState.AddRh || state === ClickOpState.AddRr) {
             this.model.getOpenPorts().forEach(point => {
                 let mesh = new THREE.Mesh();
@@ -383,15 +404,22 @@ export class WorldView {
         this.camera.updateProjectionMatrix();
     }
 
-    /* UI Utils */
     private animate() {
         // note: three.js includes requestAnimationFrame shim
         if (!this.animating) {
             return;
         }
         requestAnimationFrame(() => this.animate());
+
         this.controls.update();
         this.realtimeBindings.forEach(binding => binding.apply());
+
+        if (this.viewModel.getShowPhysics()) {
+            this.camera.layers.enable(WorldView.LAYER_PHYSICS);
+        } else {
+            this.camera.layers.disable(WorldView.LAYER_PHYSICS);
+        }
+
         this.renderer.render(this.scene, this.camera);
     }
 

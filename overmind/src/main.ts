@@ -25,7 +25,7 @@ export function runMain() {
         model.addRail(fd);
 
         let tb = new S60TrainBuilder();
-        tb.coord.unsafeSetParent(model.coord, new THREE.Vector3(0, 0, 0.1));
+        tb.coord.unsafeSetParent(model.coord, new THREE.Vector3(0.105, -0.022, 0));
         model.addRail(tb);
 
         return new FeederPlanner1D(model, fd, tb);

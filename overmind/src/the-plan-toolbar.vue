@@ -5,6 +5,11 @@
         <button @click="addRh" class="btn btn-default" :class="{'active': isAddRh}">RH</button>
         <button @click="addRr" class="btn btn-default" :class="{'active': isAddRr}">RR</button>
         <button @click="remove" class="btn btn-default" :class="{'active': isRemove}"><i class="material-icons">delete_forever</i></button>
+
+        <div style="flex-grow: 1"></div> 
+
+        <i class="material-icons">settings</i>
+        <button @click="togglePhysics" class="btn btn-default">Toggle Physics Elements</button>
     </div>
 </template>
 
@@ -32,7 +37,10 @@ export default {
         },
         remove() {
             this.viewmodel.setState(ClickOpState.Remove);
-        }
+        },
+        togglePhysics() {
+            this.viewmodel.togglePhysics();
+        },
     },
     computed: {
         isAddRs() {

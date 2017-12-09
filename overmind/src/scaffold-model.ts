@@ -47,6 +47,7 @@ export class ScaffoldModel {
         }
     }
 
+    // Incorrect semantics. Ports must belong to ScaffoldThing or ScaffoldSubComponent.
     getOpenPorts() {
         let portPoints = [];
         this.things.forEach(rail => {
@@ -106,11 +107,16 @@ export interface ScaffoldThing {
 
     cadCoord: Coordinates;
 
+    getRailSegments(): Array<RailSegment>;
+
     encode(): any;
 }
 
-// Something that is connected to wireless network and can act on comands.
-export interface Active {
+/**
+ * Something that is connected to wireless network and can act on comands.
+ */
+export class Active {
+    addr?: number;
 }
 
 export class S60RailStraight implements ScaffoldThing {
@@ -133,6 +139,15 @@ export class S60RailStraight implements ScaffoldThing {
 
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.03, 0));
+    }
+
+    getRailSegments(): Array<RailSegment> {
+        return [
+            new RailSegment(
+                new THREE.Vector3(0, -0.03, 0),
+                new THREE.Vector3(0, 0.03, 0),
+                new THREE.Vector3(0, 0, 1))
+        ];
     }
 
     encode(): any {
@@ -161,6 +176,15 @@ export class S60RailHelix implements ScaffoldThing {
 
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.025, 0));
+    }
+
+    getRailSegments(): Array<RailSegment> {
+        return [
+            new RailSegment(
+                new THREE.Vector3(0, -0.03, 0),
+                new THREE.Vector3(0, 0.03, 0),
+                new THREE.Vector3(1 / Math.sqrt(2), 0, -1 / Math.sqrt(2)))
+        ];
     }
 
     encode(): any {
@@ -193,6 +217,19 @@ export class S60RailRotator implements ScaffoldThing {
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.03, 0));
     }
 
+    getRailSegments(): Array<RailSegment> {
+        return [
+            new RailSegment(
+                new THREE.Vector3(0, -0.03, 0),
+                new THREE.Vector3(0, 0.03, 0),
+                new THREE.Vector3(0, 0, 1)),
+            new RailSegment(
+                new THREE.Vector3(-0.03, 0, 0),
+                new THREE.Vector3(0.03, 0, 0),
+                new THREE.Vector3(0, 0, 1)),
+        ];
+    }
+
     encode(): any {
         return {
             'type': 'RR',
@@ -200,13 +237,15 @@ export class S60RailRotator implements ScaffoldThing {
     }
 }
 
-export class S60RailFeederWide implements ScaffoldThing {
+export class S60RailFeederWide implements ScaffoldThing, Active {
     type: string;
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
 
     cadCoord: Coordinates;
+
+    addr?: number;
 
     paramx: number;
 
@@ -228,6 +267,15 @@ export class S60RailFeederWide implements ScaffoldThing {
         this.paramx = 0.04;
     }
 
+    getRailSegments(): Array<RailSegment> {
+        return [
+            new RailSegment(
+                new THREE.Vector3(this.paramx, -0.03, 0),
+                new THREE.Vector3(this.paramx, 0.03, 0),
+                new THREE.Vector3(0, 0, 1))
+        ];
+    }
+
     encode(): any {
         return {
             'type': 'FDW-RS',
@@ -235,13 +283,20 @@ export class S60RailFeederWide implements ScaffoldThing {
     }
 }
 
-export class S60TrainBuilder implements ScaffoldThing {
+/*
+class S60RFWStage implements ScaffoldThing {
+}
+*/
+
+export class S60TrainBuilder implements ScaffoldThing, Active {
     type: string;
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
 
     cadCoord: Coordinates;
+
+    addr?: number;
 
     constructor() {
         this.type = "TB";
@@ -254,6 +309,10 @@ export class S60TrainBuilder implements ScaffoldThing {
             new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
     }
 
+    getRailSegments(): Array<RailSegment> {
+        return [];
+    }
+
     encode(): any {
         return {
             'type': 'TB',
@@ -261,9 +320,21 @@ export class S60TrainBuilder implements ScaffoldThing {
     }
 }
 
-
+/**
+ * Bidirectional unbindable connector. This conenction forms foundation of scaffold lattice.
+ */
 class Port {
     constructor(public pos: THREE.Vector3, public up: THREE.Vector3, public fwd: THREE.Vector3) {
+    }
+}
+
+/**
+ * Linear piece of rail where trains can couple.
+ * 
+ * TODO: Support S60C-RH.
+ */
+class RailSegment {
+    constructor(public pos1: THREE.Vector3, public pos2: THREE.Vector3, public up: THREE.Vector3) {
     }
 }
 
