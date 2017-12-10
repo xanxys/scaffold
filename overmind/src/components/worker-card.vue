@@ -175,6 +175,8 @@
 <script>
 import Vue from 'vue';
 import {Line} from 'vue-chartjs';
+import * as fs from 'fs';
+
 Vue.component('line-chart', {
     extends: Line,
     props: ['data', 'options'],
@@ -214,6 +216,11 @@ Vue.component('line-chart', {
 export default {
     props: ['worker', 'show_raw'],
     data() {
+        fs.readFile("state/actions.json", "utf8", (err, data) => {
+          const actions = JSON.parse(data);
+          console.log("Actions:", actions);
+
+        });
         return {
           command_palette: "",
         };
