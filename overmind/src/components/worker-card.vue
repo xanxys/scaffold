@@ -18,11 +18,12 @@
           <input size="30" v-model="command_palette" @keyup.enter="send_palette"/><br/>
           <br/>
           <div>
+            <button class="btn-small btn-default" @click="sortByUsage()"><i class="material-icons">sort</i> Sort by usage</button>
             <div v-for="ch in filteredCommands">
               <button class="btn-small btn-start" @click="runCommandFromHistory(ch)"><i class="material-icons">play_arrow</i></button>
-              {{ch.seq}} | <input size="12" v-model="ch.memo" @keyup.enter="updateMemo(ch)"/> |
+              <input size="12" v-model="ch.memo" @keyup.enter="updateMemo(ch)"/> {{ch.seq}} |
               {{ch.used}} used
-              <i class="material-icons" @click="thumbDownCommand(ch)">thumb_down</i>{{ch.bad}}
+              <i class="material-icons" @click="thumbDownCommand(ch)">remove_circle_outline</i>
             </div>
           </div>
           <br/>
@@ -42,47 +43,6 @@
 
           <div v-if="show_raw">
             <!-- Top Panel -->
-            <div v-if="worker.wtype === 'FDW-RS'" style="overflow:hidden">
-              <h4>Gripper</h4>
-              <div>
-              <button @click="command('e1000v80V70,v0')" class="btn btn-default">
-                V Origin
-              </button>
-              <button @click="command('e150v80,1v0')" class="btn btn-default">
-                V<span class="glyphicon glyphicon-arrow-up"></span>
-              </button>
-              <button @click="command('e150v-80,1v0')" class="btn btn-default">
-                V<span class="glyphicon glyphicon-arrow-down"></span>
-              </button>
-              </div>
-
-              <div>
-              <button @click="command('e1c11')" class="btn btn-default">
-                open
-              </button>
-              <button @click="command('e1c23')" class="btn btn-default">
-                close
-              </button>
-              </div>
-
-              <div>
-              <button @click="command('e500r30')" class="btn btn-default">
-                Rvert
-              </button>
-              <button @click="command('e500r18')" class="btn btn-default">
-                Rhorz
-              </button>
-              </div>
-
-              <h4>Stock</h4>
-              <button @click="command('e1l24')" class="btn btn-default">
-                lock
-              </button>
-              <button @click="command('e1l20')" class="btn btn-default">
-                unlock
-              </button>
-
-            </div>
             <div v-if="worker.wtype === 'builder'" style="overflow:hidden">
                 <div style="float:left">
                     <h4>D</h4>
@@ -244,8 +204,10 @@ export default {
 
         updateMemo(ch) {
           this.commandHistory.syncToFile();
-       //   this.commandHistory.setMemo(this.worker.wtype, ch.seq, )
+        },
 
+        sortByUsage() {
+          this.commandHistory.sort(this.worker.wtype);
         },
 
         send_palette() {

@@ -14,11 +14,20 @@ export class CommandHistory {
         };
         fs.readFile(this.path, "utf8", (err, data) => {
             this.data = JSON.parse(data);
+            this.data.history.sort(comparing(e => -e.used));
         });
     }
 
     getFor(wtype: string): Array<any> {
-        return this.data.history.filter(entry => entry.wtype === wtype && entry.bad === 0).sort(comparing(e => e.used)).reverse();
+        return this.data.history.filter(entry => entry.wtype === wtype);
+    }
+
+    sort(wtype: string) {
+        const these = this.data.history.filter(entry => entry.wtype === wtype);
+        const others = this.data.history.filter(entry => entry.wtype !== wtype);
+
+        these.sort(comparing(e => -e.used));
+        this.data.history = these.concat(others);
     }
 
     notifyUsed(wtype: string, seq: string) {
@@ -31,15 +40,13 @@ export class CommandHistory {
                 seq: seq,
                 memo: "",
                 used: 1,
-                good: 0,
-                bad: 0,
             });
         }
         this.syncToFile();
     }
 
     thumbDown(wtype: string, seq: string) {
-        this.data.history.filter(entry => entry.wtype === wtype && entry.seq === seq).forEach(entry => entry.bad += 1);
+        this.data.history = this.data.history.filter(entry => !(entry.wtype === wtype && entry.seq === seq));
         this.syncToFile();
     }
 
@@ -69,8 +76,6 @@ interface HistoryEntry {
     seq: string;
     memo: string;
     used: number;
-    good: number;
-    bad: number;
 }
 
 interface WorkerEntry {
