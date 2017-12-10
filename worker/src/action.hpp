@@ -453,20 +453,13 @@ private:
   }
 
   void print_sensor_status() const {
-    request_log.print('{');
-
-    request_log.print_dict_key("T");
-    request_log.print(sensor.get_sensor_t());
+    request_log.print('[');
+    request_log.print(sensor.get_sensor0());
     request_log.print(',');
-
-    request_log.print_dict_key("O");
-    request_log.print(sensor.get_sensor_o());
+    request_log.print(sensor.get_sensor1());
     request_log.print(',');
-
-    request_log.print_dict_key("X");
-    request_log.print(sensor.get_sensor_x());
-
-    request_log.print('}');
+    request_log.print(sensor.get_sensor2());
+    request_log.print(']');
   }
 
   void commit_posvel() {
