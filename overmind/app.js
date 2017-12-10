@@ -2,7 +2,9 @@ const electron = require('electron');
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
-require('electron-reload')(__dirname);
+require('electron-reload')(__dirname, {
+    ignored: /node_modules|fake|state|[\/\\]\./
+});
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.

@@ -18,7 +18,7 @@
           <input size="30" v-model="command_palette" @keyup.enter="send_palette"/><br/>
           <br/>
           <div>
-            <div v-for="ch in commandHistory">
+            <div v-for="ch in filteredCommands">
               <button class="btn-small btn-start" @click="runCommandFromHistory(ch)"><i class="material-icons">play_arrow</i></button>
               {{ch.seq}} | {{ch.memo}} |
               {{ch.used}} used
@@ -213,13 +213,10 @@ Vue.component('line-chart', {
 export default {
     props: ['worker', 'show_raw'],
     data() {
-        new CommandHistory().getFor(this.worker.wtype).then(entries => {
-          this.commandHistory = entries;
-        })
-        return {
-          command_palette: "",
-          commandHistory: [],
-        };
+      return {
+        command_palette: "",
+        commandHistory: new CommandHistory(),
+      };
     },
     methods: {
         command(msg) {
@@ -229,6 +226,10 @@ export default {
             head: msg,
             desc: msg,
           });
+          // TODO: Better to intercept directly from Bridge.
+          if (msg[0] === 'e') {
+            this.commandHistory.notifyUsed(this.worker.wtype, msg.slice(1));
+          }
           sendCommand(msg, this.worker.addr);
         },
 
@@ -260,6 +261,9 @@ export default {
         },
     },
     computed: {
+        filteredCommands() {
+          return this.commandHistory.getFor(this.worker.wtype);
+        },
         readings() {
             // return [1, 3,2];
             return this.worker.readings.concat([]); // copy
