@@ -19,6 +19,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/jasmine": "^2.8.2",
+    "@types/node": "^8.0.57",
     "@types/three": "^0.84.30",
     "@types/vue": "^2.0.0",
     "babel": "^6.23.0",

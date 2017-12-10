@@ -56,7 +56,7 @@ export default {
             if (this.bridge.isOpen) {
                 return 'connected';
             } else {
-                return 'cutoff'
+                return 'fake replay'
             }
         },
         status_class() {

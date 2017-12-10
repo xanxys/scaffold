@@ -1,6 +1,7 @@
 // Need to use window.require: https://github.com/railsware/bozon/issues/40
 declare var window: any;
 const SerialPort: any = window.require('serialport');
+import * as fs from 'fs';
 
 export interface Packet {
     raw_data: any;
@@ -19,16 +20,23 @@ export class WorkerBridge {
     path = '/dev/ttyUSB0';
     isOpen = false;
     latestPacket?: Date;
+    private handlePacket?: (packet: Packet) => void;
 
     constructor() {
     }
 
     open(handleUpdate: (br: WorkerBridge) => void, handlePacket: (packet: Packet) => void): void {
+        this.handlePacket = handlePacket;
         this.port = new SerialPort(this.path, {
             baudRate: 115200
         }, err => {
             if (err !== null) {
-                console.error('serial port error', err);
+                console.error('serial port error', err, 'will inject recorded fake packets');
+                fs.readFile("fake/packets.json", "utf8", (err, data) => {
+                    const fakePackets = JSON.parse(data);
+                    console.log("Fake packets", fakePackets);
+                    fakePackets.packets.forEach(worker => worker.packets.forEach(p => this.onData(p)));
+                });
             } else {
                 console.info('serial port ok');
                 this.isOpen = true;
@@ -38,33 +46,35 @@ export class WorkerBridge {
 
         const parser = new SerialPort.parsers.Readline();
         this.port.pipe(parser);
-        parser.on('data', data => {
-            data = data.trim();
+        parser.on('data', data => this.onData(data));
+    }
 
-            let packet: Packet = {
-                raw_data: data,
-                // Decoded overmind protocol.
-                src: null,
-                srcTs: null,
-                datagram: null,
-                // Decoded datagram JSON.
-                data: null,
-            };
+    private onData(tweliteData: string) {
+        const data = tweliteData.trim();
 
-            if (data.startsWith(':7801')) {
-                let ovm_packet = decodeHex(data.slice(':7801'.length, -2 /* csum */));
+        let packet: Packet = {
+            raw_data: data,
+            // Decoded overmind protocol.
+            src: null,
+            srcTs: null,
+            datagram: null,
+            // Decoded datagram JSON.
+            data: null,
+        };
 
-                packet.src = new DataView(ovm_packet).getUint32(0);
-                packet.srcTs = new DataView(ovm_packet).getUint32(4);
-                packet.datagram = new Uint8Array(ovm_packet, 8);
-                try {
-                    packet.data = JSON.parse(String.fromCharCode.apply(String, packet.datagram));
-                } catch (e) { }
-            }
+        if (data.startsWith(':7801')) {
+            let ovm_packet = decodeHex(data.slice(':7801'.length, -2 /* csum */));
 
-            this.latestPacket = new Date();
-            handlePacket(packet);
-        });
+            packet.src = new DataView(ovm_packet).getUint32(0);
+            packet.srcTs = new DataView(ovm_packet).getUint32(4);
+            packet.datagram = new Uint8Array(ovm_packet, 8);
+            try {
+                packet.data = JSON.parse(String.fromCharCode.apply(String, packet.datagram));
+            } catch (e) { }
+        }
+
+        this.latestPacket = new Date();
+        this.handlePacket(packet);
     }
 
     sendCommand(command: string, addr = 0xffffffff): void {
