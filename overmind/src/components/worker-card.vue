@@ -14,16 +14,19 @@
           <b>{{desc_plan}}</b>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-6">
           <input size="30" v-model="command_palette" @keyup.enter="send_palette"/><br/>
+          <br/>
           <div>
             <div v-for="ch in commandHistory">
               <button class="btn-small btn-start" @click="runCommandFromHistory(ch)"><i class="material-icons">play_arrow</i></button>
               {{ch.seq}} | {{ch.memo}} |
+              {{ch.used}} used
               <i class="material-icons">thumb_up</i>{{ch.good}}
               <i class="material-icons">thumb_down</i>{{ch.bad}}
             </div>
           </div>
+          <br/>
 
           <div v-if="worker.wtype === 'TB'">
             <button @click='builder_extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
@@ -36,21 +39,6 @@
             <button @click='builder_insert()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
               Insert to Feeder
             </button>
-          </div>
-
-          <div v-if="worker.wtype === 'FDW-RS'">
-            <button @click='feeder_prepare()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
-              Prepare
-            </button>
-
-            <button @click='feeder_accept_pre()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
-              Accept-Pre
-            </button>
-
-            <button @click='feeder_accept()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
-              Accept
-            </button>
-            
           </div>
 
           <div v-if="show_raw">
@@ -184,7 +172,7 @@
 <script>
 import Vue from 'vue';
 import {Line} from 'vue-chartjs';
-import * as fs from 'fs';
+import {CommandHistory} from '../command-history';
 
 Vue.component('line-chart', {
     extends: Line,
@@ -225,11 +213,9 @@ Vue.component('line-chart', {
 export default {
     props: ['worker', 'show_raw'],
     data() {
-        fs.readFile("state/actions.json", "utf8", (err, data) => {
-          const actions = JSON.parse(data);
-          console.log("Loaded actions:", actions);
-          this.commandHistory = actions.history.filter(entry => entry.wtype === this.worker.wtype);
-        });
+        new CommandHistory().getFor(this.worker.wtype).then(entries => {
+          this.commandHistory = entries;
+        })
         return {
           command_palette: "",
           commandHistory: [],
@@ -272,20 +258,6 @@ export default {
         builder_insert() {
           this.command('e600t-60,1t0');
         },
-
-        feeder_prepare() {
-          this.command('e200v-80,200r32,850v-70,1v0');
-        },
-
-        feeder_accept_pre() {
-          // this.command('e100v60,1v0');
-          this.command('e1r30');
-        },
-
-        feeder_accept() {
-          // TODO: Do e1r30, T-, bfore V-
-          this.command('e500v80r18,1000v70V70,1v0')
-        }
     },
     computed: {
         readings() {
