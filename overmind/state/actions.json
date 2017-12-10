@@ -4,13 +4,7 @@
       "wtype": "FDW-RS",
       "seq": "200v100,1v0",
       "memo": "Lbit",
-      "used": 52
-    },
-    {
-      "wtype": "FDW-RS",
-      "seq": "300v120,700v100S100,50v50,1v0",
-      "memo": "Ln",
-      "used": 19
+      "used": 54
     },
     {
       "wtype": "FDW-RS",
@@ -20,15 +14,21 @@
     },
     {
       "wtype": "FDW-RS",
-      "seq": "300v-120,700v-100S100,50v-50,1v0",
-      "memo": "Rn",
-      "used": 9
+      "seq": "3000v-110O200,100v50,1v0",
+      "memo": "origin",
+      "used": 4
     },
     {
       "wtype": "FDW-RS",
-      "seq": "3000v-110O200,100v50,1v0",
-      "memo": "origin",
-      "used": 2
+      "seq": "300v-120,700v-100S100,50v-80,1v0",
+      "memo": "Rn",
+      "used": 17
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "300v120,700v100S100,70v80,1v0",
+      "memo": "Ln",
+      "used": 6
     }
   ],
   "workers": [
