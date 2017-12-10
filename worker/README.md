@@ -18,7 +18,7 @@ Feeder 1.0
 
 |New name|ADC pin| Legacy Name | TB               | FDW-RS           | TB legacy commands          | FDW-RS legacy commands     |
 |--------|-------|-------------|------------------|------------------|-----------------------------|----------------------------|
-| S0     | 1     |  T          | rail center (+)  | port stops (-)   | Tx: if S0>=x, stop MV0     | Sx: if S0<x, stop MV0       |
+| S0     | 1     |  T          | rail center (+)  | port stops (-)   | Tx: if S0>=x, stop MV0      | Sx: if S0<x, stop MV0       |
 | S1     | 6     |  O          | unused           | origin (+)       |                             | Ox: if S1>x, stop MV0      |
 | S2     | 7     |  X          | unused           | unused           |                             |                            |
 

@@ -44,6 +44,19 @@ public:
   }
 
   // 0: 0V, 255: 5V ("max")
+  uint8_t get_sensor0() const {
+    return value_cache[PHASE_SEN_T] >> 2;
+  }
+
+  uint8_t get_sensor1() const {
+    return value_cache[PHASE_SEN_O] >> 2;
+  }
+
+  uint8_t get_sensor2() const {
+    return value_cache[PHASE_SEN_X] >> 2;
+  }
+
+  // DEPRECATED
   uint8_t get_sensor_t() const {
     return value_cache[PHASE_SEN_T] >> 2;
   }

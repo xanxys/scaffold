@@ -154,8 +154,8 @@ private: // Command Handler
         #ifdef WORKER_TYPE_FEEDER
         case '!': action.report = true; break;
         case 'v': action.motor_vel[MV_VERT] = safe_read_vel(); break;
-        case 'O': action.origin_cutoff_thresh = safe_read_thresh(); break;
         case 'S': action.stop_cutoff_thresh = safe_read_thresh(); break;
+        case 'O': action.origin_cutoff_thresh = safe_read_thresh(); break;
         #endif
         default:
           twelite.warn("unknown action target");
