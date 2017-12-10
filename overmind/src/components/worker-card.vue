@@ -15,7 +15,16 @@
         </div>
 
         <div class="col-md-4">
-          <input size="30" v-model="command_palette" @keyup.enter="send_palette"/>
+          <input size="30" v-model="command_palette" @keyup.enter="send_palette"/><br/>
+          <div>
+            <div v-for="ch in commandHistory">
+              <button class="btn-small btn-start" @click="runCommandFromHistory(ch)"><i class="material-icons">play_arrow</i></button>
+              {{ch.seq}} | {{ch.memo}} |
+              <i class="material-icons">thumb_up</i>{{ch.good}}
+              <i class="material-icons">thumb_down</i>{{ch.bad}}
+            </div>
+          </div>
+
           <div v-if="worker.wtype === 'TB'">
             <button @click='builder_extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
               Extend
@@ -218,11 +227,12 @@ export default {
     data() {
         fs.readFile("state/actions.json", "utf8", (err, data) => {
           const actions = JSON.parse(data);
-          console.log("Actions:", actions);
-
+          console.log("Loaded actions:", actions);
+          this.commandHistory = actions.history.filter(entry => entry.wtype === this.worker.wtype);
         });
         return {
           command_palette: "",
+          commandHistory: [],
         };
     },
     methods: {
@@ -234,6 +244,12 @@ export default {
             desc: msg,
           });
           sendCommand(msg, this.worker.addr);
+        },
+
+        runCommandFromHistory(ch) {
+          const command = 'e' + ch.seq;
+          this.command(command);
+          this.command_palette = command;
         },
 
         send_palette() {

@@ -13,7 +13,7 @@
         <button class="btn btn-primary" @click="simStart">Sim Start</button>
         <button class="btn btn-primary" @click="simStop">Sim Stop</button>
         |
-        <button class="btn btn-danger" @click="exec">Exec</button>|
+        <button class="btn btn-start" @click="exec">Exec</button>|
         <span>T={{timeSec.toFixed(2)}}s</span>
     </div>
 </template>
