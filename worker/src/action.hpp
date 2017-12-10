@@ -31,9 +31,14 @@ public:
   #endif
 
   #ifdef WORKER_TYPE_FEEDER
-  // Set train=0 when sensor reading > this value.
+  // Set train=0 when T sensor reading > this value.
   // 255 means disable this functionality.
-  uint8_t vert_cutoff_thresh = 255;
+  uint8_t origin_cutoff_thresh = 255;
+
+  // Set train=0 when O sensor reading < this value.
+  // WARNING: The < is flipped due to hardware construction.
+  // 0 means disale this functionality.
+  uint8_t stop_cutoff_thresh = 0;
   #endif
 
   // Note this can be 0, but action still has effect.
@@ -136,7 +141,10 @@ public:
     }
     #endif
     #ifdef WORKER_TYPE_FEEDER
-    if (sensor.get_sensor_v() > action->vert_cutoff_thresh) {
+    if (sensor.get_sensor_t() > action->origin_cutoff_thresh) {
+      motor_vel_out[MV_VERT] = 0;
+    }
+    if (sensor.get_sensor_o() < action->stop_cutoff_thresh) {
       motor_vel_out[MV_VERT] = 0;
     }
     #endif

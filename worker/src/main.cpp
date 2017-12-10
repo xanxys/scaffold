@@ -153,11 +153,9 @@ private: // Command Handler
         #endif
         #ifdef WORKER_TYPE_FEEDER
         case '!': action.report = true; break;
-        case 'r': action.servo_pos[CIX_GR_ROT] = safe_read_pos(); break;
-        case 'c': action.servo_pos[CIX_GR_CLOSE] = safe_read_pos(); break;
-        case 'l': action.servo_pos[CIX_LOCK] = safe_read_pos(); break;
         case 'v': action.motor_vel[MV_VERT] = safe_read_vel(); break;
-        case 'V': action.vert_cutoff_thresh = safe_read_thresh(); break;
+        case 'O': action.origin_cutoff_thresh = safe_read_thresh(); break;
+        case 'S': action.stop_cutoff_thresh = safe_read_thresh(); break;
         #endif
         default:
           twelite.warn("unknown action target");
