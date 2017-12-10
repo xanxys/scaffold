@@ -28,81 +28,9 @@
           </div>
           <br/>
 
-          <div v-if="worker.wtype === 'TB'">
-            <button @click='builder_extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
-              Extend
-            </button>
-            <button @click='builder_shorten()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
-              Shorten
-            </button>
-
-            <button @click='builder_insert()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
-              Insert to Feeder
-            </button>
-          </div>
-
           <div v-if="show_raw">
-            <!-- Top Panel -->
-            <div v-if="worker.wtype === 'builder'" style="overflow:hidden">
-                <div style="float:left">
-                    <h4>D</h4>
-                    <button @click="command('e400b15')" class="btn btn-default" title="update">
-                        <span class="glyphicon glyphicon-arrow-up"></span>
-                    </button>
-                    <br/>
-
-                    <button @click="command('e400b27')" class="btn btn-default" title="update">
-                      <span class="glyphicon glyphicon-arrow-down"></span>
-                    </button> {{worker.out[0][1]}}
-                    <br/>
-                    <button @click="command('e400b30')" class="btn btn-warning" title="update">
-                      <span class="glyphicon glyphicon-arrow-down"></span>
-                    </button>
-                </div>
-                <div style="float:left">
-                    <h4>SCR</h4>
-                    <button @click="command('e300a10')" class="btn btn-default" title="update">
-                      <span class="glyphicon glyphicon-arrow-up"></span>
-                    </button>
-                    <br/>
-                    <button @click="command('e300a27')" class="btn btn-default" title="update">
-                      <span class="glyphicon glyphicon-arrow-down"></span>
-                    </button> {{worker.out[0][0]}}
-                </div>
-                <div style="float:left">
-                    <h4>S</h4> {{worker.out[1][2]}}
-                    <br/>
-                    <button @click="command('e1s-100')" class="btn btn-default" title="unfasten screw">
-                      unlock
-                    </button>
-                    <button @click="command('e1s0')" class="btn btn-default" title="stop screw">
-                      <span class="glyphicon glyphicon-stop"></span>
-                    </button>
-                    <button @click="command('e1s100')" class="btn btn-default" title="fasten screw">
-                      lock
-                    </button>
-                </div>
-            </div>
-
-            <!-- Train & Sensor readings -->
+            <!-- Sensor readings -->
             <div v-if="worker.wtype === 'TB'">
-                <h4>T</h4>
-                <button @click="command('e500t-70T30,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
-                  <span class="glyphicon glyphicon-arrow-up"></span>
-                </button>
-                <button @click="command('e100t-70,1!t0')" class="btn btn-default" title="go forward for a moment">
-                  <span class="glyphicon glyphicon-arrow-up"></span>
-                </button>
-                {{worker.out[1][0]}}
-                <br/>
-                <button @click="command('e500t70T30,1!t0')" class="btn btn-primary" title="Find origin baclward(500ms)">
-                  <span class="glyphicon glyphicon-arrow-down"></span>
-                </button>
-                <button @click="command('e100t70,1!t0')" class="btn btn-default" title="go backward for a moment">
-                  <span class="glyphicon glyphicon-arrow-down"></span>
-                </button>
-                O:{{worker.out[1][1]}}
-
                 <line-chart :width="300" :height="200" :data="worker.readings"/>
             </div>
           </div>
@@ -217,18 +145,6 @@ export default {
 
         update_info() {
             this.command('p');
-        },
-
-        builder_extend() {
-            this.command('e500a29,500t-60,300b22s-20,5000t50s-100,400b10,500s0t70T30,300t0a11');
-        },
-
-        builder_shorten() {
-            this.command('e500a29,800t-70,300b21,3000s70b22t-30,600b10s0t60T30,500t0a11');
-        },
-
-        builder_insert() {
-          this.command('e600t-60,1t0');
         },
     },
     computed: {

@@ -7,16 +7,16 @@
       "used": 54
     },
     {
-      "wtype": "FDW-RS",
-      "seq": "200v-100,1v0",
-      "memo": "Rbit",
-      "used": 15
+      "wtype": "TB",
+      "seq": "100t-70,1!t0",
+      "memo": "FwdBitRp",
+      "used": 43
     },
     {
-      "wtype": "FDW-RS",
-      "seq": "3000v-110O200,100v50,1v0",
-      "memo": "origin",
-      "used": 4
+      "wtype": "TB",
+      "seq": "100t70,1!t0",
+      "memo": "BackBitRp",
+      "used": 25
     },
     {
       "wtype": "FDW-RS",
@@ -26,9 +26,69 @@
     },
     {
       "wtype": "FDW-RS",
+      "seq": "200v-100,1v0",
+      "memo": "Rbit",
+      "used": 15
+    },
+    {
+      "wtype": "FDW-RS",
       "seq": "300v120,700v100S100,70v80,1v0",
       "memo": "Ln",
       "used": 6
+    },
+    {
+      "wtype": "TB",
+      "seq": "200a10",
+      "memo": "DrvIn",
+      "used": 5
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "3000v-110O200,100v50,1v0",
+      "memo": "origin",
+      "used": 4
+    },
+    {
+      "wtype": "TB",
+      "seq": "200b15",
+      "memo": "ArmRest",
+      "used": 3
+    },
+    {
+      "wtype": "TB",
+      "seq": "200a32",
+      "memo": "DrvOut",
+      "used": 1
+    },
+    {
+      "wtype": "TB",
+      "seq": "1s100",
+      "memo": "Lock",
+      "used": 1
+    },
+    {
+      "wtype": "TB",
+      "seq": "1s0",
+      "memo": "Stop",
+      "used": 2
+    },
+    {
+      "wtype": "TB",
+      "seq": "1s-100",
+      "memo": "Unlock",
+      "used": 1
+    },
+    {
+      "wtype": "TB",
+      "seq": "500t-70T30,1!t0",
+      "memo": "FindC+",
+      "used": 3
+    },
+    {
+      "wtype": "TB",
+      "seq": "500t70T30,1!t0",
+      "memo": "FindC-",
+      "used": 2
     }
   ],
   "workers": [
