@@ -16,7 +16,7 @@
 
         <div class="col-md-4">
           <input size="30" v-model="command_palette" @keyup.enter="send_palette"/>
-          <div v-if="worker.wtype === 'builder'">
+          <div v-if="worker.wtype === 'TB'">
             <button @click='builder_extend()' class="btn btn-default" title="Attach new rail and screw it. Run from origin.">
               Extend
             </button>
@@ -29,7 +29,7 @@
             </button>
           </div>
 
-          <div v-if="worker.wtype === 'feeder'">
+          <div v-if="worker.wtype === 'FDW-RS'">
             <button @click='feeder_prepare()' class="btn btn-default" title="Remove rail and screw. Run from origin.">
               Prepare
             </button>
@@ -46,7 +46,7 @@
 
           <div v-if="show_raw">
             <!-- Top Panel -->
-            <div v-if="worker.wtype === 'feeder'" style="overflow:hidden">
+            <div v-if="worker.wtype === 'FDW-RS'" style="overflow:hidden">
               <h4>Gripper</h4>
               <div>
               <button @click="command('e1000v80V70,v0')" class="btn btn-default">
@@ -129,7 +129,7 @@
             </div>
 
             <!-- Train & Sensor readings -->
-            <div v-if="worker.wtype === 'builder'">
+            <div v-if="worker.wtype === 'TB'">
                 <h4>T</h4>
                 <button @click="command('e500t-70T30,1!t0')" class="btn btn-primary" title="Find origin forward(500ms)">
                   <span class="glyphicon glyphicon-arrow-up"></span>

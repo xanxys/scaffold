@@ -375,9 +375,9 @@ public:
 
     request_log.print_dict_key("wtype");
     #ifdef WORKER_TYPE_BUILDER
-    request_log.print_str("builder");
+    request_log.print_str("TB");
     #elif defined WORKER_TYPE_FEEDER
-    request_log.print_str("feeder");
+    request_log.print_str("FDW-RS");
     #else
     request_log.print("null");
     #endif

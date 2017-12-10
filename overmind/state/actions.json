@@ -1,0 +1,12 @@
+{
+    "history": [
+        {
+            "target": "FDW-RS",
+            "label": "origin",
+            "seq": "200v-100O200,1v0",
+            "used": 1,
+            "good": 0,
+            "bad": 0,
+        }
+    ]
+}
