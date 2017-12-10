@@ -18,7 +18,7 @@ export class CommandHistory {
     }
 
     getFor(wtype: string): Array<any> {
-        return this.data.history.filter(entry => entry.wtype === wtype);
+        return this.data.history.filter(entry => entry.wtype === wtype && entry.bad === 0).sort(comparing(e => e.used)).reverse();
     }
 
     notifyUsed(wtype: string, seq: string) {
@@ -35,8 +35,28 @@ export class CommandHistory {
                 bad: 0,
             });
         }
+        this.syncToFile();
+    }
+
+    thumbDown(wtype: string, seq: string) {
+        this.data.history.filter(entry => entry.wtype === wtype && entry.seq === seq).forEach(entry => entry.bad += 1);
+        this.syncToFile();
+    }
+
+    syncToFile() {
         fs.writeFile(this.path, JSON.stringify(this.data, null, 2));
     }
+}
+
+function comparing<V, K>(fn: (val: V) => K): (val1: V, val2: V) => number {
+    return (v1, v2) => {
+        if (fn(v1) < fn(v2)) {
+            return -1;
+        } else if (fn(v1) > fn(v2)) {
+            return 1;
+        }
+        return 0;
+    };
 }
 
 interface CommandHistoryFile {

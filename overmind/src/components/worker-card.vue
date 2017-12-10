@@ -20,10 +20,9 @@
           <div>
             <div v-for="ch in filteredCommands">
               <button class="btn-small btn-start" @click="runCommandFromHistory(ch)"><i class="material-icons">play_arrow</i></button>
-              {{ch.seq}} | {{ch.memo}} |
+              {{ch.seq}} | <input size="12" v-model="ch.memo" @keyup.enter="updateMemo(ch)"/> |
               {{ch.used}} used
-              <i class="material-icons">thumb_up</i>{{ch.good}}
-              <i class="material-icons">thumb_down</i>{{ch.bad}}
+              <i class="material-icons" @click="thumbDownCommand(ch)">thumb_down</i>{{ch.bad}}
             </div>
           </div>
           <br/>
@@ -237,6 +236,16 @@ export default {
           const command = 'e' + ch.seq;
           this.command(command);
           this.command_palette = command;
+        },
+
+        thumbDownCommand(ch) {
+          this.commandHistory.thumbDown(this.worker.wtype, ch.seq);
+        },
+
+        updateMemo(ch) {
+          this.commandHistory.syncToFile();
+       //   this.commandHistory.setMemo(this.worker.wtype, ch.seq, )
+
         },
 
         send_palette() {

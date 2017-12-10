@@ -4,9 +4,161 @@
       "wtype": "FDW-RS",
       "seq": "200v-100O200,1v0",
       "memo": "origin",
+      "used": 27,
+      "good": 0,
+      "bad": 21
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "500v100,1v0",
+      "memo": "",
+      "used": 8,
+      "good": 0,
+      "bad": 2
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "500v100T100,1v0",
+      "memo": "",
+      "used": 3,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "500v100T200,1v0",
+      "memo": "",
+      "used": 1,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "200v-100O50,1v0",
+      "memo": "",
+      "used": 1,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "500v100T50,1v0 ",
+      "memo": "",
+      "used": 1,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "200v-100T100,1v0",
+      "memo": "",
+      "used": 3,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "200v-100S100,1v0",
+      "memo": "",
+      "used": 4,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "800v-100O200,1v0",
+      "memo": "origin",
+      "used": 16,
+      "good": 0,
+      "bad": 0
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "500v100S100,1v0",
+      "memo": "Lnext",
+      "used": 6,
+      "good": 0,
+      "bad": 0
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "200v100,1v0",
+      "memo": "Lbit",
+      "used": 43,
+      "good": 0,
+      "bad": 0
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "500v100S200,1v0",
+      "memo": "Lnext",
+      "used": 4,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "500v100S50,1v0",
+      "memo": "",
+      "used": 1,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "500v100S5,1v0",
+      "memo": "",
+      "used": 3,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "100v-100,1v0",
+      "memo": "",
+      "used": 1,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "500v100S100",
+      "memo": "",
+      "used": 6,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "100v100,1v0",
+      "memo": "",
+      "used": 7,
+      "good": 0,
+      "bad": 1
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "200v-100,1v0",
+      "memo": "Rbit",
+      "used": 10,
+      "good": 0,
+      "bad": 0
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "500v-100S100,1v0",
+      "memo": "Rnext",
       "used": 1,
       "good": 0,
       "bad": 0
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "800v-100,1v0",
+      "memo": "",
+      "used": 3,
+      "good": 0,
+      "bad": 1
     }
   ],
   "workers": [
