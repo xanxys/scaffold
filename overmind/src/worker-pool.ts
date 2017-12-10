@@ -58,7 +58,7 @@ export default class WorkerPool {
         if (packet.data === null) {
             message.status = 'corrupt';
             message.head = 'CORRUPT JSON';
-            message.desc = packet.datagram;
+            message.desc = String.fromCharCode.apply(String, packet.datagram);
         } else if (packet.data.ty === undefined) {
             message.status = 'corrupt';
             message.head = 'MISSING TYPE';

@@ -107,6 +107,7 @@ export default {
     },
     methods: {
         command(msg) {
+          msg = msg.replace(' ', '');
           this.worker.messages.unshift({
             status: 'command',
             timestamp: null,

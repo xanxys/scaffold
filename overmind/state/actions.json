@@ -1,22 +1,82 @@
 {
   "history": [
     {
-      "wtype": "FDW-RS",
-      "seq": "200v100,1v0",
-      "memo": "Lbit",
-      "used": 54
+      "wtype": "TB",
+      "seq": "100t70,1!t0",
+      "memo": "BackBitRp",
+      "used": 174
     },
     {
       "wtype": "TB",
       "seq": "100t-70,1!t0",
       "memo": "FwdBitRp",
+      "used": 134
+    },
+    {
+      "wtype": "TB",
+      "seq": "200b15",
+      "memo": "ArmRest",
+      "used": 59
+    },
+    {
+      "wtype": "TB",
+      "seq": "200a10",
+      "memo": "DrvIn",
       "used": 43
     },
     {
       "wtype": "TB",
-      "seq": "100t70,1!t0",
-      "memo": "BackBitRp",
-      "used": 25
+      "seq": "500t70T30,1!t0",
+      "memo": "FindC-",
+      "used": 47
+    },
+    {
+      "wtype": "TB",
+      "seq": "1s0",
+      "memo": "StopDrv",
+      "used": 36
+    },
+    {
+      "wtype": "TB",
+      "seq": "500t-70T30,1!t0",
+      "memo": "FindC+",
+      "used": 21
+    },
+    {
+      "wtype": "TB",
+      "seq": "1s100",
+      "memo": "Lock",
+      "used": 20
+    },
+    {
+      "wtype": "TB",
+      "seq": "1s-100",
+      "memo": "Unlock",
+      "used": 16
+    },
+    {
+      "wtype": "TB",
+      "seq": "200b27",
+      "memo": "ArmExt",
+      "used": 6
+    },
+    {
+      "wtype": "TB",
+      "seq": "200a32",
+      "memo": "DrvExt",
+      "used": 6
+    },
+    {
+      "wtype": "TB",
+      "seq": "500s100b27t-50,3000b31t50,1000t-50,1000t0,1s0",
+      "memo": "DE->PutSomeOk",
+      "used": 6
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "200v100,1v0",
+      "memo": "Lbit",
+      "used": 54
     },
     {
       "wtype": "FDW-RS",
@@ -37,12 +97,6 @@
       "used": 6
     },
     {
-      "wtype": "TB",
-      "seq": "200a10",
-      "memo": "DrvIn",
-      "used": 5
-    },
-    {
       "wtype": "FDW-RS",
       "seq": "3000v-110O200,100v50,1v0",
       "memo": "origin",
@@ -50,45 +104,15 @@
     },
     {
       "wtype": "TB",
-      "seq": "200b15",
-      "memo": "ArmRest",
-      "used": 3
+      "seq": "200t-70,1t0,200a34",
+      "memo": "C->DrvE3",
+      "used": 7
     },
     {
       "wtype": "TB",
-      "seq": "200a32",
-      "memo": "DrvOut",
-      "used": 1
-    },
-    {
-      "wtype": "TB",
-      "seq": "1s100",
-      "memo": "Lock",
-      "used": 1
-    },
-    {
-      "wtype": "TB",
-      "seq": "1s0",
-      "memo": "Stop",
-      "used": 2
-    },
-    {
-      "wtype": "TB",
-      "seq": "1s-100",
-      "memo": "Unlock",
-      "used": 1
-    },
-    {
-      "wtype": "TB",
-      "seq": "500t-70T30,1!t0",
-      "memo": "FindC+",
-      "used": 3
-    },
-    {
-      "wtype": "TB",
-      "seq": "500t70T30,1!t0",
-      "memo": "FindC-",
-      "used": 2
+      "seq": "500s100b27t-50,3000b31t50,1000t-50,2000t0,1s0",
+      "memo": "DE3->PutOkReal",
+      "used": 4
     }
   ],
   "workers": [
