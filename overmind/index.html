@@ -8,24 +8,21 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 </head>
 
-<body style="background-color: #444">
-    <div id="app">
+<body style="background-color: #444; height: 100vh">
+    <div id="app" style="height: 100vh; display: flex; flex-direction: column">
         <the-toolbar :bridge="bridge"></the-toolbar>
 
-        <div class="container-fluid">
-            <div class="row" style="margin-left: 0">
-                <the-sidepanel :model="model" :worker-pool="workerPool" :world-view="worldView"></the-sidepanel>
+        <div style="flex-grow: 1; display: flex">
+            <the-sidepanel style="width: 22vw; max-width: 350px; padding: 16px; height: initial" :model="model" :worker-pool="workerPool" :world-view="worldView"></the-sidepanel>
 
-                <!-- modal main content -->
-                <div class="col-md-9">
-                    <div id="tab_plan" style="display: none">
-                        <the-plan-toolbar :viewmodel="worldViewModel"></the-plan-toolbar>
-                        <div id="viewport"></div>
-                        <timeline :viewmodel="worldViewModel"></timeline>
-                    </div>
-
-                    <the-tab-worker :pool="workerPool"></the-tab-worker>
+            <div style="flex-grow: 1; padding: 16px">
+                <div id="tab_plan" style="display: none">
+                    <the-plan-toolbar :viewmodel="worldViewModel"></the-plan-toolbar>
+                    <div id="viewport"></div>
+                    <timeline :viewmodel="worldViewModel"></timeline>
                 </div>
+
+                <the-tab-worker :pool="workerPool"></the-tab-worker>
             </div>
         </div>
     </div>

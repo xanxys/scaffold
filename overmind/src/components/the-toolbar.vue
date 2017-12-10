@@ -1,5 +1,5 @@
 <template>
-    <nav class="navbar navbar-default" style="background-color: #222; border-radius: 3px;">
+    <nav class="navbar navbar-default" style="background-color: #222; margin-bottom: 0px">
         <div class="container-fluid">
             <div class="navbar-header" >
                 <a class="navbar-brand" href="#">S60C</a>

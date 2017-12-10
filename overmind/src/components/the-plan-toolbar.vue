@@ -11,7 +11,7 @@
 
         <div style="flex-grow: 1"></div> 
 
-        <i class="material-icons">settings</i>
+        <i class="material-icons">layers</i>
         <button @click="togglePhysics" class="btn btn-default">Toggle Physics Elements</button>
     </div>
 </template>

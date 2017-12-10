@@ -1,5 +1,5 @@
 <template>
-    <div id="tab_workers">
+    <div id="tab_workers" class="container-fluid">
         <a v-if="!rawEnabled" style="color: #f0ad4e" href="#" @click="setRawEnabled(true)">
             <i class="material-icons">warning</i>Show raw actions
         </a>

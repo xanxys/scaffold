@@ -1,5 +1,5 @@
 <template>
-    <div id="sidepanel" class="col-md-3" style="background-color: #333; height: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">
+    <nav id="sidepanel" style="background-color: #333; height: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">
         <pane-control name="Plan" :active="activePane" @change="update_pane"/>
         <div id="plan">
             <plan-summary :model="model"/>
@@ -18,7 +18,7 @@
             </table>
             <div :class="{'alert': true, 'alert-info': !has_uninit, 'alert-danger': has_uninit}" role="alert">{{uninit_desc}}</div>
         </div>
-    </div>
+    </nav>
 </template>
 
 <script>
