@@ -4,7 +4,9 @@
             <div v-for="worker in workers" :key="worker.name" class="timeline-worker">
                 <span class="timeline-header">{{worker.name}}</span>
                 <span style="position: relative">
-                    <div class="timeline-action" v-for="task in worker.tasks" style="position:absolute; top: 0" :style="{left: task.init + 'px', width: task.dur + 'px'}">{{task.name}}</div>
+                    <div class="timeline-action" v-for="task in worker.tasks"
+                         style="position:absolute; top: 0"
+                         :style="{left: (pxPerSec * task.init) + 'px', width: (pxPerSec * task.dur) + 'px'}">{{task.name}}</div>
                 </span>
             </div>
         </div>
@@ -29,37 +31,34 @@ export default {
             simInterval: null,
             timeOrigin: new Date(),
             timeNow: new Date(),
-            workers: [
-                {
-                    name: "W1",
-                    tasks: [{
-                        name: "up",
-                        init: 3 * scale,
-                        dur: 5 * scale
-                    },{
-                        name: "fasten",
-                        init: 8 * scale,
-                        dur: 10 * scale
-                    }
-                ]
-                },
-                {
-                    name: "F1",
-                    tasks: [{
-                        name: "up",
-                        init: 0 * scale,
-                        dur: 5 * scale
-                    },{
-                        name: "fasten",
-                        init: 5 * scale,
-                        dur: 3 * scale
-                    }
-                ]
-                },
-            ]
+            pxPerSec: 100,
         };
     },
     computed: {
+        workers() {
+            const pl = this.viewmodel.plan;
+            if (!pl) {
+                return [];
+            }
+
+            const m = pl.getSeqPerWorker();
+            let results = [];
+            m.forEach((seqs, addr) => {
+                const workerName = "W" + addr;
+                results.push({
+                    name: workerName,
+                    tasks: seqs.map(tAndSq => {
+                        console.log(tAndSq, tAndSq[1].getDurationSec());
+                        return {
+                            name: tAndSq[1].getLabel(),
+                            init: tAndSq[0],
+                            dur: tAndSq[1].getDurationSec()
+                        };
+                    }),
+                });
+            });
+            return results;
+        },
         timeSec() {
             return (this.timeNow - this.timeOrigin) * 1e-3;
         }

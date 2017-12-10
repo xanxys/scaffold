@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import * as OrthoTrackballControls from './ortho-trackball-controls.js';
 import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60TrainBuilder, S60RailFeederWide, ScaffoldThingLoader } from './scaffold-model';
-import { Planner, FeederPlanner1D } from './planner';
+import { Plan, Planner, FeederPlanner1D } from './planner';
 
 let STLLoader: any = LoaderFactory(THREE);
 
@@ -27,6 +27,7 @@ export class WorldViewModel {
 
     private loader: ScaffoldThingLoader;
     private planner?: Planner;
+    plan?: Plan = undefined;
 
     constructor(private model) {
         this.loader = new ScaffoldThingLoader();
@@ -55,8 +56,9 @@ export class WorldViewModel {
                 return tb;
             }),
         ]).then(res => {
-            console.log(res);
             this.planner = new FeederPlanner1D(this.model, <S60RailFeederWide>res[1], <S60TrainBuilder>res[2]);
+            this.plan = this.planner.getPlan();
+            console.log(this.plan);
             this.view.regenScaffoldView(ClickOpState.None);
         });
     }

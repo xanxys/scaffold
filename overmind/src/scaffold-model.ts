@@ -32,7 +32,6 @@ export class ScaffoldThingLoader {
             this.stlLoader.load('./models/' + name + '.stl', geom => {
                 geom.scale(1e-3, 1e-3, 1e-3);
                 this.cadModels[name] = geom;
-                // console.log("Loading time", new Date() - t0, "ms");
                 resolve(geom);
             });
         });

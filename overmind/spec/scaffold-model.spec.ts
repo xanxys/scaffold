@@ -1,7 +1,7 @@
 
 // cf. https://stackoverflow.com/questions/39020022/angular-2-unit-tests-cannot-find-name-describe/39945169#39945169
-import {} from 'jasmine';
-import {RelationBuilder} from "../src/scaffold-model";
+import { } from 'jasmine';
+import { RelationBuilder } from "../src/geometry";
 
 import * as THREE from 'three';
 
@@ -23,7 +23,7 @@ describe("RelationBuilder", () => {
             .alignDir(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 1, 0))
             .alignPt(new THREE.Vector3(1, 2, 3), new THREE.Vector3(1, 2, 3))
             .getTransformToRef();
-        
+
         let v = new THREE.Vector3(4, 5, 6);
         expectTransforms(trans, v, v);
     });
