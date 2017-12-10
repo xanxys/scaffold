@@ -18,6 +18,8 @@
             </table>
             <div :class="{'alert': true, 'alert-info': !has_uninit, 'alert-danger': has_uninit}" role="alert">{{uninit_desc}}</div>
         </div>
+
+        <pane-control name="Settings" :active="activePane" @change="update_pane"/>
     </nav>
 </template>
 
@@ -58,21 +60,33 @@ export default {
     },
     methods: {
         update_pane(newActive) {
-            if (this.activePane === 'Plan') {
-                $('#tab_plan').hide();
-                this.worldView.stop();
-            } else if (this.activePane === 'Workers') {
-                $('#tab_workers').hide();
+            switch(this.activePane) {
+                case 'Plan':
+                    $('#tab_plan').hide();
+                    this.worldView.stop();
+                    break;
+                case 'Workers':
+                    $('#tab_workers').hide();
+                    break;
+                case 'Settings':
+                    $('#tab_settings').hide();
+                    break;
             }
 
             this.activePane = newActive;
 
-            if (newActive === 'Plan') {
-                $('#tab_plan').show();
-                this.worldView.reinitializeControls();
-                this.worldView.start();
-            } else if (this.activePane === 'Workers') {
-                $('#tab_workers').show();
+            switch (newActive) {
+                case 'Plan':
+                    $('#tab_plan').show();
+                    this.worldView.reinitializeControls();
+                    this.worldView.start();
+                    break;
+                case 'Workers':
+                    $('#tab_workers').show();
+                    break;
+                case 'Settings':
+                    $('#tab_settings').show();
+                    break;
             }
         }
     }

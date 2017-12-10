@@ -22,7 +22,9 @@
                     <timeline :viewmodel="worldViewModel"></timeline>
                 </div>
 
-                <the-tab-worker :pool="workerPool"></the-tab-worker>
+                <the-tab-worker id="tab_workers" :pool="workerPool"></the-tab-worker>
+
+                <div id="tab_settings" style="display: none">Settings</div>
             </div>
         </div>
     </div>
