@@ -51,7 +51,7 @@ export class CommandHistory {
     }
 
     syncToFile() {
-        fs.writeFile(this.path, JSON.stringify(this.data, null, 2));
+        fs.writeFile(this.path, JSON.stringify(this.data, null, 2), console.error);
     }
 }
 

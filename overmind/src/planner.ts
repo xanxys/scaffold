@@ -28,7 +28,7 @@ export class Plan {
  * FeederPlanner1D is a very limited Planner for FDW-TB-RS interactions.
  */
 export class FeederPlanner1D implements Planner {
-    constructor(private model: ScaffoldModel, private feeder: S60RailFeederWide, private builder: S60TrainBuilder) {
+    constructor(private srcModel: ScaffoldModel, private dstModel: ScaffoldModel, private feeder: S60RailFeederWide, private builder: S60TrainBuilder) {
     }
 
     getPlan(): Plan {
@@ -41,4 +41,39 @@ export class FeederPlanner1D implements Planner {
     setTime(tSec: number) {
         this.feeder.paramx = Math.cos(tSec * Math.PI / 2) * 0.05;
     }
+}
+
+/**
+ * Immutable world representation for FeederPlanner1D.
+ * 
+ * In this world, only RS * n (n >= 0), FDW-RS * 1, TB * 1 can exist.
+ * This also represents succesful static state.
+ * 
+ * e.g. world must be constrained:
+ *  * TB must be on-center
+ *  * both darm & driver is up (folded)
+ *  * no motor is rotating
+ */
+class Fp1dWorld {
+    readonly FDW_NUM_PORTS = 5;
+
+    // FDW-RS & connected RS.
+    stagePos: number;
+    connectedRs: Array<number>;  // must have length of FDW_NUM_PORTS
+
+    // TB state
+    carryRs: boolean;
+    tbLoc: TbLoc;
+}
+
+type TbLoc = TbOnStage | TbOnStack;
+
+interface TbOnStage {
+    kind: "onStage";
+}
+
+interface TbOnStack {
+    kind: "onStack"
+    stackIx: number;  // [0, FDW_NUM_PORTS)
+    posInStack: number; // 0: first connected Rs, 1: second ...
 }

@@ -29,8 +29,11 @@ export class WorldViewModel {
     private planner?: Planner;
     plan?: Plan = undefined;
 
-    constructor(private model) {
+    private targetModel: ScaffoldModel;
+
+    constructor(private currModel) {
         this.loader = new ScaffoldThingLoader();
+        this.targetModel = new ScaffoldModel();
     }
 
     setState(state: ClickOpState) {
@@ -41,22 +44,22 @@ export class WorldViewModel {
     genFeederPlan() {
         Promise.all([
             this.loader.create(S60RailStraight).then(rs => {
-                rs.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0, 0, 0.02));
-                this.model.addRail(rs);
+                rs.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0, 0, 0.02));
+                this.currModel.addRail(rs);
                 return rs;
             }),
             this.loader.create(S60RailFeederWide).then(fd => {
-                fd.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0.1, 0, 0));
-                this.model.addRail(fd);
+                fd.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.1, 0, 0));
+                this.currModel.addRail(fd);
                 return fd;
             }),
             this.loader.create(S60TrainBuilder).then(tb => {
-                tb.coord.unsafeSetParent(this.model.coord, new THREE.Vector3(0.105, -0.022, 0));
-                this.model.addRail(tb);
+                tb.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.105, -0.022, 0));
+                this.currModel.addRail(tb);
                 return tb;
             }),
         ]).then(res => {
-            this.planner = new FeederPlanner1D(this.model, <S60RailFeederWide>res[1], <S60TrainBuilder>res[2]);
+            this.planner = new FeederPlanner1D(this.currModel, this.targetModel, <S60RailFeederWide>res[1], <S60TrainBuilder>res[2]);
             this.plan = this.planner.getPlan();
             console.log(this.plan);
             this.view.regenScaffoldView(ClickOpState.None);
@@ -101,17 +104,17 @@ export class WorldViewModel {
     private addRail(obj: any, newRail: ScaffoldThing) {
         let orgRail = obj.userData.rail;
         let orgPort = obj.userData.port;
-        newRail.coord.unsafeSetParentWithRelation(this.model.coord, orgRail.coord)
+        newRail.coord.unsafeSetParentWithRelation(this.currModel.coord, orgRail.coord)
             .alignPt(newRail.ports[0].pos, orgPort.pos)
             .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
             .alignDir(newRail.ports[0].up, orgPort.up)
             .build();
-        this.model.addRail(newRail);
+        this.currModel.addRail(newRail);
         this.view.regenScaffoldView(this.state);
     }
 
     private removeRail(obj: any) {
-        this.model.removeRail(obj.userData.rail);
+        this.currModel.removeRail(obj.userData.rail);
         this.view.regenScaffoldView(this.state);
     }
 }

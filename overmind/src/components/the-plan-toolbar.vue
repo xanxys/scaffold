@@ -1,7 +1,8 @@
 <template>
     <div style="display:flex; align-items: center">
-        <i class="material-icons">playlist_add</i>
-        <button @click="genFeederPlan" class="btn btn-default">GenFeederPlan</button>
+        <button @click="genFeederPlan" class="btn btn-default">
+            <i class="material-icons">playlist_add</i>GenFeederPlan
+        </button>
 
         <i class="material-icons">add_box</i>
         <button @click="addRs" class="btn btn-default" :class="{'active': isAddRs}">RS</button>
@@ -11,8 +12,13 @@
 
         <div style="flex-grow: 1"></div> 
 
-        <i class="material-icons">layers</i>
-        <button @click="togglePhysics" class="btn btn-default">Toggle Physics Elements</button>
+        <button @click="toggleMode" class="btn btn-default">
+            <i class="material-icons">compare_arrows</i>{{isCurrent ? "Showing Current" : "Showing Future"}}
+        </button>
+
+        <button @click="togglePhysics" class="btn btn-default">
+            <i class="material-icons">layers</i>Toggle Physics Elements
+        </button>
     </div>
 </template>
 
@@ -26,6 +32,7 @@ export default {
     },
     data() {
         return {
+            isCurrent: true,
         };
     },
     methods: {
@@ -43,6 +50,9 @@ export default {
         },
         remove() {
             this.viewmodel.setState(ClickOpState.Remove);
+        },
+        toggleMode() {
+            this.isCurrent = !this.isCurrent;
         },
         togglePhysics() {
             this.viewmodel.togglePhysics();
