@@ -28,7 +28,7 @@ export class Plan {
  * FeederPlanner1D is a very limited Planner for FDW-TB-RS interactions.
  */
 export class FeederPlanner1D implements Planner {
-    constructor(private srcModel: ScaffoldModel, private dstModel: ScaffoldModel, private feeder: S60RailFeederWide, private builder: S60TrainBuilder) {
+    constructor(private srcModel: ScaffoldModel, private dstModel: ScaffoldModel) {
     }
 
     getPlan(): Plan {
@@ -39,7 +39,38 @@ export class FeederPlanner1D implements Planner {
     }
 
     setTime(tSec: number) {
-        this.feeder.paramx = Math.cos(tSec * Math.PI / 2) * 0.05;
+        const wOrErr = this.interpretWorld(this.srcModel);
+        if (typeof(wOrErr) === 'string') {
+            console.error(wOrErr);
+            return;
+        }
+
+        let fdw = this.srcModel.findByType(S60RailFeederWide);
+        if (fdw) {
+            fdw.paramx = Math.cos(tSec * Math.PI / 2) * 0.05;
+        }
+    }
+
+    private interpretWorld(model: ScaffoldModel): Fp1dWorld | string {
+        const w = new Fp1dWorld();
+
+        let fdw = model.findByType(S60RailFeederWide);
+        if (!fdw) {
+            return "FDW-RS not found";
+        }
+        w.stagePos = fdw.stagePos;
+        w.connectedRs = new Array(S60RailFeederWide.NUM_PORTS);
+        // TODO: Get RS from model and populate.
+
+        let tb = model.findByType(S60TrainBuilder);
+        if (!tb) {
+            return "TB not found";
+        }
+        // TODO: Get info from tb.
+        w.carryRs = false;
+        w.tbLoc = {kind: "onStage"};
+        
+        return w;
     }
 }
 
@@ -55,8 +86,6 @@ export class FeederPlanner1D implements Planner {
  *  * no motor is rotating
  */
 class Fp1dWorld {
-    readonly FDW_NUM_PORTS = 5;
-
     // FDW-RS & connected RS.
     stagePos: number;
     connectedRs: Array<number>;  // must have length of FDW_NUM_PORTS

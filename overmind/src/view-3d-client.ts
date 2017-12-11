@@ -46,22 +46,18 @@ export class WorldViewModel {
             this.loader.create(S60RailStraight).then(rs => {
                 rs.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0, 0, 0.02));
                 this.currModel.addRail(rs);
-                return rs;
             }),
             this.loader.create(S60RailFeederWide).then(fd => {
                 fd.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.1, 0, 0));
                 this.currModel.addRail(fd);
-                return fd;
             }),
             this.loader.create(S60TrainBuilder).then(tb => {
                 tb.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.105, -0.022, 0));
                 this.currModel.addRail(tb);
-                return tb;
             }),
-        ]).then(res => {
-            this.planner = new FeederPlanner1D(this.currModel, this.targetModel, <S60RailFeederWide>res[1], <S60TrainBuilder>res[2]);
+        ]).then(_ => {
+            this.planner = new FeederPlanner1D(this.currModel, this.targetModel);
             this.plan = this.planner.getPlan();
-            console.log(this.plan);
             this.view.regenScaffoldView(ClickOpState.None);
         });
     }

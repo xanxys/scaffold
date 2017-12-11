@@ -78,6 +78,10 @@ export class ScaffoldModel {
         return this.things;
     }
 
+    findByType<T extends ScaffoldThing>(type: TypedNewable<T>): T {
+         return <T> this.getThings().find(thing => thing.type === type.type);
+    }
+
     addRail(rail: ScaffoldThing) {
         this.things.push(rail);
     }
@@ -142,6 +146,8 @@ export class ScaffoldModel {
  * Can have internal state.
  */
 export interface ScaffoldThing {
+    readonly type: string;
+
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
@@ -166,6 +172,7 @@ export class Active {
 
 export class S60RailStraight implements ScaffoldThing {
     static readonly type = "RS";
+    readonly type = "RS";
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
@@ -211,6 +218,7 @@ export class S60RailStraight implements ScaffoldThing {
 
 export class S60RailHelix implements ScaffoldThing {
     static readonly type = "RH";
+    readonly type = "RH";
 
     coord: Coordinates;
     ports: Array<Port>;
@@ -248,6 +256,7 @@ export class S60RailHelix implements ScaffoldThing {
 
 export class S60RailRotator implements ScaffoldThing {
     static readonly type = "RR";
+    readonly type = "RR";
 
     coord: Coordinates;
     ports: Array<Port>;
@@ -291,6 +300,7 @@ export class S60RailRotator implements ScaffoldThing {
 
 export class S60RailFeederWide implements ScaffoldThing, Active {
     static readonly type = "FDW-RS";
+    readonly type = "FDW-RS";
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
@@ -298,6 +308,9 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
     cadCoord: Coordinates;
 
     addr?: number;
+
+    static readonly NUM_PORTS = 5;
+    stagePos: number;  // integer: 0 = origin. 1 = 1st stop.
 
     paramx: number;
 
@@ -341,6 +354,7 @@ class S60RFWStage implements ScaffoldThing {
 
 export class S60TrainBuilder implements ScaffoldThing, Active {
     static readonly type = "TB";
+    readonly type = "TB";
     coord: Coordinates;
     ports: Array<Port>;
     bound: AABB;
