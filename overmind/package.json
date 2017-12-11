@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "dev": "webpack",
-    "start": "electron .",
+    "start": "electron . --dev",
     "test": "node_modules/.bin/jasmine-ts"
   },
   "repository": "https://github.com/xanxys/scaffold",
@@ -33,6 +33,7 @@
     "file-loader": "^0.11.2",
     "jasmine": "^2.8.0",
     "jasmine-ts": "^0.2.1",
+    "spectron": "^3.7.2",
     "ts-loader": "^3.1.1",
     "typescript": "^2.6.1",
     "vue-class-component": "^6.1.0",
