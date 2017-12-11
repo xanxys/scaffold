@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import * as OrthoTrackballControls from './ortho-trackball-controls.js';
-import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60TrainBuilder, S60RailFeederWide, ScaffoldThingLoader } from './scaffold-model';
+import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60TrainBuilder, S60RailFeederWide, ScaffoldThingLoader, Port } from './scaffold-model';
 import { Plan, Planner, FeederPlanner1D } from './planner';
+import { Coordinates } from './geometry';
 
 let STLLoader: any = LoaderFactory(THREE);
 
@@ -57,13 +58,10 @@ export class WorldViewModel {
                 this.currModel.addRail(tb);
             }
             {
-                const rs = loader.create(S60RailStraight);
-                rs.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0, 0, 0.02));
-                this.targetModel.addRail(rs);
-
                 const fd = loader.create(S60RailFeederWide);
                 fd.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.1, 0, 0));
                 this.targetModel.addRail(fd);
+                WorldViewModel.addRailToPort(this.targetModel, fd.coord, fd.ports[1], loader.create(S60RailStraight));
 
                 const tb = loader.create(S60TrainBuilder);
                 tb.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.105, -0.022, 0));
@@ -114,15 +112,17 @@ export class WorldViewModel {
     }
 
     private addRail(obj: any, newRail: ScaffoldThing) {
-        let orgRail = obj.userData.rail;
-        let orgPort = obj.userData.port;
-        newRail.coord.unsafeSetParentWithRelation(this.currModel.coord, orgRail.coord)
+        WorldViewModel.addRailToPort(this.currModel, obj.userData.rail.coord, obj.userData.port, newRail);
+        this.view.regenScaffoldView(this.state);
+    }
+
+    private static addRailToPort(model: ScaffoldModel, orgCoord: Coordinates, orgPort: Port, newRail: ScaffoldThing) {
+        newRail.coord.unsafeSetParentWithRelation(model.coord, orgCoord)
             .alignPt(newRail.ports[0].pos, orgPort.pos)
             .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
             .alignDir(newRail.ports[0].up, orgPort.up)
             .build();
-        this.currModel.addRail(newRail);
-        this.view.regenScaffoldView(this.state);
+        model.addRail(newRail);
     }
 
     private removeRail(obj: any) {
