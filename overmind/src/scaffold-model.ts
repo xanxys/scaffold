@@ -20,10 +20,20 @@ export class ScaffoldThingLoader {
         this.loadingDone = Promise.all(modelNames.map(name => this.loadModel(name)));
     }
 
-    create<T extends ScaffoldThing>(newable: TypedNewable<T>): Promise<T> {
+    // This API is so hard to use. Get rid of it.
+    createAsync<T extends ScaffoldThing>(newable: TypedNewable<T>): Promise<T> {
         return this.loadingDone.then(_ => {
             return new newable(this.cadModels['S60C-' + newable.type]);
         });
+    }
+
+    loaded(): Promise<ScaffoldThingLoader> {
+        return this.loadingDone.then(_ => this);
+    }
+
+    /** Only usable in with... future. Consider separating to different class. */
+    create<T extends ScaffoldThing>(newable: TypedNewable<T>): T {
+        return new newable(this.cadModels['S60C-' + newable.type]);
     }
 
     private loadModel(name) {

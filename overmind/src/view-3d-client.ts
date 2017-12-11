@@ -42,39 +42,34 @@ export class WorldViewModel {
     }
 
     popForFeederPlan() {
-        // CurrModel
-        Promise.all([
-            this.loader.create(S60RailStraight).then(rs => {
+        this.loader.loaded().then(loader => {
+            {
+                const rs = loader.create(S60RailStraight);
                 rs.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0, 0, 0.02));
                 this.currModel.addRail(rs);
-            }),
-            this.loader.create(S60RailFeederWide).then(fd => {
+
+                const fd = loader.create(S60RailFeederWide);
                 fd.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.1, 0, 0));
                 this.currModel.addRail(fd);
-            }),
-            this.loader.create(S60TrainBuilder).then(tb => {
+
+                const tb = loader.create(S60TrainBuilder);
                 tb.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.105, -0.022, 0));
                 this.currModel.addRail(tb);
-            }),
-        ]).then(_ => {
-            this.view.regenScaffoldView(this.state);
-        });
-    
-        // CurrModel
-        Promise.all([
-            this.loader.create(S60RailStraight).then(rs => {
+            }
+            {
+                const rs = loader.create(S60RailStraight);
                 rs.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0, 0, 0.02));
                 this.targetModel.addRail(rs);
-            }),
-            this.loader.create(S60RailFeederWide).then(fd => {
+
+                const fd = loader.create(S60RailFeederWide);
                 fd.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.1, 0, 0));
                 this.targetModel.addRail(fd);
-            }),
-            this.loader.create(S60TrainBuilder).then(tb => {
+
+                const tb = loader.create(S60TrainBuilder);
                 tb.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.105, -0.022, 0));
                 this.targetModel.addRail(tb);
-            }),
-        ]);
+            }
+        }).then(_ => this.view.regenScaffoldView(this.state));
     }
 
     /** @deprecated this should be run automatically when models are updated. */
@@ -100,13 +95,13 @@ export class WorldViewModel {
     onClickUiObject(obj: any) {
         switch (this.state) {
             case ClickOpState.AddRs:
-                this.loader.create(S60RailStraight).then(r => this.addRail(obj, r));
+                this.loader.createAsync(S60RailStraight).then(r => this.addRail(obj, r));
                 break;
             case ClickOpState.AddRh:
-                this.loader.create(S60RailHelix).then(r => this.addRail(obj, r));
+                this.loader.createAsync(S60RailHelix).then(r => this.addRail(obj, r));
                 break;
             case ClickOpState.AddRr:
-                this.loader.create(S60RailRotator).then(r => this.addRail(obj, r));
+                this.loader.createAsync(S60RailRotator).then(r => this.addRail(obj, r));
                 break;
             case ClickOpState.Remove:
                 this.removeRail(obj);
