@@ -45,7 +45,7 @@ export class CommandHistory {
         this.syncToFile();
     }
 
-    thumbDown(wtype: string, seq: string) {
+    delete(wtype: string, seq: string) {
         this.data.history = this.data.history.filter(entry => !(entry.wtype === wtype && entry.seq === seq));
         this.syncToFile();
     }

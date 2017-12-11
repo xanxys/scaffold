@@ -23,7 +23,7 @@
               <button class="btn-small btn-start" @click="runCommandFromHistory(ch)"><i class="material-icons">play_arrow</i></button>
               <input size="12" v-model="ch.memo" @keyup.enter="updateMemo(ch)"/> {{ch.seq}} |
               {{ch.used}} used
-              <i class="material-icons" @click="thumbDownCommand(ch)">remove_circle_outline</i>
+              <i class="material-icons" @click="deleteCommand(ch)">remove_circle_outline</i>
             </div>
           </div>
           <br/>
@@ -127,8 +127,8 @@ export default {
           this.command_palette = command;
         },
 
-        thumbDownCommand(ch) {
-          this.commandHistory.thumbDown(this.worker.wtype, ch.seq);
+        deleteCommand(ch) {
+          this.commandHistory.delete(this.worker.wtype, ch.seq);
         },
 
         updateMemo(ch) {
