@@ -32,7 +32,6 @@ export default {
     },
     data() {
         return {
-            isCurrent: true,
         };
     },
     methods: {
@@ -55,13 +54,16 @@ export default {
             this.viewmodel.setState(ClickOpState.Remove);
         },
         toggleMode() {
-            this.isCurrent = !this.isCurrent;
+            this.viewmodel.setIsCurrent(!this.viewmodel.getIsCurrent());
         },
         togglePhysics() {
             this.viewmodel.togglePhysics();
         },
     },
     computed: {
+        isCurrent() {
+            return this.viewmodel.getIsCurrent();
+        },
         isAddRs() {
             return this.viewmodel.state === ClickOpState.AddRs;
         },

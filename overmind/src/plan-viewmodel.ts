@@ -13,6 +13,7 @@ export class PlanViewModel {
     private state = ClickOpState.None;
     private view: WorldView;
     private showPhysics = false;
+    private isCurrent = true;
 
     private loader: ScaffoldThingLoader;
     private planner?: Planner;
@@ -70,6 +71,15 @@ export class PlanViewModel {
         }
     }
 
+    setIsCurrent(isCurrent: boolean) {
+        this.isCurrent = isCurrent;
+        this.rebind();
+    }
+
+    getIsCurrent(): boolean {
+        return this.isCurrent;
+    }
+
     togglePhysics() {
         this.showPhysics = !this.showPhysics;
     }
@@ -100,7 +110,7 @@ export class PlanViewModel {
     }
 
     private addRail(obj: any, newRail: ScaffoldThing) {
-        PlanViewModel.addRailToPort(this.currModel, obj.userData.rail.coord, obj.userData.port, newRail);
+        PlanViewModel.addRailToPort(this.isCurrent ? this.currModel : this.targetModel, obj.userData.rail.coord, obj.userData.port, newRail);
         this.rebind();
     }
 
@@ -119,7 +129,7 @@ export class PlanViewModel {
     }
 
     private rebind() {
-        this.view.bindViewModel(new WorldViewModelImpl(this.currModel, this, this.state));
+        this.view.bindViewModel(new WorldViewModelImpl(this.isCurrent ? this.currModel : this.targetModel, this, this.state));
     }
 }
 
