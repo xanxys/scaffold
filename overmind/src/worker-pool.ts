@@ -12,7 +12,7 @@ interface Worker {
     readings: Array<any>;
 }
 
-export default class WorkerPool {
+export class WorkerPool {
     workers: Array<Worker>;
     lastUninit?: Date;
 

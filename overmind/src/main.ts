@@ -2,10 +2,11 @@ declare const global: any;
 
 import * as $ from 'jquery';
 import * as Vue from 'vue/dist/vue.js';
-import { WorldView, PlanViewModel } from './view-3d-client';
+import { PlanViewModel } from './plan-viewmodel';
+import { WorldView } from './world-view';
 
 import { WorkerBridge } from './comm';
-import WorkerPool from './worker-pool';
+import { WorkerPool } from './worker-pool';
 import { ScaffoldModel } from './scaffold-model';
 
 export function runMain() {

@@ -24,7 +24,7 @@
 
 <script>
 import Vue from 'vue';
-import {ClickOpState} from '../view-3d-client';
+import { ClickOpState } from '../world-view';
 
 export default {
     props: ['viewmodel'],
