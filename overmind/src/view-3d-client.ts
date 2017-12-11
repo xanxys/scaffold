@@ -20,8 +20,10 @@ export enum ClickOpState {
 
 /**
  * A viewmodel used by both View3DClient, the-plan-toolbar, and timeline.
+ * 
+ * Knows about both current / future ScaffoldModel.
  */
-export class WorldViewModel {
+export class PlanViewModel {
     private state = ClickOpState.None;
     private view: WorldView;
     private showPhysics = false;
@@ -39,7 +41,7 @@ export class WorldViewModel {
 
     setState(state: ClickOpState) {
         this.state = state;
-        this.view.regenScaffoldView(state);
+        this.view.bindViewModel(new WorldViewModel(this.currModel, this, state));
     }
 
     popForFeederPlan() {
@@ -61,13 +63,13 @@ export class WorldViewModel {
                 const fd = loader.create(S60RailFeederWide);
                 fd.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.1, 0, 0));
                 this.targetModel.addRail(fd);
-                WorldViewModel.addRailToPort(this.targetModel, fd.coord, fd.ports[1], loader.create(S60RailStraight));
+                PlanViewModel.addRailToPort(this.targetModel, fd.coord, fd.ports[1], loader.create(S60RailStraight));
 
                 const tb = loader.create(S60TrainBuilder);
                 tb.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.105, -0.022, 0));
                 this.targetModel.addRail(tb);
             }
-        }).then(_ => this.view.regenScaffoldView(this.state));
+        }).then(_ => this.view.bindViewModel(new WorldViewModel(this.currModel, this, this.state)));
     }
 
     /** @deprecated this should be run automatically when models are updated. */
@@ -112,8 +114,8 @@ export class WorldViewModel {
     }
 
     private addRail(obj: any, newRail: ScaffoldThing) {
-        WorldViewModel.addRailToPort(this.currModel, obj.userData.rail.coord, obj.userData.port, newRail);
-        this.view.regenScaffoldView(this.state);
+        PlanViewModel.addRailToPort(this.currModel, obj.userData.rail.coord, obj.userData.port, newRail);
+        this.view.bindViewModel(new WorldViewModel(this.currModel, this, this.state));
     }
 
     private static addRailToPort(model: ScaffoldModel, orgCoord: Coordinates, orgPort: Port, newRail: ScaffoldThing) {
@@ -127,12 +129,28 @@ export class WorldViewModel {
 
     private removeRail(obj: any) {
         this.currModel.removeRail(obj.userData.rail);
-        this.view.regenScaffoldView(this.state);
+        this.view.bindViewModel(new WorldViewModel(this.currModel, this, this.state));
+    }
+}
+
+class WorldViewModel {
+    constructor(public readonly model: ScaffoldModel, private planViewModel: PlanViewModel, public readonly state: ClickOpState) {
+    }
+
+    // Realtime
+    getShowPhysics(): boolean {
+        return this.planViewModel.getShowPhysics();
+    }
+
+    // Non-realtime
+    onClickUiObject(obj: any) {
+        return this.planViewModel.onClickUiObject(obj);
     }
 }
 
 /**
  * Renders ScaffoldModel directly, but uses WorldViewModel for model edit / other UI interactions.
+ * Only knows about single ScaffoldModel at a time.
  * 
  * ScaffoldModel & THREE.Object3D Hierarchy Mapping:
  * 
@@ -154,8 +172,6 @@ export class WorldView {
     // Layers where abstract physical elements / interactions (ports, rail segment bindings etc.) are shown.
     private static readonly LAYER_PHYSICS = 4;
 
-    model: ScaffoldModel;
-
     // Unabstracted jQuery UI things.
     windowElem: any;
     viewportElem: any;
@@ -176,13 +192,11 @@ export class WorldView {
     cadModels: Map<string, THREE.Geometry>;
     cachePointGeom: THREE.BufferGeometry;
 
-    viewModel: WorldViewModel;
+    viewModel?: WorldViewModel;
 
-    constructor(model, windowElem, viewportElem, viewModel) {
-        this.model = model;
+    constructor(windowElem, viewportElem) {
         this.windowElem = windowElem;
         this.viewportElem = viewportElem;
-        this.viewModel = viewModel;
 
         let aspect = WorldView.WIDTH / WorldView.HEIGHT;
         this.camera = new THREE.OrthographicCamera(
@@ -254,7 +268,9 @@ export class WorldView {
             if (isect == undefined) {
                 return;
             }
-            this.viewModel.onClickUiObject(isect.object);
+            if (this.viewModel) {
+                this.viewModel.onClickUiObject(isect.object);
+            }
         });
 
         this.updateProjection();
@@ -316,7 +332,9 @@ export class WorldView {
         this.controls = new OrthoTrackballControls(this.camera, this.renderer.domElement);
     }
 
-    regenScaffoldView(state: ClickOpState) {
+    bindViewModel(viewModel: WorldViewModel) {
+        this.viewModel = viewModel;
+
         // Because of .remove impl, we need to reverse traversal order.
         for (let i = this.scaffoldView.children.length - 1; i >= 0; i--) {
             this.scaffoldView.remove(this.scaffoldView.children[i]);
@@ -347,7 +365,7 @@ export class WorldView {
             pz.position.z = 0.01;
         }
         this.realtimeBindings = [];
-        this.model.getThings().forEach(thing => {
+        this.viewModel.model.getThings().forEach(thing => {
             let obj = null;
             let type = (<any>thing.constructor).type;
             if (type === 'FDW-RS') {
@@ -388,7 +406,7 @@ export class WorldView {
                 mesh.material = new THREE.MeshLambertMaterial({});
                 obj = mesh;
             }
-            obj.applyMatrix(thing.cadCoord.getTransformTo(this.model.coord));
+            obj.applyMatrix(thing.cadCoord.getTransformTo(this.viewModel.model.coord));
             this.scaffoldView.add(obj);
         });
         // Run initial bindings to update model positions.
@@ -397,8 +415,9 @@ export class WorldView {
         this.cachePointGeom = new THREE.SphereBufferGeometry(0.006, 16, 12);
 
         // TODO: These UI elems should be children of scaffold objects.
+        const state = this.viewModel.state;
         if (state === ClickOpState.AddRs || state === ClickOpState.AddRh || state === ClickOpState.AddRr) {
-            this.model.getOpenPorts().forEach(point => {
+            this.viewModel.model.getOpenPorts().forEach(point => {
                 let mesh = new THREE.Mesh();
                 mesh.userData = {
                     rail: point.rail,
@@ -416,7 +435,7 @@ export class WorldView {
                 this.scaffoldView.add(mesh);
             });
         } else if (state === ClickOpState.Remove) {
-            this.model.getDeletionPoints().forEach(point => {
+            this.viewModel.model.getDeletionPoints().forEach(point => {
                 let mesh = new THREE.Mesh();
                 mesh.userData = {
                     rail: point.rail,
@@ -466,7 +485,7 @@ export class WorldView {
         this.controls.update();
         this.realtimeBindings.forEach(binding => binding.apply());
 
-        if (this.viewModel.getShowPhysics()) {
+        if (this.viewModel && this.viewModel.getShowPhysics()) {
             this.camera.layers.enable(WorldView.LAYER_PHYSICS);
         } else {
             this.camera.layers.disable(WorldView.LAYER_PHYSICS);

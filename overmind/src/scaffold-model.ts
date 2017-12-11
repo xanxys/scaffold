@@ -397,7 +397,7 @@ export class S60TrainBuilder implements ScaffoldThing, Active {
 /**
  * Bidirectional unbindable connector. This conenction forms foundation of scaffold lattice.
  */
-class Port {
+export class Port {
     constructor(public pos: THREE.Vector3, public up: THREE.Vector3, public fwd: THREE.Vector3) {
     }
 }

@@ -2,7 +2,7 @@ declare const global: any;
 
 import * as $ from 'jquery';
 import * as Vue from 'vue/dist/vue.js';
-import { WorldView, WorldViewModel } from './view-3d-client';
+import { WorldView, PlanViewModel } from './view-3d-client';
 
 import { WorkerBridge } from './comm';
 import WorkerPool from './worker-pool';
@@ -12,7 +12,7 @@ export function runMain() {
     const bridge = new WorkerBridge();
     const workerPool = new WorkerPool();
     const model = new ScaffoldModel();
-    const viewModel = new WorldViewModel(model);
+    const planViewModel = new PlanViewModel(model);
 
     let appVm = new Vue({
         el: '#app',
@@ -21,7 +21,7 @@ export function runMain() {
             model: model,
             workerPool: workerPool,
             worldView: null,
-            worldViewModel: viewModel,
+            worldViewModel: planViewModel,
         },
     });
 
@@ -40,8 +40,8 @@ export function runMain() {
     // Otherwise <canvas> will be inserted to DOM but shows nothing.
     // But worldview needs to be bound to the app component.
     // As a workaround, access internal data object of the component instance to bind later.
-    const worldView = new WorldView(model, $(window), $('#viewport'), viewModel);
-    viewModel.bindView(worldView);
+    const worldView = new WorldView($(window), $('#viewport'));
+    planViewModel.bindView(worldView);
     worldView.startRenderer();
     worldView.start();
 
