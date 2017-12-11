@@ -1,8 +1,8 @@
 <template>
     <div style="display:flex; align-items: center">
-        <button @click="genFeederPlan" class="btn btn-default">
-            <i class="material-icons">playlist_add</i>GenFeederPlan
-        </button>
+        <i class="material-icons">playlist_add</i>
+        <button @click="popForFeederPlan" class="btn btn-default">PopulateForFeederPlan</button>
+        <button @click="genFeederPlan" class="btn btn-default">GenFeederPlan</button>
 
         <i class="material-icons">add_box</i>
         <button @click="addRs" class="btn btn-default" :class="{'active': isAddRs}">RS</button>
@@ -36,6 +36,9 @@ export default {
         };
     },
     methods: {
+        popForFeederPlan() {
+            this.viewmodel.popForFeederPlan();
+        },
         genFeederPlan() {
             this.viewmodel.genFeederPlan();
         },

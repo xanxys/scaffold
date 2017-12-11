@@ -41,7 +41,8 @@ export class WorldViewModel {
         this.view.regenScaffoldView(state);
     }
 
-    genFeederPlan() {
+    popForFeederPlan() {
+        // CurrModel
         Promise.all([
             this.loader.create(S60RailStraight).then(rs => {
                 rs.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0, 0, 0.02));
@@ -56,10 +57,30 @@ export class WorldViewModel {
                 this.currModel.addRail(tb);
             }),
         ]).then(_ => {
-            this.planner = new FeederPlanner1D(this.currModel, this.targetModel);
-            this.plan = this.planner.getPlan();
-            this.view.regenScaffoldView(ClickOpState.None);
+            this.view.regenScaffoldView(this.state);
         });
+    
+        // CurrModel
+        Promise.all([
+            this.loader.create(S60RailStraight).then(rs => {
+                rs.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0, 0, 0.02));
+                this.targetModel.addRail(rs);
+            }),
+            this.loader.create(S60RailFeederWide).then(fd => {
+                fd.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.1, 0, 0));
+                this.targetModel.addRail(fd);
+            }),
+            this.loader.create(S60TrainBuilder).then(tb => {
+                tb.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.105, -0.022, 0));
+                this.targetModel.addRail(tb);
+            }),
+        ]);
+    }
+
+    /** @deprecated this should be run automatically when models are updated. */
+    genFeederPlan() {
+        this.planner = new FeederPlanner1D(this.currModel, this.targetModel);
+        this.plan = this.planner.getPlan();
     }
 
     setTime(tSec: number) {
