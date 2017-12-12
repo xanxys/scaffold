@@ -33,6 +33,24 @@ export class FeederPlanner1D implements Planner {
     }
 
     getPlan(): Plan {
+        const srcWOrErr = this.interpretWorld(this.srcModel);
+        const dstWOrErr = this.interpretWorld(this.dstModel);
+        if (typeof (srcWOrErr) === 'string') {
+            console.error('source error:', srcWOrErr);
+            return;
+        }
+        if (typeof (dstWOrErr) === 'string') {
+            console.error('dest error:', dstWOrErr);
+            return;
+        }
+
+        if (srcWOrErr.countRs() !== dstWOrErr.countRs()) {
+            console.error('Failed to plan, due to mismatched RS counts', srcWOrErr.countRs(), dstWOrErr.countRs());
+            return;
+        }
+
+        // TODO: Write some logic here.
+
         const m = new Map();
         m.set(1, [[0, new ActionSeq([new Action("250b-20")])]]);
         m.set(2, [[0, new ActionSeq([new Action("200a50")])]]);
@@ -40,15 +58,6 @@ export class FeederPlanner1D implements Planner {
     }
 
     setTime(tSec: number) {
-        const wOrErr = this.interpretWorld(this.srcModel);
-        if (tSec < 0.1) {
-            console.log("IW", wOrErr);
-        }
-        if (typeof (wOrErr) === 'string') {
-            console.error(wOrErr);
-            return;
-        }
-
         let fdw = this.srcModel.findByType(S60RailFeederWide);
         if (fdw) {
             fdw.paramx = Math.cos(tSec * Math.PI / 2) * 0.05;
@@ -133,6 +142,10 @@ class Fp1dWorld {
     // TB state
     carryRs: boolean;
     tbLoc: TbLoc;
+
+    countRs(): number {
+        return this.connectedRs.reduce((a, b) => a + b) + (this.carryRs ? 1 : 0);
+    }
 }
 
 type TbLoc = TbOnStage | TbOnStack;
