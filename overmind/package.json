@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "dev": "webpack",
-    "start": "electron . --dev",
+    "start": "electron . --dev --fake-packet=fake/packets.json",
     "test": "node_modules/.bin/jasmine-ts"
   },
   "repository": "https://github.com/xanxys/scaffold",
@@ -45,6 +45,7 @@
     "webpack": "^3.5.5"
   },
   "dependencies": {
+    "argv": "0.0.2",
     "bootstrap": "^3.3.7",
     "chart.js": "^2.6.0",
     "identicon.js": "^2.3.1",

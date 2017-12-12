@@ -22,7 +22,7 @@ export class WorkerBridge {
     latestPacket?: Date;
     private handlePacket?: (packet: Packet) => void;
 
-    constructor() {
+    constructor(private fakePath?: string) {
     }
 
     open(handleUpdate: (br: WorkerBridge) => void, handlePacket: (packet: Packet) => void): void {
@@ -30,16 +30,19 @@ export class WorkerBridge {
         this.port = new SerialPort(this.path, {
             baudRate: 115200
         }, err => {
-            if (err !== null) {
-                console.error('serial port error', err, 'will inject recorded fake packets');
-                fs.readFile("fake/packets.json", "utf8", (err, data) => {
-                    const fakePackets = JSON.parse(data);
-                    console.log("Fake packets", fakePackets);
-                    fakePackets.packets.forEach(worker => worker.packets.forEach(p => this.onData(p)));
-                });
-            } else {
+            if (err === null) {
                 console.info('serial port ok');
                 this.isOpen = true;
+            } else {
+                console.error('serial port error', err);
+                if (this.fakePath) {
+                    console.log('will inject recorded fake packets from', this.fakePath);
+                    fs.readFile(this.fakePath, "utf8", (err, data) => {
+                        const fakePackets = JSON.parse(data);
+                        console.log("Fake packets", fakePackets);
+                        fakePackets.packets.forEach(worker => worker.packets.forEach(p => this.onData(p)));
+                    });
+                }
             }
             handleUpdate(this);
         });
@@ -89,6 +92,17 @@ export class WorkerBridge {
         let final_command = ':' + encodeHex(buffer) + 'X\r\n';
         console.log('send', final_command);
         this.port.write(final_command);
+    }
+
+    /** @returns human-readable short text describing mode */
+    getMode(): string {
+        if (this.isOpen) {
+            return 'connected';
+        } else if (this.fakePath) {
+            return 'fake replay'
+        } else {
+            return 'disconnected';
+        }
     }
 }
 

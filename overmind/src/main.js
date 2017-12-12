@@ -22,5 +22,6 @@ import TheTabWorker from './components/the-tab-worker.vue';
 Vue.component('the-tab-worker', TheTabWorker);
 
 // Hand over exec to TypeScript land.
+import { remote } from 'electron';
 import { runMain } from './main.ts';
-runMain();
+runMain(remote.getGlobal('parsedArgs'));

@@ -1,6 +1,8 @@
 const electron = require('electron');
+const argv = require('argv');
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
+
 
 require('electron-reload')(__dirname, {
     ignored: /node_modules|fake|state|[\/\\]\./
@@ -11,22 +13,16 @@ require('electron-reload')(__dirname, {
 let mainWindow;
 
 function createWindow() {
-    // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 1400,
         height: 1000
     });
-
-    // and load the index.html of the app.
     mainWindow.loadURL(`file://${__dirname}/index.html`);
-
-    // Open the DevTools.
-    if (process.argv.find(arg => arg === '--dev')) {
+    if (global.parsedArgs.dev) {
         mainWindow.webContents.openDevTools();
     }
 
-    // Emitted when the window is closed.
-    mainWindow.on('closed', function() {
+    mainWindow.on('closed', function () {
         // Dereference the window object, usually you would store windows
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
@@ -39,11 +35,36 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
     BrowserWindow.addDevToolsExtension('node_modules/vue-devtools/vender');
+
+
+    global.parsedArgs = {};
+    global.parsedArgs['dev'] = process.argv.some(arg => arg === '--dev');
+
+    const prefix = '--fake-packet=';
+    const arg = process.argv.find(arg => arg.startsWith('--fake-packet='));
+    if (arg) {
+        global.parsedArgs['fake-packet'] = arg.substr(prefix.length);
+    }
+    // For whatever reason, argv.run(process.argv) freezes (resulting in test timeout failure) in spectron (npm test).
+
+    /*
+    argv.option([
+        {
+            name: 'dev',
+            type: 'boolean',
+        },
+        {
+            name: 'fake-packet',
+            type: 'string',
+        }
+    ]).run(process.argv);
+    */
+
     createWindow();
 });
 
 // Quit when all windows are closed.
-app.on('window-all-closed', function() {
+app.on('window-all-closed', function () {
     // On OS X it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== 'darwin') {
@@ -51,7 +72,7 @@ app.on('window-all-closed', function() {
     }
 });
 
-app.on('activate', function() {
+app.on('activate', function () {
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (mainWindow === null) {
