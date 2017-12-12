@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60RailFeederWide, S60TrainBuilder } from './scaffold-model';
+import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60RailFeederWide, S60TrainBuilder, Port } from './scaffold-model';
 import { Action, ActionSeq } from './action';
+import { Coordinates } from './geometry';
 
 /**
  * Planner takes a model (that's in specific state), and provides Timeline that's simulatable and/or executable.
@@ -40,7 +41,10 @@ export class FeederPlanner1D implements Planner {
 
     setTime(tSec: number) {
         const wOrErr = this.interpretWorld(this.srcModel);
-        if (typeof(wOrErr) === 'string') {
+        if (tSec < 0.1) {
+            console.log("IW", wOrErr);
+        }
+        if (typeof (wOrErr) === 'string') {
             console.error(wOrErr);
             return;
         }
@@ -56,21 +60,57 @@ export class FeederPlanner1D implements Planner {
 
         let fdw = model.findByType(S60RailFeederWide);
         if (!fdw) {
-            return "FDW-RS not found";
+            return "FDW-RS x1 expected but not found";
         }
         w.stagePos = fdw.stagePos;
         w.connectedRs = new Array(S60RailFeederWide.NUM_PORTS);
-        // TODO: Get RS from model and populate.
+        let unprocessedRss = model.findAllByType(S60RailStraight);
+        w.connectedRs = fdw.ports.map(fixedPort => {
+            let rootPortPos = fdw.coord.convertP(fixedPort.pos, model.coord);
+            let attachedCount = 0;
+            while (true) {
+                let foundInThisCycle = undefined;
+                unprocessedRss.forEach(rs => {
+                    const otherSidePos = FeederPlanner1D.getOtherSide(model.coord, rootPortPos, rs);
+                    if (otherSidePos) {
+                        rootPortPos = otherSidePos;
+                        attachedCount += 1;
+                        foundInThisCycle = rs;
+                    }
+                });
+                if (!foundInThisCycle) {
+                    break;
+                }
+                unprocessedRss = unprocessedRss.filter(r => r !== foundInThisCycle);
+            }
+            return attachedCount;
+        });
 
         let tb = model.findByType(S60TrainBuilder);
         if (!tb) {
-            return "TB not found";
+            return "TB x1 expected but not found";
         }
         // TODO: Get info from tb.
         w.carryRs = false;
-        w.tbLoc = {kind: "onStage"};
-        
+        w.tbLoc = { kind: "onStage" };
+
         return w;
+    }
+
+    /**
+     * Return the other port of RS.
+     * If the spcified port is not shared by given rs, return undefined.
+     */
+    private static getOtherSide(wCoord: Coordinates, pos: THREE.Vector3, rs: S60RailStraight): THREE.Vector3? {
+        const eps = 1e-3;
+        const isShared = rs.ports.some(rsPort => {
+            const rsPortPos = rs.coord.convertP(rsPort.pos, wCoord);
+            return rsPortPos.distanceTo(pos) < eps;
+        });
+        return isShared ? rs.coord.convertP(rs.ports.find(rsPort => {
+            const rsPortPos = rs.coord.convertP(rsPort.pos, wCoord);
+            return !(rsPortPos.distanceTo(pos) < eps);
+        }).pos, wCoord) : undefined;
     }
 }
 

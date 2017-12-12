@@ -92,6 +92,10 @@ export class ScaffoldModel {
          return <T> this.getThings().find(thing => thing.type === type.type);
     }
 
+    findAllByType<T extends ScaffoldThing>(type: TypedNewable<T>): Array<T> {
+        return <Array<T>> this.getThings().filter(thing => thing.type === type.type);
+   }
+
     addRail(rail: ScaffoldThing) {
         this.things.push(rail);
     }
@@ -126,6 +130,7 @@ export class ScaffoldModel {
         );
     }
 
+    // This is pure UI thing and should be moved to viewmodel.
     getDeletionPoints() {
         return this.things.map(rail => ({
             rail: rail,
