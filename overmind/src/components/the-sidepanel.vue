@@ -1,25 +1,34 @@
 <template>
-    <nav id="sidepanel" style="background-color: #333; height: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">
-        <pane-control name="Plan" :active="activePane" @change="update_pane"/>
-        <div id="plan">
-            <plan-summary :model="model"/>
+    <nav id="sidepanel" style="background-color: #333; height: 100%; display: flex; flex-direction: column">
+        <div class="tab-unselected">
+            <pane-control name="Plan" :active="activePane" @change="update_pane"/>
+            <div id="plan">
+                <plan-summary :model="model"/>
+            </div>
         </div>
 
-        <pane-control name="Workers" :active="activePane" @change="update_pane"/>
-        <div id="workers">
-            <table>
-            <tbody>
-                <tr v-for="worker in workerPool.workers">
-                <td>
-                    <h4><img width="25" height="25" :src="'data:image/png;base64,' + worker.identicon.toString()"/> {{worker.wtype}} <span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h4>
-                </td>
-                </tr>
-            </tbody>
-            </table>
-            <div :class="{'alert': true, 'alert-info': !has_uninit, 'alert-danger': has_uninit}" role="alert">{{uninit_desc}}</div>
+        <div class="tab-selected">
+            <pane-control name="Workers" :active="activePane" @change="update_pane"/>
+            <div id="workers">
+                <table>
+                <tbody>
+                    <tr v-for="worker in workerPool.workers">
+                    <td>
+                        <h4><img width="25" height="25" :src="'data:image/png;base64,' + worker.identicon.toString()"/> {{worker.wtype}} <span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h4>
+                    </td>
+                    </tr>
+                </tbody>
+                </table>
+                <div :class="{'alert': true, 'alert-info': !has_uninit, 'alert-danger': has_uninit}" role="alert">{{uninit_desc}}</div>
+            </div>
         </div>
 
-        <pane-control name="Settings" :active="activePane" @change="update_pane"/>
+        <div class="tab-unselected">
+            <pane-control name="Settings" :active="activePane" @change="update_pane"/>
+        </div>
+
+        <div class="tab-unselected" style="flex-grow: 1">
+        </div>
     </nav>
 </template>
 
@@ -92,3 +101,19 @@ export default {
     }
 }
 </script>
+
+<style>
+.tab-selected {
+    background-color: #444;
+    box-shadow: -10px 0px 10px black;
+    padding: 8px 16px 8px;
+}
+
+.tab-unselected {
+    box-shadow: -10px 0px 10px -10px black inset;  /* shadowed by right edge */
+    padding: 16px;
+    padding: 8px 16px 8px;
+
+    border-bottom: 1px #222 solid; /* faint card separator */
+}
+</style>

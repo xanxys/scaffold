@@ -5,6 +5,8 @@
 </template>
 
 <script>
+var $ = require('jquery');
+
 export default {
     props: ['name', 'active'],
     data() {
@@ -12,6 +14,8 @@ export default {
     },
     methods: {
         activate() {
+            ['plan', 'workers'].forEach(name => $('#' + name).parent().removeClass('tab-selected').addClass('tab-unselected'));
+            $('#' + this.name.toLowerCase()).parent().removeClass('tab-unselected').addClass('tab-selected');
             this.$emit('change', this.name);
         }
     }
@@ -20,12 +24,9 @@ export default {
 
 <style>
 button.pane-button  {
-  transition: opacity 0.1s linear;
 }
 
 button.pane-button.active {
-    z-index: 100;
-    position: relative;
     display: none;
 }
 </style>

@@ -11,10 +11,10 @@
 
 <body style="background-color: #444; height: 100vh">
     <div id="app" style="height: 100vh; display: flex; flex-direction: column">
-        <the-toolbar :bridge="bridge"></the-toolbar>
+        <the-toolbar style="flex-shrink: 0" :bridge="bridge"></the-toolbar>
 
         <div style="flex-grow: 1; display: flex">
-            <the-sidepanel style="width: 22vw; max-width: 350px; padding: 16px; height: initial" :model="model" :worker-pool="workerPool" :world-view="worldView"></the-sidepanel>
+            <the-sidepanel style="flex-shrink: 0; width: 22vw; max-width: 350px; height: initial" :model="model" :worker-pool="workerPool" :world-view="worldView"></the-sidepanel>
 
             <div style="flex-grow: 1; padding: 16px">
                 <div id="tab_plan" style="display: none">
