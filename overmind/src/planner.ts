@@ -10,7 +10,7 @@ export interface Planner {
     // TODO: Simulation functionality should be moved to ScaffoldModel.
     setTime(tSec: number);
 
-    getPlan(): Plan;
+    getPlan(): Plan | string;
 }
 
 export class Plan {
@@ -32,27 +32,18 @@ export class FeederPlanner1D implements Planner {
     constructor(private srcModel: ScaffoldModel, private dstModel: ScaffoldModel) {
     }
 
-    getPlan(): Plan {
-        const m = new Map();
-        m.set(1, [[0, new ActionSeq([new Action("250b-20")])]]);
-        m.set(2, [[0, new ActionSeq([new Action("200a50")])]]);
-        return new Plan(m);
-        
-        /*
+    getPlan(): Plan | string {
         const srcWOrErr = this.interpretWorld(this.srcModel);
         const dstWOrErr = this.interpretWorld(this.dstModel);
         if (typeof (srcWOrErr) === 'string') {
-            console.error('source error:', srcWOrErr);
-            return;
+            return `src world too complex: ${srcWOrErr}`;
         }
         if (typeof (dstWOrErr) === 'string') {
-            console.error('dest error:', dstWOrErr);
-            return;
+            return `dest world too complex: ${dstWOrErr}`;
         }
 
         if (srcWOrErr.countRs() !== dstWOrErr.countRs()) {
-            console.error('Failed to plan, due to mismatched RS counts', srcWOrErr.countRs(), dstWOrErr.countRs());
-            return;
+            return `mismatched RS counts ${srcWOrErr.countRs()} → ${dstWOrErr.countRs()}`;
         }
 
         // TODO: Write some logic here.
@@ -61,7 +52,6 @@ export class FeederPlanner1D implements Planner {
         m.set(1, [[0, new ActionSeq([new Action("250b-20")])]]);
         m.set(2, [[0, new ActionSeq([new Action("200a50")])]]);
         return new Plan(m);
-        */
     }
 
     setTime(tSec: number) {

@@ -3,6 +3,7 @@ import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldT
 import { Plan, Planner, FeederPlanner1D } from './planner';
 import { Coordinates } from './geometry';
 import { WorldView, WorldViewModel, ClickOpState } from './world-view';
+import { randomBytes } from 'crypto';
 
 /**
  * A viewmodel used by both View3DClient, the-plan-toolbar, and timeline.
@@ -17,7 +18,8 @@ export class PlanViewModel {
 
     private loader: ScaffoldThingLoader;
     private planner?: Planner;
-    plan?: Plan = undefined;
+    plan?: Plan = null;
+    errorMsg: string = "";
 
     private targetModel: ScaffoldModel;
 
@@ -56,13 +58,25 @@ export class PlanViewModel {
                 tb.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.105, -0.022, 0));
                 this.targetModel.addRail(tb);
             }
-        }).then(_ => this.rebind());
+        }).then(_ => {
+            this.updatePlan();
+            this.rebind();
+        });
     }
 
-    /** @deprecated this should be run automatically when models are updated. */
-    genFeederPlan() {
+    /** Call this when models are updated. */
+    private updatePlan() {
         this.planner = new FeederPlanner1D(this.currModel, this.targetModel);
-        this.plan = this.planner.getPlan();
+        
+        this.errorMsg = "a";
+        const planOrError = this.planner.getPlan();
+        if (typeof (planOrError) === 'string') {
+            this.errorMsg = planOrError;
+            this.plan = undefined;
+        } else {
+            this.errorMsg = '';
+            this.plan = planOrError;
+        }
     }
 
     setTime(tSec: number) {
@@ -111,6 +125,7 @@ export class PlanViewModel {
 
     private addRail(obj: any, newRail: ScaffoldThing) {
         PlanViewModel.addRailToPort(this.isCurrent ? this.currModel : this.targetModel, obj.userData.rail.coord, obj.userData.port, newRail);
+        this.updatePlan();
         this.rebind();
     }
 
@@ -125,6 +140,7 @@ export class PlanViewModel {
 
     private removeRail(obj: any) {
         this.currModel.removeRail(obj.userData.rail);
+        this.updatePlan();
         this.rebind();
     }
 

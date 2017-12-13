@@ -1,5 +1,8 @@
 <template>
     <div>
+        <div>
+        CURR TARG
+        </div>
         <div class="timeline" style="display: flex; flex-direction: column">
             <div v-for="worker in workers" :key="worker.name" class="timeline-worker">
                 <span class="timeline-header">{{worker.name}}</span>
@@ -12,9 +15,9 @@
         </div>
         <button class="btn btn-primary" @click="simStart">Sim Start</button>
         <button class="btn btn-primary" @click="simStop">Sim Stop</button>
-        |
-        <button class="btn btn-start" @click="exec">Exec</button>|
         <span>T={{timeSec.toFixed(2)}}s</span>
+        <div v-if="viewmodel.errorMsg" class="alert alert-warning">{{viewmodel.errorMsg}}</div>
+        <button class="btn btn-start" @click="exec">Exec</button>
     </div>
 </template>
 

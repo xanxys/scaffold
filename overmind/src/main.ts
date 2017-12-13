@@ -25,7 +25,7 @@ export function runMain(parsedArgs: any) {
             model: model,
             workerPool: workerPool,
             worldView: null,
-            worldViewModel: planViewModel,
+            planViewModel: planViewModel,
         },
     });
 
