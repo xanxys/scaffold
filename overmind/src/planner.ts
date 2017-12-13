@@ -107,7 +107,7 @@ export class FeederPlanner1D implements Planner {
      * Return the other port of RS.
      * If the spcified port is not shared by given rs, return undefined.
      */
-    private static getOtherSide(wCoord: Coordinates, pos: THREE.Vector3, rs: S60RailStraight): THREE.Vector3? {
+    private static getOtherSide(wCoord: Coordinates, pos: THREE.Vector3, rs: S60RailStraight): THREE.Vector3 | null {
         const eps = 1e-3;
         const isShared = rs.ports.some(rsPort => {
             const rsPortPos = rs.coord.convertP(rsPort.pos, wCoord);
@@ -116,7 +116,7 @@ export class FeederPlanner1D implements Planner {
         return isShared ? rs.coord.convertP(rs.ports.find(rsPort => {
             const rsPortPos = rs.coord.convertP(rsPort.pos, wCoord);
             return !(rsPortPos.distanceTo(pos) < eps);
-        }).pos, wCoord) : undefined;
+        }).pos, wCoord) : null;
     }
 }
 

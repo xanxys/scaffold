@@ -54,7 +54,7 @@ export default {
     },
     data() {
         return {
-            activePane: "Workers",
+            activePane: "Plan",
             unitRefNow: new Date(),
         };
     },

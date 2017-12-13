@@ -43,6 +43,7 @@ export class PlanViewModel {
                 const fd = loader.create(S60RailFeederWide);
                 fd.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.1, 0, 0));
                 this.currModel.addRail(fd);
+                PlanViewModel.addRailToPort(this.currModel, fd.coord, fd.ports[3], loader.create(S60RailStraight));
 
                 const tb = loader.create(S60TrainBuilder);
                 tb.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.105, -0.022, 0));
@@ -67,7 +68,7 @@ export class PlanViewModel {
     /** Call this when models are updated. */
     private updatePlan() {
         this.planner = new FeederPlanner1D(this.currModel, this.targetModel);
-        
+
         this.errorMsg = "a";
         const planOrError = this.planner.getPlan();
         if (typeof (planOrError) === 'string') {
