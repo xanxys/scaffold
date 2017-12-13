@@ -10,6 +10,7 @@
         <div class="tab" :class="{'tab-selected': activePane === 'Workers'}">
             <pane-control name="Workers" :active="activePane" @change="update_pane"/>
             <div id="workers">
+                <span class="engrave">ACTIVE</span>
                 <table>
                 <tbody>
                     <tr v-for="worker in workerPool.workers">
@@ -19,7 +20,17 @@
                     </tr>
                 </tbody>
                 </table>
-                <div :class="{'alert': true, 'alert-info': !has_uninit, 'alert-danger': has_uninit}" role="alert">{{uninit_desc}}</div>
+                <span class="engrave">INACTIVE</span>
+                <table>
+                <tbody>
+                    <tr v-for="worker in workerPool.inactiveWorkers">
+                    <td>
+                        <h4><img width="25" height="25" :src="'data:image/png;base64,' + worker.identicon.toString()"/> {{worker.wtype}} <span style="font-size:80%; color: lightgray">{{worker.addr}}</span></h4>
+                    </td>
+                    </tr>
+                </tbody>
+                </table>
+                <div v-if="hasUninit" class="alert alert-danger" role="alert">{{uninitDesc}}</div>
             </div>
         </div>
 
@@ -51,16 +62,12 @@ export default {
         this.timer = setInterval(() => this.unitRefNow = new Date(), 800);
     },
     computed: {
-        has_uninit() {
+        hasUninit() {
             return this.workerPool.lastUninit !== null;
         },
-        uninit_desc() {
-            if (this.workerPool.lastUninit === null) {
-                return "All workers have good addresses so far.";
-            } else {
-                let stale = this.unitRefNow - this.workerPool.lastUninit;
-                return "SrcAddr=0 observed ${staleness*1e-3} seconds ago.";
-            }
+        uninitDesc() {
+            let stale = this.unitRefNow - this.workerPool.lastUninit;
+            return "SrcAddr=0 observed ${staleness*1e-3} seconds ago.";
         },
     },
     methods: {
@@ -105,5 +112,10 @@ export default {
     padding: 8px 16px 8px;
 
     border-bottom: 1px #222 solid; /* faint card separator */
+}
+
+.engrave {
+    color: #aaa;
+    font-weight: bold;
 }
 </style>

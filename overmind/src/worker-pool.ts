@@ -14,6 +14,7 @@ interface Worker {
 
 export class WorkerPool {
     workers: Array<Worker>;
+    inactiveWorkers: Array<Worker> = [];
     lastUninit?: Date;
 
     constructor() {
