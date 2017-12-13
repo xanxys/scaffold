@@ -33,6 +33,12 @@ export class FeederPlanner1D implements Planner {
     }
 
     getPlan(): Plan {
+        const m = new Map();
+        m.set(1, [[0, new ActionSeq([new Action("250b-20")])]]);
+        m.set(2, [[0, new ActionSeq([new Action("200a50")])]]);
+        return new Plan(m);
+        
+        /*
         const srcWOrErr = this.interpretWorld(this.srcModel);
         const dstWOrErr = this.interpretWorld(this.dstModel);
         if (typeof (srcWOrErr) === 'string') {
@@ -55,6 +61,7 @@ export class FeederPlanner1D implements Planner {
         m.set(1, [[0, new ActionSeq([new Action("250b-20")])]]);
         m.set(2, [[0, new ActionSeq([new Action("200a50")])]]);
         return new Plan(m);
+        */
     }
 
     setTime(tSec: number) {

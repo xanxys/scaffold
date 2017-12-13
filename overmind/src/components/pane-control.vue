@@ -5,8 +5,6 @@
 </template>
 
 <script>
-var $ = require('jquery');
-
 export default {
     props: ['name', 'active'],
     data() {
@@ -14,8 +12,6 @@ export default {
     },
     methods: {
         activate() {
-            ['plan', 'workers'].forEach(name => $('#' + name).parent().removeClass('tab-selected').addClass('tab-unselected'));
-            $('#' + this.name.toLowerCase()).parent().removeClass('tab-unselected').addClass('tab-selected');
             this.$emit('change', this.name);
         }
     }

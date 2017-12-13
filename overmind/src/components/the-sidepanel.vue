@@ -1,13 +1,13 @@
 <template>
     <nav id="sidepanel" style="background-color: #333; height: 100%; display: flex; flex-direction: column">
-        <div class="tab-unselected">
+        <div class="tab" :class="{'tab-selected': activePane === 'Plan'}">
             <pane-control name="Plan" :active="activePane" @change="update_pane"/>
             <div id="plan">
                 <plan-summary :model="model"/>
             </div>
         </div>
 
-        <div class="tab-selected">
+        <div class="tab" :class="{'tab-selected': activePane === 'Workers'}">
             <pane-control name="Workers" :active="activePane" @change="update_pane"/>
             <div id="workers">
                 <table>
@@ -23,11 +23,7 @@
             </div>
         </div>
 
-        <div class="tab-unselected">
-            <pane-control name="Settings" :active="activePane" @change="update_pane"/>
-        </div>
-
-        <div class="tab-unselected" style="flex-grow: 1">
+        <div class="tab" style="flex-grow: 1">
         </div>
     </nav>
 </template>
@@ -77,9 +73,6 @@ export default {
                 case 'Workers':
                     $('#tab_workers').hide();
                     break;
-                case 'Settings':
-                    $('#tab_settings').hide();
-                    break;
             }
 
             this.activePane = newActive;
@@ -93,9 +86,6 @@ export default {
                 case 'Workers':
                     $('#tab_workers').show();
                     break;
-                case 'Settings':
-                    $('#tab_settings').show();
-                    break;
             }
         }
     }
@@ -103,13 +93,13 @@ export default {
 </script>
 
 <style>
-.tab-selected {
+.tab.tab-selected {
     background-color: #444;
     box-shadow: -10px 0px 10px black;
     padding: 8px 16px 8px;
 }
 
-.tab-unselected {
+.tab {
     box-shadow: -10px 0px 10px -10px black inset;  /* shadowed by right edge */
     padding: 16px;
     padding: 8px 16px 8px;
