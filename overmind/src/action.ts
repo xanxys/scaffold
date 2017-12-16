@@ -13,11 +13,15 @@
  * ML-based physics simulation.
  */
 export class ActionSeq {
-    constructor(public actions: Array<Action>) {
+    constructor(public actions: Array<Action>, private t0: number, private t1: number) {
+    }
+
+    getT0(): number {
+        return this.t0;
     }
 
     getLabel(): string {
-        return "asq";
+        return this.actions[0].action;
     }
 
     getDurationSec(): number {
@@ -39,7 +43,7 @@ export class ActionSeq {
 export class Action {
     private durSec: number;
 
-    constructor(private action: string) {
+    constructor(public readonly action: string) {
         this.durSec = parseInt(/^([0-9]+)/.exec(action)[1]) * 1e-3;
     }
 

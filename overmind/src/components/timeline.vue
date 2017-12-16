@@ -51,11 +51,10 @@ export default {
                 results.push({
                     name: workerName,
                     tasks: seqs.map(tAndSq => {
-                        console.log(tAndSq, tAndSq[1].getDurationSec());
                         return {
-                            name: tAndSq[1].getLabel(),
-                            init: tAndSq[0],
-                            dur: tAndSq[1].getDurationSec()
+                            name: tAndSq.getLabel(),
+                            init: tAndSq.getT0(),
+                            dur: tAndSq.getDurationSec()
                         };
                     }),
                 });

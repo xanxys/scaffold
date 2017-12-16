@@ -15,13 +15,13 @@ export interface Planner {
 }
 
 export class Plan {
-    constructor(private actions: Map<number, Array<[number, ActionSeq]>>) {
+    constructor(private actions: Map<number, Array<ActionSeq>>) {
     }
 
     /**
      * Guarantee: within worker, actionSeq is non-overlapping and ordered.
      */
-    getSeqPerWorker(): Map<number, Array<[number, ActionSeq]>> {
+    getSeqPerWorker(): Map<number, Array<ActionSeq>> {
         return this.actions;
     }
 }
@@ -60,12 +60,19 @@ export class FeederPlanner1D implements Planner {
         });
         // TODO: do something about carryRs
 
-        let wholeAction = new Seq(...actions);
-        console.log(swaps, wholeAction, flattenAction(wholeAction));
+        const wholeAction = new Seq(...actions);
+        const flatActions = flattenAction(wholeAction);
+        console.log(swaps, wholeAction, flatActions);
 
         const m = new Map();
-        m.set(1, [[0, new ActionSeq([new Action("250b-20")])]]);
-        m.set(2, [[0, new ActionSeq([new Action("200a50")])]]);
+        flatActions[1].forEach(ta => {
+            const index = ta.primAction.kind.startsWith('Tb') ? 1 : 2;
+            if (!m.has(index)) {
+                m.set(index, []);
+            }
+            const aSeq = new ActionSeq([new Action("1000X" + ta.primAction.kind)], ta.t0, ta.t1);
+            m.get(index).push(aSeq);
+        });
         return new Plan(m);
     }
 
@@ -231,7 +238,6 @@ function chain(m: WAs, f: (w: Fp1dWorld) => WAs): WAs {
 
 
 function flattenAction(a: HlAction, t0: number = 0): [number, Array<TimedAction>] {
-    console.log("flattenA", a, a.kind, t0);
     switch (a.kind) {
         case 'Par':
             {
