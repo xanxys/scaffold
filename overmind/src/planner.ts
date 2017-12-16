@@ -134,7 +134,7 @@ export class FeederPlanner1D implements Planner {
         }
         // TODO: Get info from tb.
         w.carryRs = false;
-        w.tbLoc = { kind: "onStage", stackIx: 0 };  // TODO: Fix
+        w.tbLoc = new TbOnStage(0);  // TODO: Fix
         return w;
     }
 
@@ -176,8 +176,8 @@ function moveRs(w: Fp1dWorld, m: [number, number]): HlAction {
 // OUT: carrysRs = true, Remove[targ]
 function goGetRs(w: Fp1dWorld, targ: TargetRs): HlAction {
     let dst: TbLoc = (targ.posInStack == 0) ?
-        { kind: "onStage", stackIx: targ.stackIx } :
-        { kind: "onStack", stackIx: targ.stackIx, posInStack: targ.posInStack - 1 };
+        new TbOnStage(targ.stackIx) :
+        new TbOnStack(targ.stackIx, targ.posInStack - 1);
     return new Seq(go(w, dst), new TbGet());
 }
 
@@ -187,8 +187,8 @@ function goGetRs(w: Fp1dWorld, targ: TargetRs): HlAction {
 // OUT: carrysRs = false, Add[targ]
 function goPutRs(w: Fp1dWorld, targ: TargetRs): HlAction {
     let dst: TbLoc = (targ.posInStack == 0) ?
-        { kind: "onStage", stackIx: targ.stackIx } :
-        { kind: "onStack", stackIx: targ.stackIx, posInStack: targ.posInStack - 1 };
+        new TbOnStage(targ.stackIx) :
+        new TbOnStack(targ.stackIx, targ.posInStack - 1);
     return new Seq(go(w, dst), new TbPut());
 }
 
@@ -199,31 +199,30 @@ function goPutRs(w: Fp1dWorld, targ: TargetRs): HlAction {
 // OUT: carrysR = A
 function go(w: Fp1dWorld, dst: TbLoc): HlAction {
     const tbLoc: TbLoc = w.tbLoc;
-    switch (tbLoc.kind) {
-        case 'onStage':
-            switch (dst.kind) {
-                case 'onStage':
-                    const dIx = dst.stackIx - tbLoc.stackIx;
-                    return dIx > 0 ? new FdwMove(dIx) : new Noop();
-                case 'onStack':
-                    return new Seq(
-                        (w.stagePos !== dst.stackIx) ? new FdwMove(dst.stackIx - w.stagePos) : new Noop(),
-                        new TbMove(dst.posInStack + 1)
-                    );
-            }
-        case 'onStack':
-            switch (dst.kind) {
-                case 'onStage':
-                    return new Seq(
-                        new Par(
-                            (tbLoc.posInStack > 1) ? new TbMove(-tbLoc.posInStack) : new Noop(),
-                            (w.stagePos !== tbLoc.stackIx) ? new FdwMove(tbLoc.stackIx - w.stagePos) : new Noop()
-                        ),
-                        new TbMove(-1));
-                case 'onStack':
-                    // TODO
-                    return new Noop();
-            }
+    if (tbLoc instanceof TbOnStage) {
+        if (dst instanceof TbOnStage) {
+            const dIx = dst.stackIx - tbLoc.stackIx;
+            return dIx > 0 ? new FdwMove(dIx) : new Noop();
+        } else if (dst instanceof TbOnStack) {
+            return new Seq(
+                (w.stagePos !== dst.stackIx) ? new FdwMove(dst.stackIx - w.stagePos) : new Noop(),
+                new TbMove(dst.posInStack + 1)
+            );
+        }
+    } else if (tbLoc instanceof TbOnStack) {
+        if (dst instanceof TbOnStage) {
+            return new Seq(
+                new Par(
+                    (tbLoc.posInStack > 1) ? new TbMove(-tbLoc.posInStack) : new Noop(),
+                    (w.stagePos !== tbLoc.stackIx) ? new FdwMove(tbLoc.stackIx - w.stagePos) : new Noop()
+                ),
+                new TbMove(-1));
+        } else if (dst instanceof TbOnStack) {
+            // TODO
+            return new Noop();
+        }
+    } else {
+        const _: never = tbLoc;
     }
 }
 
@@ -243,17 +242,17 @@ function flattenAction(a: HlAction, t0: number = 0): [number, Array<TimedAction>
             {
                 const endTs = [];
                 const accum = [];
-                a.acs.map(subA => flattenAction(subA, t0)).forEach(res => {
+                (<Par>a).acs.map(subA => flattenAction(subA, t0)).forEach(res => {
                     endTs.push(res[0]);
                     res[1].forEach(ta => accum.push(ta));
                 });
-                return [endTs.reduce(Math.max, t0), accum];
+                return [endTs.reduce((v0, v1) => Math.max(v0, v1), t0), accum];
             }
         case 'Seq':
             {
                 const accum = [];
                 let currT = t0;
-                a.acs.forEach(subA => {
+                (<Seq>a).acs.forEach(subA => {
                     const flatSubA = flattenAction(subA, currT);
                     currT = flatSubA[0];
                     flatSubA[1].forEach(ta => accum.push(ta));
@@ -374,13 +373,16 @@ class Fp1dWorld {
 
 type TbLoc = TbOnStage | TbOnStack;
 
-interface TbOnStage {
+class TbOnStage {
     kind: "onStage";
-    stackIx: number;  // [0, FDW_NUM_PORTS)
+    // [0, FDW_NUM_PORTS)
+    constructor(public stackIx: number) { }
 }
 
-interface TbOnStack {
-    kind: "onStack"
-    stackIx: number;  // [0, FDW_NUM_PORTS)
-    posInStack: number; // 0: first connected Rs, 1: second ...
+class TbOnStack {
+    kind: "onStack";
+    // [0, FDW_NUM_PORTS)
+    // 0: first connected Rs, 1: second ...
+    constructor(public stackIx: number, public posInStack: number) {
+    }
 }
