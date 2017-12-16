@@ -143,7 +143,7 @@ export class PlanViewModel {
     }
 
     private removeRail(obj: any) {
-        this.currModel.removeRail(obj.userData.rail);
+        (this.isCurrent ? this.currModel : this.targetModel).removeRail(obj.userData.rail);
         this.updatePlan();
         this.rebind();
     }
