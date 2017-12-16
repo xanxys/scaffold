@@ -3,16 +3,22 @@
         <div>
         CURR TARG
         </div>
-        <div class="timeline" style="display: flex; flex-direction: column; position: relative">
-            <div v-for="worker in workers" :key="worker.name" class="timeline-worker">
-                <span class="timeline-header">{{worker.name}}</span>
-                <span>
-                    <div class="timeline-action" v-for="task in worker.tasks"
-                         style="position:absolute; "
-                         :title="task.longDesc"
-                         :style="{left: (pxPerSec * task.init + 100) + 'px', width: (pxPerSec * task.dur) + 'px'}">{{task.name}}</div>
-                </span>
-            </div>
+        <div class="timeline" style="display: flex; flex-direction: column">
+            <table>
+                <tr v-for="worker in workers" :key="worker.name" class="timeline-worker">
+                    <td>
+                        <span class="timeline-header">{{worker.name}}</span>
+                    </td>
+                    <td>
+                        <span style="position: relative">
+                            <div class="timeline-action" v-for="task in worker.tasks"
+                                style="position:absolute; "
+                                :title="task.longDesc"
+                                :style="{left: (pxPerSec * task.init) + 'px', width: (pxPerSec * task.dur) + 'px'}">{{task.name}}</div>
+                        </span>
+                    </td>
+                </tr>
+            </table>
         </div>
         <button class="btn btn-primary" @click="simStart">Sim Start</button>
         <button class="btn btn-primary" @click="simStop">Sim Stop</button>
@@ -31,15 +37,21 @@ export default {
     components: {
     },
     data() {
-        const scale = 20.0;
         return {
             simInterval: null,
             timeOrigin: new Date(),
             timeNow: new Date(),
-            pxPerSec: 100,
         };
     },
     computed: {
+        pxPerSec() {
+            const pl = this.viewmodel.plan;
+            if (!pl) {
+                return 100;
+            }
+            const maxWidth = 1000;
+            return maxWidth / pl.getTotalTime();
+        },
         workers() {
             const pl = this.viewmodel.plan;
             if (!pl) {
