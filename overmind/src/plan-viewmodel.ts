@@ -20,6 +20,7 @@ export class PlanViewModel {
     private planner?: Planner;
     plan?: Plan = null;
     errorMsg: string = "";
+    infoMsg: string = "";
 
     private targetModel: ScaffoldModel;
 
@@ -69,14 +70,16 @@ export class PlanViewModel {
     private updatePlan() {
         this.planner = new FeederPlanner1D(this.currModel, this.targetModel);
 
-        this.errorMsg = "a";
+        this.errorMsg = "<calculating>";
         const planOrError = this.planner.getPlan();
         if (typeof (planOrError) === 'string') {
-            this.errorMsg = planOrError;
             this.plan = undefined;
+            this.errorMsg = planOrError;
+            this.infoMsg = '';
         } else {
-            this.errorMsg = '';
             this.plan = planOrError;
+            this.errorMsg = '';
+            this.infoMsg = `${planOrError.getTotalTime()}sec`;
         }
     }
 

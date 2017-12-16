@@ -25,6 +25,16 @@ export class Plan {
     getSeqPerWorker(): Map<number, Array<ActionSeq>> {
         return this.actions;
     }
+
+    getTotalTime(): number {
+        let t1 = 0;
+        this.actions.forEach((actionSeqArr, _) => {
+            actionSeqArr.forEach(actionSeq => {
+                t1 = Math.max(t1, actionSeq.getT1());
+            });
+        });
+        return t1;
+    }
 }
 
 // Read at module load.

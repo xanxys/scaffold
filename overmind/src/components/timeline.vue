@@ -18,6 +18,7 @@
         <button class="btn btn-primary" @click="simStop">Sim Stop</button>
         <span>T={{timeSec.toFixed(2)}}s</span>
         <div v-if="viewmodel.errorMsg" class="alert alert-warning">{{viewmodel.errorMsg}}</div>
+        <div v-if="viewmodel.infoMsg" class="alert alert-info">{{viewmodel.infoMsg}}</div>
         <button class="btn btn-start" @click="exec">Exec</button>
     </div>
 </template>

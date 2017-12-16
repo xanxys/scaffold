@@ -20,6 +20,10 @@ export class ActionSeq {
         return this.t0;
     }
 
+    getT1(): number {
+        return this.t0 + this.getDurationSec();
+    }
+
     getLabel(): string {
         if (this.label) {
             return this.label;
