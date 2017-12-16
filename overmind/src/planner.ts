@@ -58,9 +58,10 @@ export class FeederPlanner1D implements Planner {
             actions.push(da);
             currState = applyAction(currState, da);
         });
-        console.log(swaps, actions);
-
         // TODO: do something about carryRs
+
+        let wholeAction = new Seq(...actions);
+        console.log(swaps, wholeAction, flattenAction(wholeAction));
 
         const m = new Map();
         m.set(1, [[0, new ActionSeq([new Action("250b-20")])]]);
@@ -126,7 +127,7 @@ export class FeederPlanner1D implements Planner {
         }
         // TODO: Get info from tb.
         w.carryRs = false;
-        w.tbLoc = { kind: "onStage", stackIx: 0};  // TODO: Fix
+        w.tbLoc = { kind: "onStage", stackIx: 0 };  // TODO: Fix
         return w;
     }
 
@@ -228,6 +229,42 @@ function chain(m: WAs, f: (w: Fp1dWorld) => WAs): WAs {
     return [wNext, actions.concat(dAs)];
 }
 
+
+function flattenAction(a: HlAction, t0: number = 0): [number, Array<TimedAction>] {
+    console.log("flattenA", a, a.kind, t0);
+    switch (a.kind) {
+        case 'Par':
+            {
+                const endTs = [];
+                const accum = [];
+                a.acs.map(subA => flattenAction(subA, t0)).forEach(res => {
+                    endTs.push(res[0]);
+                    res[1].forEach(ta => accum.push(ta));
+                });
+                return [endTs.reduce(Math.max, t0), accum];
+            }
+        case 'Seq':
+            {
+                const accum = [];
+                let currT = t0;
+                a.acs.forEach(subA => {
+                    const flatSubA = flattenAction(subA, currT);
+                    currT = flatSubA[0];
+                    flatSubA[1].forEach(ta => accum.push(ta));
+                });
+                return [currT, accum];
+            }
+        case 'Noop':
+            return [t0, []];
+        default:
+            return [t0 + 1, [new TimedAction(t0, t0 + 1, a)]];
+    }
+}
+
+class TimedAction {
+    constructor(public t0: number, public t1: number, public primAction: HlAction) { }
+}
+
 /**
  * High level discrete actions.
  * 
@@ -252,34 +289,34 @@ function simplify(a: HlAction): HlAction {
 }
 
 class Noop {
-    kind: 'Noop';
+    kind = 'Noop';
     constructor() { }
 }
 
 class TbMove {
-    kind: 'TbMove';
+    kind = 'TbMove';
     constructor(public n: number) { }
 }
 
 class TbPut {
-    kind: 'TbPut';
+    kind = 'TbPut';
     constructor() { }
 }
 
 class TbGet {
-    kind: 'TbGet';
+    kind = 'TbGet';
     constructor() { }
 }
 
 class FdwMove {
-    kind: 'FdwMove';
+    kind = 'FdwMove';
     // FDW-RS has notion of "origin", maybe include that?
     constructor(public n: number) { }
 }
 
 // Actions that can start at the same time safely, and waits until all children acs finishes.
 class Par {
-    kind: "Par";
+    kind = "Par";
     public acs: Array<HlAction>;
     constructor(...acs: Array<HlAction>) {
         this.acs = acs;
@@ -287,7 +324,7 @@ class Par {
 }
 
 class Seq {
-    kind: "Seq";
+    kind = "Seq";
     public acs: Array<HlAction>;
     constructor(...acs: Array<HlAction>) {
         this.acs = acs;
