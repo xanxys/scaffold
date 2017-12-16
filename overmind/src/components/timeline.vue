@@ -9,6 +9,7 @@
                 <span>
                     <div class="timeline-action" v-for="task in worker.tasks"
                          style="position:absolute; "
+                         :title="task.longDesc"
                          :style="{left: (pxPerSec * task.init + 100) + 'px', width: (pxPerSec * task.dur) + 'px'}">{{task.name}}</div>
                 </span>
             </div>
@@ -54,7 +55,8 @@ export default {
                         return {
                             name: tAndSq.getLabel(),
                             init: tAndSq.getT0(),
-                            dur: tAndSq.getDurationSec()
+                            dur: tAndSq.getDurationSec(),
+                            longDesc: tAndSq.getFullDesc(),
                         };
                     }),
                 });

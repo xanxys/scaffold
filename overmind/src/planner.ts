@@ -77,34 +77,37 @@ export class FeederPlanner1D implements Planner {
             if (!m.has(index)) {
                 m.set(index, []);
             }
-            const aSeq = this.translateCommand(ta);
-            m.get(index).push(aSeq);
-            console.log(aSeq);
+            const aSqs = this.translateCommand(ta);
+            m.set(index, m.get(index).concat(aSqs));
         });
+        console.log(m);
         return new Plan(m);
     }
 
-    translateCommand(ta: TimedAction): ActionSeq {
-        let actions = [];
+    translateCommand(ta: TimedAction): Array<ActionSeq> {
+        let actionSeqs = [];
+        function emit(wt: string, memo: string) {
+            actionSeqs.push([commandHistory.getByMemo(wt, memo), memo]);
+        }
         if (ta.primAction instanceof TbGet) {
-            actions = actions.concat(commandHistory.getByMemo('TB', 'C->DrvE3'));
-            actions = actions.concat(commandHistory.getByMemo('TB', 'DE3->GetOk'));
-            actions = actions.concat(commandHistory.getByMemo('TB', 'FindC-'));
-            actions = actions.concat(commandHistory.getByMemo('TB', 'DrvIn'));
+            emit('TB', 'C->DrvE3');
+            emit('TB', 'DE3->GetOk');
+            emit('TB', 'FindC-');
+            emit('TB', 'DrvIn');
         } else if (ta.primAction instanceof TbPut) {
-            actions = actions.concat(commandHistory.getByMemo('TB', 'C->DrvE3'));
-            actions = actions.concat(commandHistory.getByMemo('TB', 'DE3->PutOkReal'));
-            actions = actions.concat(commandHistory.getByMemo('TB', 'ArmRest'));
-            actions = actions.concat(commandHistory.getByMemo('TB', 'FindC-'));
-            actions = actions.concat(commandHistory.getByMemo('TB', 'DrvIn'));
+            emit('TB', 'C->DrvE3');
+            emit('TB', 'DE3->PutOkReal');
+            emit('TB', 'ArmRest');
+            emit('TB', 'FindC-');
+            emit('TB', 'DrvIn');
         } else if (ta.primAction instanceof TbMove) {
             const dist = Math.abs(ta.primAction.n);
             const dirPositive = ta.primAction.n > 0;
             for (let i = 0; i < dist; i++) {
                 if (dirPositive) {
-                    actions = actions.concat(commandHistory.getByMemo('TB', 'FindC+'));
+                    emit('TB', 'FindC+');
                 } else {
-                    actions = actions.concat(commandHistory.getByMemo('TB', 'FindC-'));
+                    emit('TB', 'FindC-');
                 }
             }
         } else if (ta.primAction instanceof FdwMove) {
@@ -112,15 +115,25 @@ export class FeederPlanner1D implements Planner {
             const dirPositive = ta.primAction.n > 0;
             for (let i = 0; i < dist; i++) {
                 if (dirPositive) {
-                    actions = actions.concat(commandHistory.getByMemo('FDW-RS', 'Ln'));
+                    emit('FDW-RS', 'Ln');
                 } else {
-                    actions = actions.concat(commandHistory.getByMemo('FDW-RS', 'Rn'));
+                    emit('FDW-RS', 'Rn');
                 }
             }
         } else {
-            actions = ["1000X" + ta.primAction.kind];
+            actionSeqs.push("1000X" + ta.primAction.kind, ta.primAction.kind);
         }
-        return new ActionSeq(actions.join(',').split(',').map(seq => new Action(seq)), ta.t0, ta.t1);
+        let aSqCoverted = [];
+        let t0 = ta.t0;
+        actionSeqs.forEach(asqAndM => {
+            let [asq, memo] = asqAndM;
+            let aSqCv = new ActionSeq(asq.split(',').map(seq => new Action(seq)), t0, -1);
+            const dur = aSqCv.getDurationSec();
+            console.log("T0=", t0, "Dur=", dur, "for", asqAndM);
+            aSqCoverted.push(new ActionSeq(asq.split(',').map(seq => new Action(seq)), t0, t0 + dur, memo));
+            t0 += dur;
+        });
+        return aSqCoverted;
     }
 
     /** @returns (get index, put index) */
@@ -144,7 +157,10 @@ export class FeederPlanner1D implements Planner {
         }
     }
 
-
+    /**
+     * 
+     * @returns (endT, actions)
+     */
     flattenAction(a: HlAction, t0: number = 0): [number, Array<TimedAction>] {
         switch (a.kind) {
             case 'Par':
@@ -171,8 +187,9 @@ export class FeederPlanner1D implements Planner {
             case 'Noop':
                 return [t0, []];
             default:
-                const dur = this.translateCommand(new TimedAction(-1, -1, a)).getDurationSec();
-                return [t0 + dur, [new TimedAction(t0, t0 + dur, a)]];
+                const sqs = this.translateCommand(new TimedAction(t0, -1, a)); // TODO: FIx this hack
+                const t1 = sqs[sqs.length - 1].getT0() + sqs[sqs.length - 1].getDurationSec();
+                return [t1, [new TimedAction(t0, t1, a)]];
         }
     }
 

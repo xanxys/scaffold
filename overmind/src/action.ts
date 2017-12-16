@@ -13,7 +13,7 @@
  * ML-based physics simulation.
  */
 export class ActionSeq {
-    constructor(public actions: Array<Action>, private t0: number, private t1: number) {
+    constructor(public actions: Array<Action>, private t0: number, private t1: number, public label: string = "") {
     }
 
     getT0(): number {
@@ -21,6 +21,14 @@ export class ActionSeq {
     }
 
     getLabel(): string {
+        if (this.label) {
+            return this.label;
+        } else {
+            return this.actions.map(a => a.action).join(',');
+        }
+    }
+
+    getFullDesc(): string {
         return this.actions.map(a => a.action).join(',');
     }
 
