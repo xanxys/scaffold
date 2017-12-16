@@ -21,7 +21,7 @@ export class ActionSeq {
     }
 
     getLabel(): string {
-        return this.actions[0].action;
+        return this.actions.map(a => a.action).join(',');
     }
 
     getDurationSec(): number {
@@ -44,7 +44,12 @@ export class Action {
     private durSec: number;
 
     constructor(public readonly action: string) {
-        this.durSec = parseInt(/^([0-9]+)/.exec(action)[1]) * 1e-3;
+        const m = /^([0-9]+)/.exec(action);
+        if (m) {
+            this.durSec = parseInt(m[1]) * 1e-3;
+        } else {
+            this.durSec = 500e-3;
+        }
     }
 
     getAction(): string {

@@ -3,6 +3,7 @@ import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldT
 import { Action, ActionSeq } from './action';
 import { Coordinates } from './geometry';
 import { currentId } from 'async_hooks';
+import { CommandHistory } from './command-history';
 
 /**
  * Planner takes a model (that's in specific state), and provides Timeline that's simulatable and/or executable.
@@ -26,11 +27,17 @@ export class Plan {
     }
 }
 
+// Read at module load.
+const commandHistory = new CommandHistory();
+
 /**
  * FeederPlanner1D is a very limited Planner for FDW-TB-RS interactions.
  */
 export class FeederPlanner1D implements Planner {
+
+
     constructor(private srcModel: ScaffoldModel, private dstModel: ScaffoldModel) {
+        //this.commandHistory =
     }
 
     getPlan(): Plan | string {
@@ -61,19 +68,59 @@ export class FeederPlanner1D implements Planner {
         // TODO: do something about carryRs
 
         const wholeAction = new Seq(...actions);
-        const flatActions = flattenAction(wholeAction);
+        const flatActions = this.flattenAction(wholeAction);
         console.log(swaps, wholeAction, flatActions);
 
         const m = new Map();
         flatActions[1].forEach(ta => {
-            const index = ta.primAction.kind.startsWith('Tb') ? 1 : 2;
+            const index = ta.primAction.kind.startsWith('Tb') ? 'TB' : 'FDW-RS';
             if (!m.has(index)) {
                 m.set(index, []);
             }
-            const aSeq = new ActionSeq([new Action("1000X" + ta.primAction.kind)], ta.t0, ta.t1);
+            const aSeq = this.translateCommand(ta);
             m.get(index).push(aSeq);
+            console.log(aSeq);
         });
         return new Plan(m);
+    }
+
+    translateCommand(ta: TimedAction): ActionSeq {
+        let actions = [];
+        if (ta.primAction instanceof TbGet) {
+            actions = actions.concat(commandHistory.getByMemo('TB', 'C->DrvE3'));
+            actions = actions.concat(commandHistory.getByMemo('TB', 'DE3->GetOk'));
+            actions = actions.concat(commandHistory.getByMemo('TB', 'FindC-'));
+            actions = actions.concat(commandHistory.getByMemo('TB', 'DrvIn'));
+        } else if (ta.primAction instanceof TbPut) {
+            actions = actions.concat(commandHistory.getByMemo('TB', 'C->DrvE3'));
+            actions = actions.concat(commandHistory.getByMemo('TB', 'DE3->PutOkReal'));
+            actions = actions.concat(commandHistory.getByMemo('TB', 'ArmRest'));
+            actions = actions.concat(commandHistory.getByMemo('TB', 'FindC-'));
+            actions = actions.concat(commandHistory.getByMemo('TB', 'DrvIn'));
+        } else if (ta.primAction instanceof TbMove) {
+            const dist = Math.abs(ta.primAction.n);
+            const dirPositive = ta.primAction.n > 0;
+            for (let i = 0; i < dist; i++) {
+                if (dirPositive) {
+                    actions = actions.concat(commandHistory.getByMemo('TB', 'FindC+'));
+                } else {
+                    actions = actions.concat(commandHistory.getByMemo('TB', 'FindC-'));
+                }
+            }
+        } else if (ta.primAction instanceof FdwMove) {
+            const dist = Math.abs(ta.primAction.n);
+            const dirPositive = ta.primAction.n > 0;
+            for (let i = 0; i < dist; i++) {
+                if (dirPositive) {
+                    actions = actions.concat(commandHistory.getByMemo('FDW-RS', 'Ln'));
+                } else {
+                    actions = actions.concat(commandHistory.getByMemo('FDW-RS', 'Rn'));
+                }
+            }
+        } else {
+            actions = ["1000X" + ta.primAction.kind];
+        }
+        return new ActionSeq(actions.join(',').split(',').map(seq => new Action(seq)), ta.t0, ta.t1);
     }
 
     /** @returns (get index, put index) */
@@ -94,6 +141,38 @@ export class FeederPlanner1D implements Planner {
         let fdw = this.srcModel.findByType(S60RailFeederWide);
         if (fdw) {
             fdw.paramx = Math.cos(tSec * Math.PI / 2) * 0.05;
+        }
+    }
+
+
+    flattenAction(a: HlAction, t0: number = 0): [number, Array<TimedAction>] {
+        switch (a.kind) {
+            case 'Par':
+                {
+                    const endTs = [];
+                    const accum = [];
+                    (<Par>a).acs.map(subA => this.flattenAction(subA, t0)).forEach(res => {
+                        endTs.push(res[0]);
+                        res[1].forEach(ta => accum.push(ta));
+                    });
+                    return [endTs.reduce((v0, v1) => Math.max(v0, v1), t0), accum];
+                }
+            case 'Seq':
+                {
+                    const accum = [];
+                    let currT = t0;
+                    (<Seq>a).acs.forEach(subA => {
+                        const flatSubA = this.flattenAction(subA, currT);
+                        currT = flatSubA[0];
+                        flatSubA[1].forEach(ta => accum.push(ta));
+                    });
+                    return [currT, accum];
+                }
+            case 'Noop':
+                return [t0, []];
+            default:
+                const dur = this.translateCommand(new TimedAction(-1, -1, a)).getDurationSec();
+                return [t0 + dur, [new TimedAction(t0, t0 + dur, a)]];
         }
     }
 
@@ -235,36 +314,6 @@ function chain(m: WAs, f: (w: Fp1dWorld) => WAs): WAs {
     return [wNext, actions.concat(dAs)];
 }
 
-
-function flattenAction(a: HlAction, t0: number = 0): [number, Array<TimedAction>] {
-    switch (a.kind) {
-        case 'Par':
-            {
-                const endTs = [];
-                const accum = [];
-                (<Par>a).acs.map(subA => flattenAction(subA, t0)).forEach(res => {
-                    endTs.push(res[0]);
-                    res[1].forEach(ta => accum.push(ta));
-                });
-                return [endTs.reduce((v0, v1) => Math.max(v0, v1), t0), accum];
-            }
-        case 'Seq':
-            {
-                const accum = [];
-                let currT = t0;
-                (<Seq>a).acs.forEach(subA => {
-                    const flatSubA = flattenAction(subA, currT);
-                    currT = flatSubA[0];
-                    flatSubA[1].forEach(ta => accum.push(ta));
-                });
-                return [currT, accum];
-            }
-        case 'Noop':
-            return [t0, []];
-        default:
-            return [t0 + 1, [new TimedAction(t0, t0 + 1, a)]];
-    }
-}
 
 class TimedAction {
     constructor(public t0: number, public t1: number, public primAction: HlAction) { }

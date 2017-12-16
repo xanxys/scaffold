@@ -22,6 +22,15 @@ export class CommandHistory {
         return this.data.history.filter(entry => entry.wtype === wtype);
     }
 
+    getByMemo(wtype: string, memo: string): string {
+        const entry = this.data.history.find(entry => entry.wtype === wtype && entry.memo === memo);
+        if (entry) {
+            return entry.seq;
+        } else {
+            return '<?>';
+        }
+    }
+
     sort(wtype: string) {
         const these = this.data.history.filter(entry => entry.wtype === wtype);
         const others = this.data.history.filter(entry => entry.wtype !== wtype);

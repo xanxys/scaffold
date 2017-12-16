@@ -3,13 +3,13 @@
         <div>
         CURR TARG
         </div>
-        <div class="timeline" style="display: flex; flex-direction: column">
+        <div class="timeline" style="display: flex; flex-direction: column; position: relative">
             <div v-for="worker in workers" :key="worker.name" class="timeline-worker">
                 <span class="timeline-header">{{worker.name}}</span>
-                <span style="position: relative">
+                <span>
                     <div class="timeline-action" v-for="task in worker.tasks"
-                         style="position:absolute; top: 0"
-                         :style="{left: (pxPerSec * task.init) + 'px', width: (pxPerSec * task.dur) + 'px'}">{{task.name}}</div>
+                         style="position:absolute; "
+                         :style="{left: (pxPerSec * task.init + 100) + 'px', width: (pxPerSec * task.dur) + 'px'}">{{task.name}}</div>
                 </span>
             </div>
         </div>
@@ -29,7 +29,7 @@ export default {
     components: {
     },
     data() {
-        const scale = 25.0;
+        const scale = 20.0;
         return {
             simInterval: null,
             timeOrigin: new Date(),
@@ -47,7 +47,7 @@ export default {
             const m = pl.getSeqPerWorker();
             let results = [];
             m.forEach((seqs, addr) => {
-                const workerName = "W" + addr;
+                const workerName = addr;
                 results.push({
                     name: workerName,
                     tasks: seqs.map(tAndSq => {

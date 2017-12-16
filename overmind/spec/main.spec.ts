@@ -38,7 +38,7 @@ describe('application launch', function () {
             .then(_ => {
                 return sleep(100); // wait for model load
             }).then(_ => {
-                return this.app.client.getText("span=W1");  // timeline header
+                return this.app.client.getText("span=FDW-RS");  // timeline header
             }).then(_ => {
                 return this.app.client.click('button=Sim Start');
             });
