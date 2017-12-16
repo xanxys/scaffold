@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60RailFeederWide, S60TrainBuilder, Port } from './scaffold-model';
 import { Action, ActionSeq } from './action';
 import { Coordinates } from './geometry';
+import { currentId } from 'async_hooks';
 
 /**
  * Planner takes a model (that's in specific state), and provides Timeline that's simulatable and/or executable.
@@ -46,12 +47,39 @@ export class FeederPlanner1D implements Planner {
             return `mismatched RS counts ${srcWOrErr.countRs()} → ${dstWOrErr.countRs()}`;
         }
 
-        // TODO: Write some logic here.
+        const delta = dstWOrErr.connectedRs.map((v, ix) => v - srcWOrErr.connectedRs[ix]);
+
+        // TODO: do something about carryRs
+        const swaps = this.getSwapSequence(delta);
+        let currState = srcWOrErr;
+        const actions = [];
+        swaps.forEach(swap => {
+            let da = moveRs(currState, swap);
+            actions.push(da);
+            currState = applyAction(currState, da);
+        });
+        console.log(swaps, actions);
+
+        // TODO: do something about carryRs
 
         const m = new Map();
         m.set(1, [[0, new ActionSeq([new Action("250b-20")])]]);
         m.set(2, [[0, new ActionSeq([new Action("200a50")])]]);
         return new Plan(m);
+    }
+
+    /** @returns (get index, put index) */
+    private getSwapSequence(delta: Array<number>): Array<[number, number]> {
+        delta = delta.map(v => v);  // copy to avoid mutating original data.
+        const seq = [];
+        while (!delta.every(d => d === 0)) {
+            let minusIndex = delta.findIndex(d => d < 0);
+            let plusIndex = delta.findIndex(d => d > 0);
+            seq.push([minusIndex, plusIndex]);
+            delta[minusIndex] += 1;
+            delta[plusIndex] -= 1;
+        }
+        return seq;
     }
 
     setTime(tSec: number) {
@@ -98,8 +126,7 @@ export class FeederPlanner1D implements Planner {
         }
         // TODO: Get info from tb.
         w.carryRs = false;
-        w.tbLoc = { kind: "onStage" };
-
+        w.tbLoc = { kind: "onStage", stackIx: 0};  // TODO: Fix
         return w;
     }
 
@@ -118,6 +145,163 @@ export class FeederPlanner1D implements Planner {
             return !(rsPortPos.distanceTo(pos) < eps);
         }).pos, wCoord) : null;
     }
+}
+
+
+/** Pattern-based action generator. */
+
+// Do move m = [s, d], s -> d.
+//
+// IN: carrysRs = false, Empty[s], Connected[w, s-1], Connected[w, d-1]
+// OUT: carrysRs = false, Remove[s], Add[d]
+function moveRs(w: Fp1dWorld, m: [number, number]): HlAction {
+    let [getIndex, putIndex] = m;
+    let ag = goGetRs(w, { stackIx: getIndex, posInStack: w.connectedRs[getIndex] - 1 });
+    let wg = applyAction(w, ag);
+    let ap = goPutRs(wg, { stackIx: putIndex, posInStack: w.connectedRs[putIndex] });
+    return new Seq(ag, ap);
+}
+
+// go fetch targ, and stay there.
+//
+// IN: carrysRs = false, Exist[arg], Connected[w, targ-1]
+// OUT: carrysRs = true, Remove[targ]
+function goGetRs(w: Fp1dWorld, targ: TargetRs): HlAction {
+    let dst: TbLoc = (targ.posInStack == 0) ?
+        { kind: "onStage", stackIx: targ.stackIx } :
+        { kind: "onStack", stackIx: targ.stackIx, posInStack: targ.posInStack - 1 };
+    return new Seq(go(w, dst), new TbGet());
+}
+
+// go put targ, and stay there.
+//
+// IN: carrysRs = true, Empty[arg], Connected[w, targ-1]
+// OUT: carrysRs = false, Add[targ]
+function goPutRs(w: Fp1dWorld, targ: TargetRs): HlAction {
+    let dst: TbLoc = (targ.posInStack == 0) ?
+        { kind: "onStage", stackIx: targ.stackIx } :
+        { kind: "onStack", stackIx: targ.stackIx, posInStack: targ.posInStack - 1 };
+    return new Seq(go(w, dst), new TbPut());
+}
+
+// go dst
+//
+// forall A.
+// In: carrysRs = A
+// OUT: carrysR = A
+function go(w: Fp1dWorld, dst: TbLoc): HlAction {
+    const tbLoc: TbLoc = w.tbLoc;
+    switch (tbLoc.kind) {
+        case 'onStage':
+            switch (dst.kind) {
+                case 'onStage':
+                    const dIx = dst.stackIx - tbLoc.stackIx;
+                    return dIx > 0 ? new FdwMove(dIx) : new Noop();
+                case 'onStack':
+                    return new Seq(
+                        (w.stagePos !== dst.stackIx) ? new FdwMove(dst.stackIx - w.stagePos) : new Noop(),
+                        new TbMove(dst.posInStack + 1)
+                    );
+            }
+        case 'onStack':
+            switch (dst.kind) {
+                case 'onStage':
+                    return new Seq(
+                        new Par(
+                            (tbLoc.posInStack > 1) ? new TbMove(-tbLoc.posInStack) : new Noop(),
+                            (w.stagePos !== tbLoc.stackIx) ? new FdwMove(tbLoc.stackIx - w.stagePos) : new Noop()
+                        ),
+                        new TbMove(-1));
+                case 'onStack':
+                    // TODO
+                    return new Noop();
+            }
+    }
+}
+
+// Implementation of Accumulating monad-ish object.
+type WAs = [Fp1dWorld, Array<HlAction>];
+
+function chain(m: WAs, f: (w: Fp1dWorld) => WAs): WAs {
+    let [w, actions] = m;
+    let [wNext, dAs] = f(w);
+    return [wNext, actions.concat(dAs)];
+}
+
+/**
+ * High level discrete actions.
+ * 
+ * Law for Par:
+ * forall as' in permutation(as). apply(w, Par(as)) == apply(w, Seq(as'))
+ * */
+type HlAction
+    = TbMove | FdwMove | TbPut | TbGet  // Delta of Fp1DWorld
+    | Par | Seq | Noop;  // Generic control elements
+
+/**
+ * Remove useuless actions with no domain knowledge.
+ * i.e.
+ * * Noop in Par / Seq -> remove.
+ * * empty Par, Seq -> Noop.
+ * * Par, Seq singletons -> remvoe wrapping.
+ * * Nested Par -> flatten.
+ * * Nested Seq -> flatten.
+ */
+function simplify(a: HlAction): HlAction {
+    return a;
+}
+
+class Noop {
+    kind: 'Noop';
+    constructor() { }
+}
+
+class TbMove {
+    kind: 'TbMove';
+    constructor(public n: number) { }
+}
+
+class TbPut {
+    kind: 'TbPut';
+    constructor() { }
+}
+
+class TbGet {
+    kind: 'TbGet';
+    constructor() { }
+}
+
+class FdwMove {
+    kind: 'FdwMove';
+    // FDW-RS has notion of "origin", maybe include that?
+    constructor(public n: number) { }
+}
+
+// Actions that can start at the same time safely, and waits until all children acs finishes.
+class Par {
+    kind: "Par";
+    public acs: Array<HlAction>;
+    constructor(...acs: Array<HlAction>) {
+        this.acs = acs;
+    }
+}
+
+class Seq {
+    kind: "Seq";
+    public acs: Array<HlAction>;
+    constructor(...acs: Array<HlAction>) {
+        this.acs = acs;
+    }
+}
+
+function applyAction(w: Fp1dWorld, a: HlAction): Fp1dWorld {
+    return w;
+}
+
+
+interface TargetRs {
+    stackIx: number;
+    posInStack: number; // 0: first connected Rs, 1: second ...
 }
 
 /**
@@ -149,6 +333,7 @@ type TbLoc = TbOnStage | TbOnStack;
 
 interface TbOnStage {
     kind: "onStage";
+    stackIx: number;  // [0, FDW_NUM_PORTS)
 }
 
 interface TbOnStack {

@@ -325,7 +325,7 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
     addr?: number;
 
     static readonly NUM_PORTS = 5;
-    stagePos: number;  // integer: 0 = origin. 1 = 1st stop.
+    stagePos: number = 0.0;  // integer: 0 = origin. 1 = 1st stop.
 
     paramx: number;
 
@@ -343,7 +343,7 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.038),
             new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
 
-        this.paramx = 0.04;
+        this.paramx = this.stagePos * 1.0;  // TODO: proper mapping
     }
 
     getRailSegments(): Array<RailSegment> {
