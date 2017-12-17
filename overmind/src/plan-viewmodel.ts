@@ -24,6 +24,7 @@ export class PlanViewModel {
     infoMsg: string = "";
 
     // Plan Execution.
+    public execNumComplete = 0;
     private execTimers: Array<NodeJS.Timer>;
 
     private targetModel: ScaffoldModel;
@@ -70,16 +71,21 @@ export class PlanViewModel {
         });
     }
 
-    execCurrentPlan() {
-        const workers = new Map([
-            ['FDW-RS', 2165185564],
-            ['TB', 4278401023]
-        ]);
+    stepExecCurrentPlan() {
+        let sqs = this.plan.getSeqTimeOrdered();
+        if (this.execNumComplete < sqs.length) {
+            const [wid, seq] = sqs[this.execNumComplete];
+            this.workerPool.sendActionSeq(seq, this.workerPool.typeToAddr.get(wid));
+            this.execNumComplete += 1;
+        }
+    }
 
+    execCurrentPlan() {
         this.execTimers =
             this.plan.getSeqTimeOrdered().map(([wid, seq]) => {
                 return <NodeJS.Timer><any>setTimeout(() => {
-                    this.workerPool.sendActionSeq(seq, workers.get(wid));
+                    this.execNumComplete += 1;
+                    this.workerPool.sendActionSeq(seq, this.workerPool.typeToAddr.get(wid));
                 }, seq.getT0() * 1e3);
             });
     }
@@ -87,6 +93,7 @@ export class PlanViewModel {
     stopExec() {
         this.execTimers.forEach(t => clearTimeout(t));
         this.execTimers = [];
+        this.execNumComplete = 0;
     }
 
     /** Call this when models are updated. */

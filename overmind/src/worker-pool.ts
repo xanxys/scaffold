@@ -22,6 +22,11 @@ export class WorkerPool {
     inactiveWorkers: Array<Worker> = [];
     lastUninit?: Date;
 
+    public readonly typeToAddr = new Map([
+        ['FDW-RS', 2165185564],
+        ['TB', 4278401023]
+    ]);
+
     constructor(private bridge: WorkerBridge) {
         this.workers = [];
         this.lastUninit = null;

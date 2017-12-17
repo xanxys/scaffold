@@ -26,7 +26,10 @@
         <div v-if="viewmodel.errorMsg" class="alert alert-warning">{{viewmodel.errorMsg}}</div>
         <div v-if="viewmodel.infoMsg" class="alert alert-info">{{viewmodel.infoMsg}}</div>
         <div v-if="viewmodel.infoMsg">
-            <button class="btn btn-start" @click="exec">Exec</button><button class="btn btn-danger" @click="stop">Stop</button>
+            <button class="btn btn-start" @click="exec">Exec</button>
+            <button class="btn btn-start" @click="execStep">Exec(Step)</button>
+            <button class="btn btn-danger" @click="stop">Stop</button>
+            Step={{viewmodel.execNumComplete}}
         </div>
     </div>
 </template>
@@ -102,6 +105,9 @@ export default {
         exec() {
             // TODO: Show time indicator (text & bar)
             this.viewmodel.execCurrentPlan();
+        },
+        execStep() {
+            this.viewmodel.stepExecCurrentPlan();
         },
         stop() {
             // TODO: Stop indicator at curr ext
