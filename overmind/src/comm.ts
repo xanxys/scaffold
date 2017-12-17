@@ -3,11 +3,13 @@ declare var window: any;
 const SerialPort: any = window.require('serialport');
 import * as fs from 'fs';
 
+export type WorkerAddr = number;
+
 export interface Packet {
     raw_data: any;
 
     // Decoded overmind protocol.
-    src?: number;
+    src?: WorkerAddr;
     srcTs?: number;
     datagram?: Uint8Array;
 

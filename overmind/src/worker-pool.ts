@@ -1,6 +1,8 @@
 import * as Identicon from 'identicon.js';
 import * as md5 from 'md5';
 import { Packet } from './comm';
+import { ActionSeq } from './action';
+import { WorkerAddr, WorkerBridge } from './comm';
 
 interface Worker {
     addr: number;
@@ -12,14 +14,21 @@ interface Worker {
     readings: Array<any>;
 }
 
+/**
+ * Exposes control interfaces of all workers as abstract entities decoupled from networks.
+ */
 export class WorkerPool {
     workers: Array<Worker>;
     inactiveWorkers: Array<Worker> = [];
     lastUninit?: Date;
 
-    constructor() {
+    constructor(private bridge: WorkerBridge) {
         this.workers = [];
         this.lastUninit = null;
+    }
+
+    sendActionSeq(asq: ActionSeq, addr: WorkerAddr) {
+        this.bridge.sendCommand('e' + asq.getFullDesc(), addr);
     }
 
     handleDatagram(packet: Packet) {

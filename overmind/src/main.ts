@@ -13,9 +13,9 @@ export function runMain(parsedArgs: any) {
     console.log('command line args', parsedArgs);
 
     const bridge = new WorkerBridge(parsedArgs['fake-packet']);
-    const workerPool = new WorkerPool();
+    const workerPool = new WorkerPool(bridge);
     const model = new ScaffoldModel();
-    const planViewModel = new PlanViewModel(model, bridge);
+    const planViewModel = new PlanViewModel(model, workerPool);
 
     let appVm = new Vue({
         el: '#app',
