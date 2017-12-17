@@ -105,7 +105,6 @@ export class FeederPlanner1D implements Planner {
 
         const wholeAction = new Seq(...actions);
         const flatActions = this.flattenAction(wholeAction);
-        console.log(swaps, wholeAction, flatActions);
 
         const m = new Map();
         flatActions[1].forEach(ta => {
@@ -116,7 +115,6 @@ export class FeederPlanner1D implements Planner {
             const aSqs = this.translateCommand(ta);
             m.set(index, m.get(index).concat(aSqs));
         });
-        console.log(m);
         return new Plan(m);
     }
 
@@ -166,7 +164,6 @@ export class FeederPlanner1D implements Planner {
             let [asq, memo] = asqAndM;
             let aSqCv = new ActionSeq(asq.split(',').map(seq => new Action(seq)), t0, -1);
             const dur = aSqCv.getDurationSec();
-            console.log("T0=", t0, "Dur=", dur, "for", asqAndM);
             aSqCoverted.push(new ActionSeq(asq.split(',').map(seq => new Action(seq)), t0, t0 + dur, memo));
             t0 += dur;
         });

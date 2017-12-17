@@ -94,7 +94,6 @@ export class WorkerPool {
     }
 
     handleDatagramInWorker(worker: Worker, packet: Packet) {
-        console.log(packet);
         let message: any = {
             status: 'known', // known, unknown, corrupt
             timestamp: packet.srcTs / 1e3,

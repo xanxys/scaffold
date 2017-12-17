@@ -92,7 +92,6 @@ export class WorkerBridge {
         body.set(Array.from(command).map(ch => ch.charCodeAt(0)));
 
         let final_command = ':' + encodeHex(buffer) + 'X\r\n';
-        console.log('send', final_command);
         this.port.write(final_command);
     }
 
