@@ -28,6 +28,7 @@
         <div v-if="viewmodel.infoMsg">
             <button class="btn btn-start" @click="exec">Exec</button>
             <button class="btn btn-start" @click="execStep">Exec(Step)</button>
+            <button class="btn btn-info" @click="skipStep">Skip(Step)</button>
             <button class="btn btn-danger" @click="stop">Stop</button>
             Step={{viewmodel.execNumComplete}}
         </div>
@@ -108,6 +109,9 @@ export default {
         },
         execStep() {
             this.viewmodel.stepExecCurrentPlan();
+        },
+        skipStep() {
+            this.viewmodel.skipExecStep();
         },
         stop() {
             // TODO: Stop indicator at curr ext

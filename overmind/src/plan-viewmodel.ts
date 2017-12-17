@@ -80,6 +80,10 @@ export class PlanViewModel {
         }
     }
 
+    skipExecStep() {
+        this.execNumComplete += 1;
+    }
+
     execCurrentPlan() {
         this.execTimers =
             this.plan.getSeqTimeOrdered().map(([wid, seq]) => {

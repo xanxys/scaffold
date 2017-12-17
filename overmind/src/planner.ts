@@ -128,6 +128,7 @@ export class FeederPlanner1D implements Planner {
         if (ta.primAction instanceof TbGet) {
             emit('TB', 'C->DrvE3');
             emit('TB', 'DE3->GetOk');
+            emit('TB', 'ArmRest');
             emit('TB', 'FindC-');
             emit('TB', 'DrvIn');
         } else if (ta.primAction instanceof TbPut) {
