@@ -25,7 +25,7 @@
         <span>T={{timeSec.toFixed(2)}}s</span>
         <div v-if="viewmodel.errorMsg" class="alert alert-warning">{{viewmodel.errorMsg}}</div>
         <div v-if="viewmodel.infoMsg" class="alert alert-info">{{viewmodel.infoMsg}}</div>
-        <button class="btn btn-start" @click="exec">Exec</button>
+        <button class="btn btn-start" @click="exec">Exec</button><button class="btn btn-danger" @click="stop">Stop</button>
     </div>
 </template>
 
@@ -98,6 +98,12 @@ export default {
             }
         },
         exec() {
+            // TODO: Show time indicator (text & bar)
+            // TODO: schedule bunch of timers?
+        },
+        stop() {
+            // TODO: Stop indicator at curr ext
+            // TODO: cancel remaining timers.
         }
     }
 }

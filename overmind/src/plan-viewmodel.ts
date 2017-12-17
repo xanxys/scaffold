@@ -79,7 +79,7 @@ export class PlanViewModel {
         } else {
             this.plan = planOrError;
             this.errorMsg = '';
-            this.infoMsg = `${planOrError.getTotalTime()}sec`;
+            this.infoMsg = `${planOrError.getTotalTime()}sec Tx:${planOrError.getTotalTxCommandSize()}B`;
         }
     }
 

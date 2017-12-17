@@ -35,6 +35,17 @@ export class Plan {
         });
         return t1;
     }
+
+    getTotalTxCommandSize(): number {
+        let size = 0;
+        this.actions.forEach((actionSeqArr, _) => {
+            actionSeqArr.forEach(actionSeq => {
+                const command = 'e' + actionSeq.getFullDesc();
+                size += command.length;
+            });
+        });
+        return size;
+    }
 }
 
 // Read at module load.
