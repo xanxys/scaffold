@@ -78,7 +78,7 @@ export class PlanViewModel {
 
         this.execTimers =
             this.plan.getSeqTimeOrdered().map(([wid, seq]) => {
-                return setTimeout(() => {
+                return <NodeJS.Timer><any>setTimeout(() => {
                     this.workerPool.sendActionSeq(seq, workers.get(wid));
                 }, seq.getT0() * 1e3);
             });
