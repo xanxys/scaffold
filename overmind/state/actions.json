@@ -4,19 +4,19 @@
       "wtype": "TB",
       "seq": "100t70,1!t0",
       "memo": "BackBitRp",
-      "used": 213
+      "used": 217
     },
     {
       "wtype": "TB",
       "seq": "100t-70,1!t0",
       "memo": "FwdBitRp",
-      "used": 182
+      "used": 183
     },
     {
       "wtype": "TB",
       "seq": "500t70T30,1!t0",
       "memo": "FindC-",
-      "used": 70
+      "used": 81
     },
     {
       "wtype": "FDW-RS",
@@ -28,19 +28,25 @@
       "wtype": "TB",
       "seq": "200a10",
       "memo": "DrvIn",
-      "used": 48
+      "used": 54
     },
     {
       "wtype": "TB",
       "seq": "1s0",
       "memo": "StopDrv",
-      "used": 43
+      "used": 44
     },
     {
       "wtype": "TB",
       "seq": "500t-70T30,1!t0",
       "memo": "FindC+",
       "used": 29
+    },
+    {
+      "wtype": "FDW-RS",
+      "seq": "300v-120,700v-100S100,50v-80,1v0",
+      "memo": "Rn",
+      "used": 25
     },
     {
       "wtype": "TB",
@@ -56,12 +62,6 @@
     },
     {
       "wtype": "FDW-RS",
-      "seq": "300v-120,700v-100S100,50v-80,1v0",
-      "memo": "Rn",
-      "used": 21
-    },
-    {
-      "wtype": "FDW-RS",
       "seq": "200v-100,1v0",
       "memo": "Rbit",
       "used": 15
@@ -70,19 +70,19 @@
       "wtype": "TB",
       "seq": "200t-70,1t0,200a34",
       "memo": "C->DrvE3",
-      "used": 15
+      "used": 18
     },
     {
       "wtype": "TB",
       "seq": "500b15",
       "memo": "ArmRest",
-      "used": 11
+      "used": 29
     },
     {
       "wtype": "TB",
       "seq": "200b27",
       "memo": "ArmExt",
-      "used": 9
+      "used": 13
     },
     {
       "wtype": "TB",
@@ -94,7 +94,7 @@
       "wtype": "TB",
       "seq": "200a32",
       "memo": "DrvExt",
-      "used": 6
+      "used": 7
     },
     {
       "wtype": "TB",
@@ -112,7 +112,7 @@
       "wtype": "TB",
       "seq": "500s-100t-50,200b30,2000t0,1s0",
       "memo": "DE3->GetOk",
-      "used": 5
+      "used": 6
     },
     {
       "wtype": "FDW-RS",
@@ -124,6 +124,12 @@
       "wtype": "TB",
       "seq": "100t100,1!t0",
       "memo": "",
+      "used": 1
+    },
+    {
+      "wtype": "TB",
+      "seq": "100t120,1!t0",
+      "memo": "BackStrong",
       "used": 1
     }
   ],
