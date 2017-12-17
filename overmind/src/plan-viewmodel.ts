@@ -74,7 +74,7 @@ export class PlanViewModel {
         this.execTimers =
             this.plan.getSeqTimeOrdered().map(([wid, seq]) => {
                 return setTimeout(() => {
-                    this.bridge.sendCommand(seq.getFullDesc());
+                    this.bridge.sendCommand('e' + seq.getFullDesc());
                 }, seq.getT0() * 1e3);
             });
     }
