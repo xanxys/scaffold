@@ -89,12 +89,12 @@ export class ScaffoldModel {
     }
 
     findByType<T extends ScaffoldThing>(type: TypedNewable<T>): T {
-         return <T> this.getThings().find(thing => thing.type === type.type);
+        return <T>this.getThings().find(thing => thing.type === type.type);
     }
 
     findAllByType<T extends ScaffoldThing>(type: TypedNewable<T>): Array<T> {
-        return <Array<T>> this.getThings().filter(thing => thing.type === type.type);
-   }
+        return <Array<T>>this.getThings().filter(thing => thing.type === type.type);
+    }
 
     addRail(rail: ScaffoldThing) {
         this.things.push(rail);
@@ -325,9 +325,9 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
     addr?: number;
 
     static readonly NUM_PORTS = 5;
-    stagePos: number = 0.0;  // integer: 0 = origin. 1 = 1st stop.
-
-    paramx: number;
+    static readonly GAP_WIDE = 60e-3; // distance between 0-1
+    static readonly GAP_NARROW = 35e-3;  // distance between i-(i+1) for i>=1
+    paramx: number;  // 0: aligned exactly at 0th stack. 165: last stack.
 
     constructor(readonly cadModel: THREE.Geometry) {
         this.coord = new Coordinates("FDW");
@@ -346,11 +346,29 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
         this.paramx = this.stagePos * 1.0;  // TODO: proper mapping
     }
 
+    // integer: 0 = origin. 1 = 1st stop.
+    get stagePos(): number {
+        if (this.paramx < 60e-3) {
+            return Math.round(this.paramx / S60RailFeederWide.GAP_WIDE);
+        } else {
+            return Math.round((this.paramx - S60RailFeederWide.GAP_WIDE) / S60RailFeederWide.GAP_NARROW) + 1;
+        }
+    }
+
+    set stagePos(pIx: number) {
+        if (pIx < 1) {
+            this.paramx = pIx * S60RailFeederWide.GAP_WIDE;
+        } else {
+            this.paramx = (pIx - 1) * S60RailFeederWide.GAP_NARROW + S60RailFeederWide.GAP_WIDE;
+        }
+    }
+
+    // Not used anywhere for now.
     getRailSegments(): Array<RailSegment> {
         return [
             new RailSegment(
-                new THREE.Vector3(this.paramx, -0.03, 0),
-                new THREE.Vector3(this.paramx, 0.03, 0),
+                new THREE.Vector3(this.paramx + 0.1, -0.03, 0),
+                new THREE.Vector3(this.paramx + 0.1, 0.03, 0),
                 new THREE.Vector3(0, 0, 1))
         ];
     }

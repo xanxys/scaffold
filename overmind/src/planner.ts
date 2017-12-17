@@ -187,7 +187,7 @@ export class FeederPlanner1D implements Planner {
     setTime(tSec: number) {
         let fdw = this.srcModel.findByType(S60RailFeederWide);
         if (fdw) {
-            fdw.paramx = Math.cos(tSec * Math.PI / 2) * 0.05;
+            fdw.paramx = (Math.cos(tSec * Math.PI / 4) + 1) * 0.165 / 2;
         }
     }
 
