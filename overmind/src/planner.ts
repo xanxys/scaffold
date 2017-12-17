@@ -4,6 +4,7 @@ import { Action, ActionSeq } from './action';
 import { Coordinates } from './geometry';
 import { currentId } from 'async_hooks';
 import { CommandHistory } from './command-history';
+import { comparing } from './functional';
 
 /**
  * Planner takes a model (that's in specific state), and provides Timeline that's simulatable and/or executable.
@@ -15,15 +16,29 @@ export interface Planner {
     getPlan(): Plan | string;
 }
 
+type WorkerId = string;
+
 export class Plan {
-    constructor(private actions: Map<number, Array<ActionSeq>>) {
+    constructor(private actions: Map<WorkerId, Array<ActionSeq>>) {
     }
 
     /**
      * Guarantee: within worker, actionSeq is non-overlapping and ordered.
      */
-    getSeqPerWorker(): Map<number, Array<ActionSeq>> {
+    getSeqPerWorker(): Map<WorkerId, Array<ActionSeq>> {
         return this.actions;
+    }
+
+    /**
+     * Guarantee: ordered by time.
+     */
+    getSeqTimeOrdered(): Array<[WorkerId, ActionSeq]> {
+        const result = [];
+        this.actions.forEach((seqs, wid) => {
+            seqs.forEach(seq => result.push([wid, seq]));
+        });
+        result.sort(comparing(t => t[1].getT0()));
+        return result;
     }
 
     getTotalTime(): number {

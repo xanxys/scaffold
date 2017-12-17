@@ -4,6 +4,7 @@ import { Plan, Planner, FeederPlanner1D } from './planner';
 import { Coordinates } from './geometry';
 import { WorldView, WorldViewModel, ClickOpState } from './world-view';
 import { randomBytes } from 'crypto';
+import { WorkerBridge } from './comm';
 
 /**
  * A viewmodel used by both View3DClient, the-plan-toolbar, and timeline.
@@ -22,9 +23,12 @@ export class PlanViewModel {
     errorMsg: string = "";
     infoMsg: string = "";
 
+    // Plan Execution.
+    private execTimers: Array<NodeJS.Timer>;
+
     private targetModel: ScaffoldModel;
 
-    constructor(private currModel) {
+    constructor(private currModel, private bridge: WorkerBridge) {
         this.loader = new ScaffoldThingLoader();
         this.targetModel = new ScaffoldModel();
     }
@@ -64,6 +68,20 @@ export class PlanViewModel {
             this.updatePlan();
             this.rebind();
         });
+    }
+
+    execCurrentPlan() {
+        this.execTimers =
+            this.plan.getSeqTimeOrdered().map(([wid, seq]) => {
+                return setTimeout(() => {
+                    this.bridge.sendCommand(seq.getFullDesc());
+                }, seq.getT0() * 1e3);
+            });
+    }
+
+    stopExec() {
+        this.execTimers.forEach(t => clearTimeout(t));
+        this.execTimers = [];
     }
 
     /** Call this when models are updated. */

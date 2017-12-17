@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { comparing } from './functional';
 
 /**
  * Models & persists command / ActionSeq execution (by human) history and rating stats.
@@ -64,16 +65,6 @@ export class CommandHistory {
     }
 }
 
-function comparing<V, K>(fn: (val: V) => K): (val1: V, val2: V) => number {
-    return (v1, v2) => {
-        if (fn(v1) < fn(v2)) {
-            return -1;
-        } else if (fn(v1) > fn(v2)) {
-            return 1;
-        }
-        return 0;
-    };
-}
 
 interface CommandHistoryFile {
     history: Array<HistoryEntry>;

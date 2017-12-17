@@ -1,6 +1,5 @@
 declare const global: any;
 
-
 import * as $ from 'jquery';
 import * as Vue from 'vue/dist/vue.js';
 import { PlanViewModel } from './plan-viewmodel';
@@ -16,7 +15,7 @@ export function runMain(parsedArgs: any) {
     const bridge = new WorkerBridge(parsedArgs['fake-packet']);
     const workerPool = new WorkerPool();
     const model = new ScaffoldModel();
-    const planViewModel = new PlanViewModel(model);
+    const planViewModel = new PlanViewModel(model, bridge);
 
     let appVm = new Vue({
         el: '#app',
