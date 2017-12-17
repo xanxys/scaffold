@@ -126,15 +126,5 @@
       "memo": "BackStrong",
       "used": 1
     }
-  ],
-  "workers": [
-    {
-      "wtype": "TB",
-      "addr": 4278401023
-    },
-    {
-      "wtype": "FDW-RS",
-      "addr": 2165185564
-    }
   ]
 }

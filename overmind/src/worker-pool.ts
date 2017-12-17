@@ -3,6 +3,7 @@ import * as md5 from 'md5';
 import { Packet } from './comm';
 import { ActionSeq } from './action';
 import { WorkerAddr, WorkerBridge } from './comm';
+import * as fs from 'fs';
 
 interface Worker {
     addr: number;
@@ -14,6 +15,11 @@ interface Worker {
     readings: Array<any>;
 }
 
+interface WorkerEntry {
+    wtype: string;
+    addr: number;
+}
+
 /**
  * Exposes control interfaces of all workers as abstract entities decoupled from networks.
  */
@@ -21,6 +27,8 @@ export class WorkerPool {
     workers: Array<Worker>;
     inactiveWorkers: Array<Worker> = [];
     lastUninit?: Date;
+
+    private readonly actionsPath = "state/workers.json";
 
     public readonly typeToAddr = new Map([
         ['FDW-RS', 2165185564],
@@ -30,6 +38,21 @@ export class WorkerPool {
     constructor(private bridge: WorkerBridge) {
         this.workers = [];
         this.lastUninit = null;
+
+        fs.readFile(this.actionsPath, "utf8", (err, data) => {
+            const parsedData = <Array<WorkerEntry>>JSON.parse(data).workers;
+            this.inactiveWorkers = parsedData.map(e => {
+                return {
+                    addr: e.addr,
+                    wtype: e.wtype,
+                    identicon: WorkerPool.createIdenticon(e.addr),
+                    messages: [],
+                    out: [],
+                    power: null,
+                    readings: []
+                };
+            });
+        });
     }
 
     sendActionSeq(asq: ActionSeq, addr: WorkerAddr) {
@@ -44,24 +67,30 @@ export class WorkerPool {
 
         let worker = this.workers.find(w => w.addr === packet.src);
         if (worker !== undefined) {
+            this.inactiveWorkers = this.inactiveWorkers.filter(w => w.addr !== packet.src);
             this.handleDatagramInWorker(worker, packet);
         } else {
             let worker = {
                 addr: packet.src,
                 wtype: null,
-                identicon: new Identicon(md5(packet.src), {
-                    saturation: 0.5,
-                    background: [200, 200, 200, 255],
-                    size: 50
-                }),
+                identicon: WorkerPool.createIdenticon(packet.src),
                 messages: [],
                 out: [],
                 power: {},
                 readings: [],
             };
+            // TODO: Register new workers.
             this.handleDatagramInWorker(worker, packet);
             this.workers.push(worker);
         }
+    }
+
+    private static createIdenticon(addr: number): Identicon {
+        return new Identicon(md5(addr), {
+            saturation: 0.5,
+            background: [200, 200, 200, 255],
+            size: 50
+        });
     }
 
     handleDatagramInWorker(worker: Worker, packet: Packet) {
