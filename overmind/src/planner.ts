@@ -126,14 +126,14 @@ export class FeederPlanner1D implements Planner {
             actionSeqs.push([commandHistory.getByMemo(wt, memo), memo]);
         }
         if (ta.primAction instanceof TbGet) {
-            emit('TB', 'C->DrvE3');
-            emit('TB', 'DE3->GetOk');
+            emit('TB', 'C->DrvE');
+            emit('TB', 'DrvE->Get');
             emit('TB', 'ArmRest');
             emit('TB', 'FindC-');
             emit('TB', 'DrvIn');
         } else if (ta.primAction instanceof TbPut) {
-            emit('TB', 'C->DrvE3');
-            emit('TB', 'DE3->PutOkReal');
+            emit('TB', 'C->DrvE');
+            emit('TB', 'DrvE->Put');
             emit('TB', 'ArmRest');
             emit('TB', 'FindC-');
             emit('TB', 'DrvIn');
