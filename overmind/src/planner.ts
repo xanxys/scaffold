@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60RailFeederWide, S60TrainBuilder, Port } from './scaffold-model';
 import { Action, ActionSeq } from './action';
 import { Coordinates } from './geometry';
-import { currentId } from 'async_hooks';
 import { CommandHistory } from './command-history';
 import { comparing } from './functional';
 
@@ -447,15 +446,16 @@ interface TargetRs {
 }
 
 /**
- * Immutable world representation for FeederPlanner1D.
+ * Immutable world representation for `FeederPlanner1D`.
  * 
  * In this world, only RS * n (n >= 0), FDW-RS * 1, TB * 1 can exist.
- * This also represents succesful static state.
+ * This can also represents succesful static states, but not continuum between them.
  * 
  * e.g. world must be constrained:
  *  * TB must be on-center
  *  * both darm & driver is up (folded)
  *  * no motor is rotating
+ *  * when TB is onStage, stagePos === tbLoc.stackIx (rail coupling)
  */
 class Fp1dWorld {
     // FDW-RS & connected RS.
