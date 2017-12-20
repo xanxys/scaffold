@@ -73,17 +73,6 @@ export class ScaffoldModel {
         this.things = [];
     }
 
-    encode(): any {
-        return {
-            rails: this.things.map(rail => rail.encode())
-        };
-    }
-
-    static decode(obj: any): ScaffoldModel {
-        const model = new ScaffoldModel();
-        return model;
-    }
-
     attachTrainToRail(tb: S60TrainBuilder, rail: S60RailFeederWide) {
         rail.attachedBy = tb;
         tb.attachedTo = rail;
@@ -189,13 +178,6 @@ export interface ScaffoldThing {
 
     cadCoord: Coordinates;
     readonly cadModel: THREE.Geometry;
-
-    //getCadModel(): THREE.Geometry;
-    // getCadModelSub(sub: string): THREE.Geometry;
-
-    getRailSegments(): Array<RailSegment>;
-
-    encode(): any;
 }
 
 /**
@@ -225,29 +207,6 @@ export class S60RailStraight implements ScaffoldThing {
 
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, -0.03, 0));
-    }
-
-    getCadModel() {
-        return this.cadModel;
-    }
-
-    getCadModelSub(_) {
-        return null;
-    }
-
-    getRailSegments(): Array<RailSegment> {
-        return [
-            new RailSegment(
-                new THREE.Vector3(0, -0.03, 0),
-                new THREE.Vector3(0, 0.03, 0),
-                new THREE.Vector3(0, 0, 1))
-        ];
-    }
-
-    encode(): any {
-        return {
-            'type': 'RS',
-        };
     }
 }
 
@@ -280,12 +239,6 @@ export class S60RailHelix implements ScaffoldThing {
                 new THREE.Vector3(0, 0.03, 0),
                 new THREE.Vector3(1 / Math.sqrt(2), 0, -1 / Math.sqrt(2)))
         ];
-    }
-
-    encode(): any {
-        return {
-            'type': 'RH',
-        };
     }
 }
 
@@ -324,12 +277,6 @@ export class S60RailRotator implements ScaffoldThing {
                 new THREE.Vector3(0.03, 0, 0),
                 new THREE.Vector3(0, 0, 1)),
         ];
-    }
-
-    encode(): any {
-        return {
-            'type': 'RR',
-        };
     }
 }
 
@@ -399,22 +346,6 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
             new THREE.Vector3(-this.paramx + 0.24, 0.03, 0),
             new THREE.Vector3(0, 0, 1));
     }
-
-    // Not used anywhere for now.
-    getRailSegments(): Array<RailSegment> {
-        return [
-            new RailSegment(
-                new THREE.Vector3(this.paramx + 0.1, -0.03, 0),
-                new THREE.Vector3(this.paramx + 0.1, 0.03, 0),
-                new THREE.Vector3(0, 0, 1))
-        ];
-    }
-
-    encode(): any {
-        return {
-            'type': 'FDW-RS',
-        };
-    }
 }
 
 export class S60TrainBuilder implements ScaffoldThing, Active {
@@ -462,12 +393,6 @@ export class S60TrainBuilder implements ScaffoldThing, Active {
 
     getRailSegments(): Array<RailSegment> {
         return [];
-    }
-
-    encode(): any {
-        return {
-            'type': 'TB',
-        };
     }
 }
 
