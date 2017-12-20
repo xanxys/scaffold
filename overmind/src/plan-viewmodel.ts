@@ -69,6 +69,8 @@ export class PlanViewModel {
                 const tb = loader.create(S60TrainBuilder);
                 tb.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.105, -0.022, 0));
                 this.targetModel.addRail(tb);
+
+                this.targetModel.attachTrainToRail(tb, fd);
             }
         }).then(_ => {
             this.updatePlan();

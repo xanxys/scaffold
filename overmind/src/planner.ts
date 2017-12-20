@@ -261,9 +261,11 @@ export class FeederPlanner1D implements Planner {
         if (!tb) {
             return "TB x1 expected but not found";
         }
-        // TODO: Get info from tb.
-        w.carryRs = false;
-        w.tbLoc = new TbOnStage(0);  // TODO: Fix
+        w.carryRs = false;  // TODO
+        if (tb.attachedTo !== fdw) {
+            return "TB must be attached to FDW-RS";
+        }
+        w.tbLoc = new TbOnStage(fdw.stagePos);
         return w;
     }
 
