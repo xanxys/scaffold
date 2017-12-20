@@ -108,7 +108,8 @@ export class ScaffoldModel {
     }
 
     // Incorrect semantics. Ports must belong to ScaffoldThing or ScaffoldSubComponent.
-    getOpenPorts() {
+    // UI specific parts should be moved to viewmodel.
+    getOpenPorts(): Array<any> {
         let portPoints = [];
         this.things.forEach(rail => {
             portPoints = portPoints.concat(rail.ports.map(port => {
@@ -131,11 +132,24 @@ export class ScaffoldModel {
     }
 
     // This is pure UI thing and should be moved to viewmodel.
-    getDeletionPoints() {
+    getDeletionPoints(): Array<any> {
         return this.things.map(rail => ({
             rail: rail,
             pos: rail.coord.convertP(rail.bound.center(), this.coord),
         }));
+    }
+
+    getEditPoints(): Array<any> {
+        const res = [];
+        this.things.forEach(thing => {
+            if (thing.type === 'FDW-RS' || thing.type === 'TB') {
+                res.push({
+                    pos: thing.coord.convertP(thing.bound.center(), this.coord),
+                    thing: thing,
+                });
+            }
+        })
+        return res;
     }
 
     // Returns (pos, human readable error string).

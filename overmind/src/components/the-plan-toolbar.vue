@@ -9,6 +9,8 @@
         <button @click="addRr" class="btn btn-default" :class="{'active': isAddRr}">RR</button>
         <button @click="remove" class="btn btn-default" :class="{'active': isRemove}"><i class="material-icons">delete_forever</i></button>
 
+        <button @click="edit" class="btn btn-default" :class="{'active': isEdit}"><i class="material-icons">mode_edit</i></button>
+
         <div style="flex-grow: 1"></div> 
 
         <button @click="toggleMode" class="btn btn-default">
@@ -52,6 +54,9 @@ export default {
         remove() {
             this.viewmodel.setState(ClickOpState.Remove);
         },
+        edit() {
+            this.viewmodel.setState(ClickOpState.None);
+        },
         toggleMode() {
             this.viewmodel.setIsCurrent(!this.viewmodel.getIsCurrent());
         },
@@ -74,6 +79,9 @@ export default {
         },
         isRemove() {
             return this.viewmodel.state === ClickOpState.Remove;
+        },
+        isEdit() {
+            return this.viewmodel.state === ClickOpState.None;
         }
     }
 }

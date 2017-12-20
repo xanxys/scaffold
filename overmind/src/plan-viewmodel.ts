@@ -29,6 +29,9 @@ export class PlanViewModel {
 
     private targetModel: ScaffoldModel;
 
+    selectedTb?: S60TrainBuilder = null;
+    selectedFdw?: S60RailFeederWide = null;
+
     constructor(private currModel, private workerPool: WorkerPool) {
         this.loader = new ScaffoldThingLoader();
         this.targetModel = new ScaffoldModel();
@@ -140,6 +143,7 @@ export class PlanViewModel {
         this.view = view;
     }
 
+    // World-specific.
     onClickUiObject(obj: any) {
         switch (this.state) {
             case ClickOpState.AddRs:
@@ -154,6 +158,18 @@ export class PlanViewModel {
             case ClickOpState.Remove:
                 this.removeRail(obj);
                 break;
+            case ClickOpState.None:
+                const thing = obj.userData.thing;
+                if (thing.type === 'TB') {
+                    this.selectedTb = <S60TrainBuilder> thing;
+                    this.selectedFdw = null;
+                } else if (thing.type === 'FDW-RS') {
+                    this.selectedTb = null;
+                    this.selectedFdw = <S60RailFeederWide> thing;
+                }
+                break;
+            default:
+                let _: never = this.state;
         }
     }
 

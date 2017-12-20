@@ -327,6 +327,23 @@ export class WorldView {
                 mesh.layers.enable(WorldView.LAYER_CLICKABLE);
                 this.scaffoldView.add(mesh);
             });
+        } else if (state === ClickOpState.None) {
+            this.viewModel.model.getEditPoints().forEach(point => {
+                let mesh = new THREE.Mesh();
+                mesh.userData = {
+                    thing: point.thing,
+                };
+                mesh.geometry = this.cachePointGeom;
+                mesh.material = new THREE.MeshBasicMaterial({
+                    color: "green",
+                    opacity: 0.5,
+                    transparent: true,
+                });
+                mesh.position.copy(point.pos);
+                mesh.layers.enable(WorldView.LAYER_UI);
+                mesh.layers.enable(WorldView.LAYER_CLICKABLE);
+                this.scaffoldView.add(mesh);
+            });
         }
     }
 
