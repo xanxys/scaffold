@@ -349,8 +349,16 @@ function go(w: Fp1dWorld, dst: TbLoc): HlAction {
                 ),
                 new TbMove(-1));
         } else if (dst instanceof TbOnStack) {
-            // TODO
-            return new Noop();
+            if (tbLoc.stackIx === dst.stackIx) {
+                return new TbMove(dst.posInStack - tbLoc.posInStack);
+            } else {
+                return new Seq(
+                    (w.stagePos !== tbLoc.stackIx) ? new FdwMove(tbLoc.stackIx - w.stagePos) : new Noop(),
+                    new TbMove(-(tbLoc.posInStack + 1)),
+                    new FdwMove(dst.stackIx - w.stagePos),
+                    new TbMove(dst.posInStack + 1)
+                );
+            }
         }
     } else {
         const _: never = tbLoc;
@@ -438,7 +446,71 @@ class Seq {
 }
 
 function applyAction(w: Fp1dWorld, a: HlAction): Fp1dWorld {
-    return w;
+    switch (a.kind) {
+        case 'TbMove':
+            {
+                const n = (<TbMove>a).n;
+                let nw = w.clone();
+                if (n === 0) {
+                    return w;
+                } else if (n < 0) {
+                    console.error(w, a);
+                    throw "applyAction: impossible action";
+                } else if (w.tbLoc.kind === 'onStage') {
+                    nw.tbLoc = new TbOnStack(w.tbLoc.stackIx, n - 1);
+                } else {
+                    const newPos = w.tbLoc.posInStack + n;
+                    nw.tbLoc = (newPos === -1) ? new TbOnStage(w.tbLoc.stackIx) : new TbOnStack(w.tbLoc.stackIx, newPos);
+                }
+                return nw;
+            }
+        case 'TbGet':
+            {
+                let nw = w.clone();
+                nw.carryRs = true;
+                // TODO: Proper verification of position.
+                nw.connectedRs[w.tbLoc.stackIx] -= 1;
+                return nw;
+            }
+        case 'TbPut':
+            {
+                let nw = w.clone();
+                nw.carryRs = false;
+                // TODO: Proper verification of position.
+                nw.connectedRs[w.tbLoc.stackIx] += 1;
+                return nw;
+            }
+        case 'FdwMove':
+            {
+                let nw = w.clone();
+                const n = (<FdwMove>a).n;
+                if (w.tbLoc.kind === 'onStage') {
+                    nw.tbLoc = new TbOnStage(nw.tbLoc.stackIx + n);
+                }
+                nw.stagePos += n;
+                return nw;
+            }
+        case 'Noop':
+            return w;
+        case 'Seq':
+            {
+                let nw = w;
+                (<Seq>a).acs.forEach(subA => {
+                    nw = applyAction(w, subA);
+                });
+                return nw;
+            }
+        case 'Par':
+            {
+                let nw = w;
+                (<Seq>a).acs.forEach(subA => {
+                    nw = applyAction(w, subA);
+                });
+                return nw;
+            }
+        default:
+            console.error("Complex action passed to applyAction");
+    }
 }
 
 
@@ -470,6 +542,15 @@ class Fp1dWorld {
 
     countRs(): number {
         return this.connectedRs.reduce((a, b) => a + b) + (this.carryRs ? 1 : 0);
+    }
+
+    clone(): Fp1dWorld {
+        const w = new Fp1dWorld();
+        w.stagePos = this.stagePos;
+        w.connectedRs = this.connectedRs.map(x => x);
+        w.carryRs = this.carryRs;
+        w.tbLoc = this.tbLoc;
+        return w;
     }
 }
 
