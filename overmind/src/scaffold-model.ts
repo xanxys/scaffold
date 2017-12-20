@@ -87,6 +87,7 @@ export class ScaffoldModel {
     attachTrainToRail(tb: S60TrainBuilder, rail: S60RailFeederWide) {
         rail.attachedBy = tb;
         tb.attachedTo = rail;
+        rail.stagePos = rail.stagePos;  // HACK: Force update TB pos
     }
 
     getThings(): Array<ScaffoldThing> {
@@ -394,8 +395,8 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
 
     private getRailSegment(): RailSegment {
         return new RailSegment(
-            new THREE.Vector3(this.paramx + 0.1, -0.03, 0),
-            new THREE.Vector3(this.paramx + 0.1, 0.03, 0),
+            new THREE.Vector3(-this.paramx + 0.24, -0.03, 0),
+            new THREE.Vector3(-this.paramx + 0.24, 0.03, 0),
             new THREE.Vector3(0, 0, 1));
     }
 
