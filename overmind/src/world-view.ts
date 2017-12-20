@@ -2,27 +2,13 @@ import * as THREE from 'three';
 import * as LoaderFactory from 'three-stl-loader';
 import * as OrthoTrackballControls from './ortho-trackball-controls.js';
 import { ScaffoldModel, ScaffoldThing, S60TrainBuilder, S60RailFeederWide, Port } from './scaffold-model';
+import { WorldViewModel, ClickOpState } from './world-viewmodel';
 
 let STLLoader: any = LoaderFactory(THREE);
 
-export enum ClickOpState {
-    None,
-    AddRs,
-    AddRh,
-    AddRr,
-    Remove,
-}
-
-export interface WorldViewModel {
-    readonly model: ScaffoldModel;
-    readonly state: ClickOpState;
-    getShowPhysics(): boolean;
-    onClickUiObject(obj: any);
-}
 
 const PRIM_COLOR = 0x3498db;
 const PRIM_COLOR_HOVER = 0x286090;
-
 
 /**
  * Renders ScaffoldModel directly, but uses WorldViewModel for model edit / other UI interactions.

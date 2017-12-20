@@ -102,6 +102,16 @@ export class ScaffoldModel {
         }
     }
 
+    // Util to connect new
+    addRailToPort(orgCoord: Coordinates, orgPort: Port, newRail: ScaffoldThing) {
+        newRail.coord.unsafeSetParentWithRelation(this.coord, orgCoord)
+            .alignPt(newRail.ports[0].pos, orgPort.pos)
+            .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
+            .alignDir(newRail.ports[0].up, orgPort.up)
+            .build();
+        this.addRail(newRail);
+    }
+
     // Incorrect semantics. Ports must belong to ScaffoldThing or ScaffoldSubComponent.
     // UI specific parts should be moved to viewmodel.
     getOpenPorts(): Array<any> {

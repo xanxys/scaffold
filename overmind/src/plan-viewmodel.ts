@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { ScaffoldModel, S60RailStraight, S60RailHelix, S60RailRotator, ScaffoldThing, S60TrainBuilder, S60RailFeederWide, ScaffoldThingLoader, Port } from './scaffold-model';
 import { Plan, Planner, FeederPlanner1D } from './planner';
 import { Coordinates } from './geometry';
-import { WorldView, WorldViewModel, ClickOpState } from './world-view';
+import { WorldView } from './world-view';
+import { WorldViewModel, ClickOpState, WorldViewModelCb } from './world-viewmodel';
 import { randomBytes } from 'crypto';
 import { WorkerPool } from './worker-pool';
 
@@ -11,7 +12,7 @@ import { WorkerPool } from './worker-pool';
  * 
  * Knows about both current / future ScaffoldModel.
  */
-export class PlanViewModel {
+export class PlanViewModel implements WorldViewModelCb {
     private state = ClickOpState.None;
     private view: WorldView;
     private showPhysics = false;
@@ -28,17 +29,18 @@ export class PlanViewModel {
     private execTimers: Array<NodeJS.Timer>;
 
     private targetModel: ScaffoldModel;
-
-    selectedTb?: S60TrainBuilder = null;
-    selectedFdw?: S60RailFeederWide = null;
+    worldViewModel: WorldViewModel;
 
     constructor(private currModel: ScaffoldModel, private workerPool: WorkerPool) {
         this.loader = new ScaffoldThingLoader();
         this.targetModel = new ScaffoldModel();
+
+        this.worldViewModel = new WorldViewModel(currModel, this.state, this);
     }
 
     setState(state: ClickOpState) {
         this.state = state;
+        this.worldViewModel = new WorldViewModel(this.isCurrent ? this.currModel : this.targetModel, state, this)
         this.rebind();
     }
 
@@ -52,7 +54,7 @@ export class PlanViewModel {
                 const fd = loader.create(S60RailFeederWide);
                 fd.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.1, 0, 0));
                 this.currModel.addRail(fd);
-                PlanViewModel.addRailToPort(this.currModel, fd.coord, fd.ports[3], loader.create(S60RailStraight));
+                this.currModel.addRailToPort(fd.coord, fd.ports[3], loader.create(S60RailStraight));
 
                 const tb = loader.create(S60TrainBuilder);
                 tb.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.105, -0.022, 0));
@@ -64,7 +66,7 @@ export class PlanViewModel {
                 const fd = loader.create(S60RailFeederWide);
                 fd.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.1, 0, 0));
                 this.targetModel.addRail(fd);
-                PlanViewModel.addRailToPort(this.targetModel, fd.coord, fd.ports[1], loader.create(S60RailStraight));
+                this.targetModel.addRailToPort(fd.coord, fd.ports[1], loader.create(S60RailStraight));
 
                 const tb = loader.create(S60TrainBuilder);
                 tb.coord.unsafeSetParent(this.targetModel.coord, new THREE.Vector3(0.105, -0.022, 0));
@@ -132,6 +134,7 @@ export class PlanViewModel {
 
     setIsCurrent(isCurrent: boolean) {
         this.isCurrent = isCurrent;
+        this.worldViewModel = new WorldViewModel(this.isCurrent ? this.currModel : this.targetModel, this.state, this)
         this.rebind();
     }
 
@@ -147,77 +150,20 @@ export class PlanViewModel {
         this.view = view;
     }
 
-    // World-specific.
-    onClickUiObject(obj: any) {
-        switch (this.state) {
-            case ClickOpState.AddRs:
-                this.loader.createAsync(S60RailStraight).then(r => this.addRail(obj, r));
-                break;
-            case ClickOpState.AddRh:
-                this.loader.createAsync(S60RailHelix).then(r => this.addRail(obj, r));
-                break;
-            case ClickOpState.AddRr:
-                this.loader.createAsync(S60RailRotator).then(r => this.addRail(obj, r));
-                break;
-            case ClickOpState.Remove:
-                this.removeRail(obj);
-                break;
-            case ClickOpState.None:
-                const thing = obj.userData.thing;
-                if (thing.type === 'TB') {
-                    this.selectedTb = <S60TrainBuilder> thing;
-                    this.selectedFdw = null;
-                } else if (thing.type === 'FDW-RS') {
-                    this.selectedTb = null;
-                    this.selectedFdw = <S60RailFeederWide> thing;
-                }
-                break;
-            default:
-                let _: never = this.state;
-        }
-    }
-
     getShowPhysics(): boolean {
         return this.showPhysics;
     }
 
-    private addRail(obj: any, newRail: ScaffoldThing) {
-        PlanViewModel.addRailToPort(this.isCurrent ? this.currModel : this.targetModel, obj.userData.rail.coord, obj.userData.port, newRail);
+    onModelUpdated() {
         this.updatePlan();
         this.rebind();
     }
 
-    private static addRailToPort(model: ScaffoldModel, orgCoord: Coordinates, orgPort: Port, newRail: ScaffoldThing) {
-        newRail.coord.unsafeSetParentWithRelation(model.coord, orgCoord)
-            .alignPt(newRail.ports[0].pos, orgPort.pos)
-            .alignDir(newRail.ports[0].fwd, orgPort.fwd.clone().multiplyScalar(-1))
-            .alignDir(newRail.ports[0].up, orgPort.up)
-            .build();
-        model.addRail(newRail);
-    }
-
-    private removeRail(obj: any) {
-        (this.isCurrent ? this.currModel : this.targetModel).removeRail(obj.userData.rail);
-        this.updatePlan();
-        this.rebind();
+    getLoader(): ScaffoldThingLoader {
+        return this.loader;
     }
 
     private rebind() {
-        this.view.bindViewModel(new WorldViewModelImpl(this.isCurrent ? this.currModel : this.targetModel, this, this.state));
-    }
-}
-
-class WorldViewModelImpl implements WorldViewModel {
-    constructor(public readonly model: ScaffoldModel, private planViewModel: PlanViewModel, public readonly state: ClickOpState) {
-    }
-
-    // Realtime
-    getShowPhysics(): boolean {
-        return this.planViewModel.getShowPhysics();
-    }
-
-    // Non-realtime
-    onClickUiObject(obj: any) {
-        return this.planViewModel.onClickUiObject(obj);
+        this.view.bindViewModel(this.worldViewModel);
     }
 }

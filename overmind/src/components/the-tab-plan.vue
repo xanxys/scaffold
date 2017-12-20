@@ -6,7 +6,7 @@
             <div>
                 <section v-if="showFdwProperty">
                     <h4>FDW-RS Properties</h4>
-                    FDW.stagePos = {{viewmodel.selectedFdw.stagePos}}
+                    FDW.stagePos = {{viewmodel.worldViewModel.selectedFdw.stagePos}}
                     <br/>
                     <button class="btn btn-info" @click="decPropFdw"><i class="material-icons">remove</i></button>
                     <button class="btn btn-info" @click="incPropFdw"><i class="material-icons">add</i></button>
@@ -47,11 +47,11 @@ export default {
     },
     methods: {
         decPropFdw() {
-            this.viewmodel.selectedFdw.stagePos -= 1;
+            this.viewmodel.worldViewModel.selectedFdw.stagePos -= 1;
             this.viewmodel.updatePlan();
         },
         incPropFdw() {
-            this.viewmodel.selectedFdw.stagePos += 1;
+            this.viewmodel.worldViewModel.selectedFdw.stagePos += 1;
             this.viewmodel.updatePlan();
         },
         toggleMode() {
@@ -60,10 +60,10 @@ export default {
     },
     computed: {
         showFdwProperty() {
-            return this.viewmodel.selectedFdw !== null;
+            return this.viewmodel.worldViewModel.selectedFdw !== null;
         },
         showTbProperty() {
-            return this.viewmodel.selectedTb !== null;
+            return this.viewmodel.worldViewModel.selectedTb !== null;
         },
         isCurrent() {
             return this.viewmodel.getIsCurrent();
