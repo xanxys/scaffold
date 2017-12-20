@@ -1,25 +1,24 @@
 <template>
-    <div style="display:flex; align-items: center">
-        <i class="material-icons">playlist_add</i>
-        <button @click="popForFeederPlan" class="btn btn-default">PopulateForFeederPlan</button>
+    <div>
+        <div style="display:flex; align-items: center">
+            <i class="material-icons">playlist_add</i>
+            <button @click="popForFeederPlan" class="btn btn-default">PopulateForFeederPlan</button>
+        </div>
+        <div style="display:flex; align-items: center">
+            <i class="material-icons">add_box</i>
+            <button @click="addRs" class="btn btn-default" :class="{'active': isAddRs}">RS</button>
+            <button @click="addRh" class="btn btn-default" :class="{'active': isAddRh}">RH</button>
+            <button @click="addRr" class="btn btn-default" :class="{'active': isAddRr}">RR</button>
+            <button @click="remove" class="btn btn-default" :class="{'active': isRemove}"><i class="material-icons">delete_forever</i></button>
 
-        <i class="material-icons">add_box</i>
-        <button @click="addRs" class="btn btn-default" :class="{'active': isAddRs}">RS</button>
-        <button @click="addRh" class="btn btn-default" :class="{'active': isAddRh}">RH</button>
-        <button @click="addRr" class="btn btn-default" :class="{'active': isAddRr}">RR</button>
-        <button @click="remove" class="btn btn-default" :class="{'active': isRemove}"><i class="material-icons">delete_forever</i></button>
+            <button @click="edit" class="btn btn-default" :class="{'active': isEdit}"><i class="material-icons">mode_edit</i></button>
 
-        <button @click="edit" class="btn btn-default" :class="{'active': isEdit}"><i class="material-icons">mode_edit</i></button>
+            <div style="flex-grow: 1"></div> 
 
-        <div style="flex-grow: 1"></div> 
-
-        <button @click="toggleMode" class="btn btn-default">
-            <i class="material-icons">compare_arrows</i>{{isCurrent ? "Showing Current" : "Showing Future"}}
-        </button>
-
-        <button @click="togglePhysics" class="btn btn-default">
-            <i class="material-icons">layers</i>Toggle Physics Elements
-        </button>
+            <button @click="togglePhysics" class="btn btn-default">
+                <i class="material-icons">layers</i>Toggle Physics Elements
+            </button>
+        </div>
     </div>
 </template>
 
@@ -57,17 +56,11 @@ export default {
         edit() {
             this.viewmodel.setState(ClickOpState.None);
         },
-        toggleMode() {
-            this.viewmodel.setIsCurrent(!this.viewmodel.getIsCurrent());
-        },
         togglePhysics() {
             this.viewmodel.togglePhysics();
         },
     },
     computed: {
-        isCurrent() {
-            return this.viewmodel.getIsCurrent();
-        },
         isAddRs() {
             return this.viewmodel.state === ClickOpState.AddRs;
         },

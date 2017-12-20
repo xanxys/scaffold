@@ -26,6 +26,9 @@
                 </section>
             </div>
         </div>
+        <button @click="toggleMode" class="btn btn-default">
+                <i class="material-icons">compare_arrows</i>{{isCurrent ? "Showing Current" : "Showing Future"}}
+        </button>
         <timeline :viewmodel="viewmodel"></timeline>
     </div>
 </template>
@@ -50,7 +53,10 @@ export default {
         incPropFdw() {
             this.viewmodel.selectedFdw.stagePos += 1;
             this.viewmodel.updatePlan();
-        }
+        },
+        toggleMode() {
+            this.viewmodel.setIsCurrent(!this.viewmodel.getIsCurrent());
+        },
     },
     computed: {
         showFdwProperty() {
@@ -58,7 +64,10 @@ export default {
         },
         showTbProperty() {
             return this.viewmodel.selectedTb !== null;
-        }
+        },
+        isCurrent() {
+            return this.viewmodel.getIsCurrent();
+        },
     }
 }
 </script>

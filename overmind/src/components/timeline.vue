@@ -1,8 +1,5 @@
 <template>
     <div>
-        <div>
-        CURR TARG
-        </div>
         <div class="timeline" style="display: flex; flex-direction: column">
             <table>
                 <tr v-for="worker in workers" :key="worker.name" class="timeline-worker">
