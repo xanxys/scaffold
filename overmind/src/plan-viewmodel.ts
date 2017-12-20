@@ -32,7 +32,7 @@ export class PlanViewModel {
     selectedTb?: S60TrainBuilder = null;
     selectedFdw?: S60RailFeederWide = null;
 
-    constructor(private currModel, private workerPool: WorkerPool) {
+    constructor(private currModel: ScaffoldModel, private workerPool: WorkerPool) {
         this.loader = new ScaffoldThingLoader();
         this.targetModel = new ScaffoldModel();
     }
@@ -57,6 +57,8 @@ export class PlanViewModel {
                 const tb = loader.create(S60TrainBuilder);
                 tb.coord.unsafeSetParent(this.currModel.coord, new THREE.Vector3(0.105, -0.022, 0));
                 this.currModel.addRail(tb);
+
+                this.currModel.attachTrainToRail(tb, fd);
             }
             {
                 const fd = loader.create(S60RailFeederWide);

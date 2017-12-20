@@ -10,6 +10,12 @@
                     <br/>
                     <button class="btn btn-info" @click="decPropFdw"><i class="material-icons">remove</i></button>
                     <button class="btn btn-info" @click="incPropFdw"><i class="material-icons">add</i></button>
+
+                    <br/>
+                    Will also affect:
+                    <ul>
+                        <li>TB (coupled by rail)</li>
+                    </ul>
                 </section>
                 <section v-if="showTbProperty">
                     <h4>TB Properties</h4>
@@ -39,9 +45,11 @@ export default {
     methods: {
         decPropFdw() {
             this.viewmodel.selectedFdw.stagePos -= 1;
+            this.viewmodel.updatePlan();
         },
         incPropFdw() {
             this.viewmodel.selectedFdw.stagePos += 1;
+            this.viewmodel.updatePlan();
         }
     },
     computed: {

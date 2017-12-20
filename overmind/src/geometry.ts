@@ -69,6 +69,17 @@ export class Coordinates {
         });
     }
 
+    /**
+     * Change relative pose to parent, using another reference coordinates.
+     * Usage:
+     * newCoord.adjustWithRelation(existingRef)
+     *   .alignX(newX, existingX)
+     *   .build();
+     */
+    adjustWithRelation(ref: Coordinates): RelationBuilder {
+        return this.unsafeSetParentWithRelation(this.parent, ref);
+    }
+
     convertP(pos: THREE.Vector3, target: Coordinates): THREE.Vector3 {
         if (target === this) {
             return pos;

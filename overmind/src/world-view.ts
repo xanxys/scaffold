@@ -251,7 +251,7 @@ export class WorldView {
                 // TODO: Migrate these into ScaffoldModel intead of having hierarchy here.
                 const stage = new THREE.Mesh(this.cadModels['S60C-FDW-RS_stage']);
                 stage.material = new THREE.MeshLambertMaterial({ 'color': new THREE.Color(0x888888) });
-                this.realtimeBindings.push({ apply: () => stage.position.x = -(<S60RailFeederWide>thing).paramx + 0.0957});
+                this.realtimeBindings.push({ apply: () => stage.position.x = -(<S60RailFeederWide>thing).paramx + 0.0957 });
 
                 mesh.add(stage);
                 obj = mesh;
@@ -282,7 +282,12 @@ export class WorldView {
                 mesh.material = new THREE.MeshLambertMaterial({});
                 obj = mesh;
             }
-            obj.applyMatrix(thing.cadCoord.getTransformTo(this.viewModel.model.coord));
+            this.realtimeBindings.push({
+                apply: () => {
+                    obj.matrix.copy(thing.cadCoord.getTransformTo(this.viewModel.model.coord));
+                    obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
+                }
+            });
             this.scaffoldView.add(obj);
         });
         // Run initial bindings to update model positions.

@@ -84,6 +84,11 @@ export class ScaffoldModel {
         return model;
     }
 
+    attachTrainToRail(tb: S60TrainBuilder, rail: S60RailFeederWide) {
+        rail.attachedBy = tb;
+        tb.attachedTo = rail;
+    }
+
     getThings(): Array<ScaffoldThing> {
         return this.things;
     }
@@ -343,6 +348,9 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
     static readonly GAP_NARROW = 35e-3;  // distance between i-(i+1) for i>=1
     paramx: number;  // 0: aligned exactly at 0th stack. 165: last stack.
 
+    // TODO: Abstract this?
+    attachedBy?: S60TrainBuilder = null;
+
     constructor(readonly cadModel: THREE.Geometry) {
         this.coord = new Coordinates("FDW");
         this.ports = [0, 0.06, 0.06 + 0.035, 0.06 + 0.035 * 2, 0.06 + 0.035 * 3].map(xoffset => {
@@ -358,6 +366,8 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
             new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
 
         this.paramx = 0;
+
+        // TODO: Somehow need to propagate coord update to boundBy.
     }
 
     // integer: 0 = origin. 1 = 1st stop.
@@ -375,6 +385,18 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
         } else {
             this.paramx = (pIx - 1) * S60RailFeederWide.GAP_NARROW + S60RailFeederWide.GAP_WIDE;
         }
+
+        if (this.attachedBy) {
+            const railSeg = this.getRailSegment();
+            this.attachedBy.centerOn(railSeg, this.coord);
+        }
+    }
+
+    private getRailSegment(): RailSegment {
+        return new RailSegment(
+            new THREE.Vector3(this.paramx + 0.1, -0.03, 0),
+            new THREE.Vector3(this.paramx + 0.1, 0.03, 0),
+            new THREE.Vector3(0, 0, 1));
     }
 
     // Not used anywhere for now.
@@ -394,11 +416,6 @@ export class S60RailFeederWide implements ScaffoldThing, Active {
     }
 }
 
-/*
-class S60RFWStage implements ScaffoldThing {
-}
-*/
-
 export class S60TrainBuilder implements ScaffoldThing, Active {
     static readonly type = "TB";
     readonly type = "TB";
@@ -410,6 +427,12 @@ export class S60TrainBuilder implements ScaffoldThing, Active {
 
     addr?: number;
 
+    // TODO: Abstract this, to refer to RailSegment instead of rail direclty?
+    attachedTo?: S60RailFeederWide = null;
+
+    readonly up = new THREE.Vector3(0, 0, 1);
+    readonly forward = new THREE.Vector3(0, 1, 0);
+
     constructor(readonly cadModel: THREE.Geometry) {
         this.coord = new Coordinates("TB");
         this.ports = [];
@@ -418,6 +441,22 @@ export class S60TrainBuilder implements ScaffoldThing, Active {
         this.cadCoord = new Coordinates();
         this.cadCoord.unsafeSetParent(this.coord, new THREE.Vector3(0, 0, 0.038),
             new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
+    }
+
+    centerOn(rs: RailSegment, rsCoord: Coordinates) {
+        const rsCenterPos = rs.pos1.clone().add(rs.pos2).multiplyScalar(0.5);
+
+        // Choose rail direction closer to forward (instead of -forward).
+        let rsDir = rs.dir;
+        if (this.coord.convertD(rsDir, rsCoord).dot(this.forward) < 0) {
+            rsDir.multiplyScalar(-1);
+        }
+
+        this.coord.adjustWithRelation(rsCoord)
+            .alignPt(this.bound.center(), rs.center)
+            .alignDir(this.up, rs.up)
+            .alignDir(this.forward, rsDir)
+            .build();
     }
 
     getRailSegments(): Array<RailSegment> {
@@ -446,5 +485,15 @@ export class Port {
  */
 class RailSegment {
     constructor(public pos1: THREE.Vector3, public pos2: THREE.Vector3, public up: THREE.Vector3) {
+    }
+
+    get center(): THREE.Vector3 {
+        return this.pos1.clone().add(this.pos2).multiplyScalar(0.5);
+    }
+
+    /** Get rail direction unit vector. Caller must not rely on which direction it's pointing to. */
+    get dir(): THREE.Vector3 {
+        const delta = (Math.random() > 0.5) ? this.pos1.clone().sub(this.pos2) : this.pos2.clone().sub(this.pos1);
+        return delta.normalize();
     }
 }
