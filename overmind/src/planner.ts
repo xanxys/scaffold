@@ -333,7 +333,7 @@ function go(w: Fp1dWorld, dst: TbLoc): HlAction {
     if (tbLoc instanceof TbOnStage) {
         if (dst instanceof TbOnStage) {
             const dIx = dst.stackIx - tbLoc.stackIx;
-            return dIx > 0 ? new FdwMove(dIx) : new Noop();
+            return dIx !== 0 ? new FdwMove(dIx) : new Noop();
         } else if (dst instanceof TbOnStack) {
             return new Seq(
                 (w.stagePos !== dst.stackIx) ? new FdwMove(dst.stackIx - w.stagePos) : new Noop(),
@@ -456,7 +456,7 @@ function applyAction(w: Fp1dWorld, a: HlAction): Fp1dWorld {
                 } else if (n < 0) {
                     console.error(w, a);
                     throw "applyAction: impossible action";
-                } else if (w.tbLoc.kind === 'onStage') {
+                } else if (w.tbLoc instanceof TbOnStage) {
                     nw.tbLoc = new TbOnStack(w.tbLoc.stackIx, n - 1);
                 } else {
                     const newPos = w.tbLoc.posInStack + n;
@@ -468,8 +468,8 @@ function applyAction(w: Fp1dWorld, a: HlAction): Fp1dWorld {
             {
                 let nw = w.clone();
                 nw.carryRs = true;
-                // TODO: Proper verification of position.
                 nw.connectedRs[w.tbLoc.stackIx] -= 1;
+                // TODO: Proper verification of position.
                 return nw;
             }
         case 'TbPut':
@@ -484,7 +484,7 @@ function applyAction(w: Fp1dWorld, a: HlAction): Fp1dWorld {
             {
                 let nw = w.clone();
                 const n = (<FdwMove>a).n;
-                if (w.tbLoc.kind === 'onStage') {
+                if (w.tbLoc instanceof TbOnStage) {
                     nw.tbLoc = new TbOnStage(nw.tbLoc.stackIx + n);
                 }
                 nw.stagePos += n;
@@ -496,7 +496,7 @@ function applyAction(w: Fp1dWorld, a: HlAction): Fp1dWorld {
             {
                 let nw = w;
                 (<Seq>a).acs.forEach(subA => {
-                    nw = applyAction(w, subA);
+                    nw = applyAction(nw, subA);
                 });
                 return nw;
             }
@@ -504,7 +504,7 @@ function applyAction(w: Fp1dWorld, a: HlAction): Fp1dWorld {
             {
                 let nw = w;
                 (<Seq>a).acs.forEach(subA => {
-                    nw = applyAction(w, subA);
+                    nw = applyAction(nw, subA);
                 });
                 return nw;
             }
