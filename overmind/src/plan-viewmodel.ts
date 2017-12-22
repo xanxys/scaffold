@@ -140,7 +140,7 @@ export class PlanViewModel implements WorldViewModelCb {
         } else {
             this.plan = planOrError;
             this.errorMsg = '';
-            this.infoMsg = `${planOrError.getTotalTime()}sec Tx:${planOrError.getTotalTxCommandSize()}B`;
+            this.infoMsg = `${planOrError.getTotalTime().toFixed(2)}sec Tx:${planOrError.getTotalTxCommandSize()}B`;
         }
     }
 
