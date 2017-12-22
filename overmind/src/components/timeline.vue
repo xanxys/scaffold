@@ -2,6 +2,14 @@
     <div>
         <div class="timeline" style="display: flex; flex-direction: column">
             <table>
+                <tr>
+                    <td></td>
+                    <td style="position:relative">
+                        <div style="position: absolute; height: 50px; width: 2px; background-color: white; z-index: 2"
+                            :style="{left: (pxPerSec * timeSec) + 'px'}">
+                        </div>
+                    </td>
+                </tr>
                 <tr v-for="worker in workers" :key="worker.name" class="timeline-worker">
                     <td>
                         <span class="timeline-header">{{worker.name}}</span>
@@ -80,7 +88,11 @@ export default {
             return results;
         },
         timeSec() {
-            return (this.timeNow - this.timeOrigin) * 1e-3;
+            if (this.simInterval) {
+                return (this.timeNow - this.timeOrigin) * 1e-3;
+            } else {
+                return this.viewmodel.execTime;
+            }
         }
     },
     methods: {

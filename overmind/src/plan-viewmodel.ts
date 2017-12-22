@@ -26,7 +26,9 @@ export class PlanViewModel implements WorldViewModelCb {
 
     // Plan Execution.
     public execNumComplete = 0;
+    public execTime = 0;
     private execTimers: Array<NodeJS.Timer>;
+    private execInterval: any;
 
     private targetModel: ScaffoldModel;
     worldViewModel: WorldViewModel;
@@ -85,12 +87,18 @@ export class PlanViewModel implements WorldViewModelCb {
         if (this.execNumComplete < sqs.length) {
             const [wid, seq] = sqs[this.execNumComplete];
             this.workerPool.sendActionSeq(seq, this.workerPool.typeToAddr.get(wid));
+            this.execTime += seq.getDurationSec();
             this.execNumComplete += 1;
         }
     }
 
     skipExecStep() {
-        this.execNumComplete += 1;
+        let sqs = this.plan.getSeqTimeOrdered();
+        if (this.execNumComplete < sqs.length) {
+            const [wid, seq] = sqs[this.execNumComplete];
+            this.execTime += seq.getDurationSec();
+            this.execNumComplete += 1;
+        }
     }
 
     execCurrentPlan() {
@@ -101,11 +109,21 @@ export class PlanViewModel implements WorldViewModelCb {
                     this.workerPool.sendActionSeq(seq, this.workerPool.typeToAddr.get(wid));
                 }, seq.getT0() * 1e3);
             });
+
+        const t0 = new Date();
+        this.execTime = 0;
+        this.execInterval = setInterval(() => {
+            this.execTime = (<any>new Date() - <any>t0) * 1e-3;
+        }, 100);
     }
 
     stopExec() {
         this.execTimers.forEach(t => clearTimeout(t));
         this.execTimers = [];
+
+        clearInterval(this.execInterval);
+        this.execInterval = null;
+
         this.execNumComplete = 0;
     }
 
