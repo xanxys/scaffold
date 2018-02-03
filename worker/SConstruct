@@ -28,20 +28,11 @@ env.Library('build/libs.a', Glob('lib/*.cpp') + Glob('lib/*.c'))
 # different FWs
 
 env.Object('build/builder-main.o', 'build/main.cpp', CPPDEFINES=['WORKER_TYPE_BUILDER'])
-env.Object('build/feeder-main.o', 'build/main.cpp', CPPDEFINES=['WORKER_TYPE_FEEDER'])
 
 env.Program('build/builder-fw.elf', ['build/builder-main.o', 'build/libs.a'])
 env.Copy('build/builder-fw.hex', 'build/builder-fw.elf')
 env.Dump('build/builder-disasm.S', 'build/builder-fw.elf')
-
-env.Program('build/feeder-fw.elf', ['build/feeder-main.o', 'build/libs.a'])
-env.Copy('build/feeder-fw.hex', 'build/feeder-fw.elf')
-env.Dump('build/feeder-disasm.S', 'build/feeder-fw.elf')
-
 env.Alias('write-builder', env.WriteProg(None, 'build/builder-fw.hex'))
-env.Alias('write-feeder', env.WriteProg(None, 'build/feeder-fw.hex'))
-
 env.Alias('size-builder', env.CheckSize('fake-sz-builder', 'build/builder-fw.elf'))
-env.Alias('size-feeder', env.CheckSize('fake-sz-feeder', 'build/feeder-fw.elf'))
 
-env.Default('size-builder', 'size-feeder')
+env.Default('size-builder')

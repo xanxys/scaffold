@@ -237,13 +237,6 @@ int main() {
     actions.enqueue(action);
   }
   #endif
-  #ifdef WORKER_TYPE_FEEDER
-  {
-    Action action(1 /* dur_ms */);
-    action.servo_pos[CIX_LOCK] = 20;  // open
-    actions.enqueue(action);
-  }
-  #endif
 
   #ifdef WORKER_TYPE_BUILDER
   indicator.flash_blocking();
