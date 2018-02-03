@@ -1,5 +1,7 @@
 # scaffold
 
+[![Scaffold: Progression of Rails 2017](https://img.youtube.com/vi/H0F9yggMfn8/0.jpg)](https://www.youtube.com/watch?v=H0F9yggMfn8 "Scaffold: Progression of Rails 2017")
+
 * PRD: https://docs.google.com/document/d/1AyhhH3LTPeGcEkzU2smBuM1e6MzfZJXZTJ8Jl38s1jc/edit
 * Designs
   * Mechanical hardware: Autodesk Fusion360 cloud

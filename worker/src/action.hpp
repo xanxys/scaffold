@@ -7,9 +7,6 @@
 #ifdef WORKER_TYPE_BUILDER
 #include "hardware_builder.hpp"
 #endif
-#ifdef WORKER_TYPE_FEEDER
-#include "hardware_feeder.hpp"
-#endif
 
 // Safely calculate va + (vb - va) * (ix / num)
 uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
