@@ -8,19 +8,21 @@ env=Environment(
     AS="avr-as",
     CC='avr-gcc',
     CXX="avr-gcc",
-    CCFLAGS="-D F_CPU=16000000L -mmcu=%s -std=c++11 -Wall -Os -funroll-loops -I./lib -I%s -fdata-sections -ffunction-sections"%(arch, "/usr/share/arduino/hardware/arduino/avr/variants/standard"),
+    CCFLAGS="-D F_CPU=12000000L -mmcu=%s -std=c++11 -Wall -Os -funroll-loops -I./lib -I%s -fdata-sections -ffunction-sections"%(arch, "/usr/share/arduino/hardware/arduino/avr/variants/standard"),
     LINKFLAGS="-mmcu=%s -Wl,--gc-sections"%arch)
 
 env.Append(BUILDERS=
     {"Copy":Builder(action="avr-objcopy $SOURCE -O ihex $TARGET")
     ,"Dump":Builder(action="avr-objdump -dSr $SOURCE > $TARGET")
-    ,"WriteProg":Builder(action="avrdude -p m328p -c usbasp -U flash:w:$SOURCE:i")
+    # ATmega328PB sig=0x1e9516  /  ATmega328P is 1E 95 0F
+    # Ignore sig because avrdude doesn't support it yet.
+    ,"WriteProg":Builder(action="avrdude -F -p m328p -c usbasp -U flash:w:$SOURCE:i")
     ,"CheckSize":Builder(action="avr-size $SOURCE")
     })
 
 # http://www.engbedded.com/fusecalc/
 # 16MHz 1:1, fast start, no watchdog, preserve EEPROM while flashing
-env.Alias('writefuse',env.Command('fake-fuse', None, "avrdude -p m328p -c usbasp -U lfuse:w:0xfe:m -U hfuse:w:0xd1:m"))
+env.Alias('writefuse',env.Command('fake-fuse', None, "avrdude -F -p m328p -c usbasp -U lfuse:w:0xfe:m -U hfuse:w:0xd1:m"))
 
 env.Library('build/libs.a', Glob('lib/*.cpp') + Glob('lib/*.c'))
 
