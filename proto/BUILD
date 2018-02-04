@@ -11,5 +11,6 @@ genrule(
     name = "proto_nanopb",
     srcs = [":proto_desc"],
     outs = ["builder.pb.h", "builder.pb.c"],
-    cmd = "python nanopb/generator/nanopb_generator.py $(location :proto_desc)",
+    cmd = "python $(location //nanopb:generator_bin) $(SRCS)",
+    tools = ["//nanopb:generator_bin", "//nanopb:generator_lib"],
 )

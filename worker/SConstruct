@@ -8,7 +8,7 @@ env=Environment(
     AS="avr-as",
     CC='avr-gcc',
     CXX="avr-gcc",
-    CCFLAGS="-D F_CPU=12000000L -mmcu=%s -std=c++11 -Wall -Os -funroll-loops -I./lib -I%s -fdata-sections -ffunction-sections"%(arch, "/usr/share/arduino/hardware/arduino/avr/variants/standard"),
+    CCFLAGS="-D F_CPU=12000000L -mmcu=%s -std=c++11 -Wall -Os -funroll-loops -I./lib -I../ -I../nanopb -I../bazel-genfiles -I%s -fdata-sections -ffunction-sections"%(arch, "/usr/share/arduino/hardware/arduino/avr/variants/standard"),
     LINKFLAGS="-mmcu=%s -Wl,--gc-sections"%arch)
 
 env.Append(BUILDERS=
@@ -30,8 +30,11 @@ env.Library('build/libs.a', Glob('lib/*.cpp') + Glob('lib/*.c'))
 # different FWs
 
 env.Object('build/builder-main.o', 'build/main.cpp', CPPDEFINES=['WORKER_TYPE_BUILDER'])
+env.Object('build/proto.o', '../bazel-genfiles/proto/builder.pb.c')
+env.Object('build/pb_encode.o', '../nanopb/pb_encode.c')
+env.Object('build/pb_common.o', '../nanopb/pb_common.c')
 
-env.Program('build/builder-fw.elf', ['build/builder-main.o', 'build/libs.a'])
+env.Program('build/builder-fw.elf', ['build/builder-main.o', 'build/libs.a', 'build/proto.o', 'build/pb_encode.o', 'build/pb_common.o'])
 env.Copy('build/builder-fw.hex', 'build/builder-fw.elf')
 env.Dump('build/builder-disasm.S', 'build/builder-fw.elf')
 env.Alias('write-builder', env.WriteProg(None, 'build/builder-fw.hex'))

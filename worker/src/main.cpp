@@ -3,6 +3,11 @@
 #include <Arduino.h>
 #include <MsTimer2.h>
 
+/*
+#include <nanopb/pb_encode.h>
+#include <proto/builder.pb.h>
+*/
+
 #include "action.hpp"
 #include "hardware_builder.hpp"
 #include "json_writer.hpp"
@@ -285,6 +290,14 @@ int main() {
     actions.enqueue(action);
   }
 #endif
+
+/*
+  Status status;
+
+  uint8_t buffer[16];
+  pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+  pb_encode(&stream, Status_fields, &status);
+  */
 
   // Fully initialized. Start realtime periodic process & idle tasks.
   setMillisHook(loop1ms);
