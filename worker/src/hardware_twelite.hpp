@@ -3,7 +3,10 @@
 #include <EEPROM.h>
 
 #include "slice.hpp"
-#include "logger.hpp"
+#include "json_writer.hpp"
+
+char async_tx_buffer[200];
+char warn_tx_buffer[70];
 
 // Parse ":..." ASCII messages from standard TWELITE MWAPP.
 class TweliteInterface {
@@ -13,8 +16,7 @@ private:
   const static uint8_t BUF_SIZE = 150;
   uint8_t buffer[BUF_SIZE];
 
-  // TX buffer.
-  Logger<70> warn_log;
+  volatile uint8_t send_async_size = 0;
 
   // Size of 01 command data (excludes TWELITE header / csum) sent.
   uint32_t data_bytes_sent = 0;
@@ -44,6 +46,10 @@ public:
       uid = hdr_uid;
       write_eeprom_be(UID_EEPROM_ADDR, uid);
     }
+  }
+
+  void queue_send_async(uint8_t async_size) {
+    send_async_size = async_size;
   }
 
   // If fails, returns 0.
@@ -98,21 +104,6 @@ public:
 
   void info(const char* message) {
     send_status("INFO", message);
-  }
-
-  void info(const char* message, const char* vp, uint8_t vs) {
-    warn_log.clear();
-    warn_log.begin_std_dict("INFO");
-
-    warn_log.print_dict_key("msg");
-    warn_log.print_str(message);
-
-    warn_log.print_dict_key("val");
-    warn_log.print_str(vp, vs);
-
-    warn_log.print('}');
-
-    send_datagram(warn_log.buffer, warn_log.index);
   }
 
   uint32_t get_data_bytes_sent() {
@@ -222,15 +213,14 @@ private:
   }
 
   void send_status(const char* type, const char* message) {
-    warn_log.clear();
-    warn_log.begin_std_dict(type);
+    StringWriter writer(warn_tx_buffer, sizeof(warn_tx_buffer));
 
-    warn_log.print_dict_key("msg");
-    warn_log.print_str(message);
+    JsonDict resp(&writer);
+    resp.insert("ty").set(type);
+    resp.insert("msg").set(message);
+    resp.end();
 
-    warn_log.print('}');
-
-    send_datagram(warn_log.buffer, warn_log.index);
+    send_datagram(warn_tx_buffer, writer.size_written());
   }
 
   uint8_t decode_nibble(char c) {
@@ -295,10 +285,10 @@ private:
 
   char getch_concurrent() {
     while (Serial.available() == 0) {
-      if (request_log.send_async) {
-        send_datagram(request_log.buffer, request_log.index);
-        request_log.clear();
-        request_log.send_async = false;
+      uint8_t async_size = send_async_size;
+      if (async_size) {
+        send_datagram(async_tx_buffer, async_size);
+        send_async_size = 0;
       }
     }
     return Serial.read();

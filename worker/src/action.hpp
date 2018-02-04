@@ -371,29 +371,24 @@ public:
   }
 private:
   void report_cache() const {
-    // This breaks if main loop is sending something.
-    request_log.clear();
-    request_log.begin_std_dict("SENSOR_CACHE");
+    // check send_async_size
 
-    request_log.print_dict_key("rate/ms");
-    request_log.print(sensor.get_rate_ms());
-    request_log.print(',');
+    StringWriter writer(async_tx_buffer, sizeof(async_tx_buffer));
 
-    request_log.print_dict_key("val");
-    request_log.print('[');
+    JsonDict response(&writer);
+
+    response.insert("ty").set("SENSOR_CACHE");
+    response.insert("rate/ms").set(sensor.get_rate_ms());
+
+    JsonArray values = response.insert("val").as_array();
     for (uint8_t i = 0; i < tr_sensor_cache_ix; i++) {
-      request_log.print(tr_sensor_cache[i]);
-      if (i != tr_sensor_cache_ix - 1) {
-        request_log.print(',');
-      }
+      values.add().set(tr_sensor_cache[i]);
     }
-    request_log.print(']');
+    values.end();
 
-    request_log.print('}');
+    response.end();
 
-    // We cannot send directly, probably because timer interrupt disables Serial
-    // interrupts and get stuck?
-    request_log.send_soon();
+    twelite.queue_send_async(writer.size_written());
   }
 
   void print_system_status(JsonElement e) const {

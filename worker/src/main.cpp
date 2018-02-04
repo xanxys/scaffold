@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <MsTimer2.h>
 
-#include "logger.hpp"
+#include "json_writer.hpp"
 #include "action.hpp"
 #include "hardware_builder.hpp"
 
@@ -32,12 +32,11 @@ public:
       #ifdef WORKER_TYPE_BUILDER
       indicator.flash_blocking();
       #endif
-      request_log.clear();
 
       char code = read();
 
       char buffer[200];
-      StringWriter writer(buffer, 200);
+      StringWriter writer(buffer, sizeof(buffer));
 
       JsonDict response(&writer);
       switch (code) {
@@ -127,18 +126,13 @@ private: // Command Handler
         break;
       }
     }
-    request_log.begin_std_dict("ENQUEUED");
-
-    request_log.print_dict_key("in_queue");
-    request_log.print(actions.queue.count());
-
-    request_log.print('}');
+    response.insert("ty").set("ENQUEUED");
+    response.insert("in_queue").set(actions.queue.count());
   }
 
   void exec_update_sensor(JsonDict& response) {
     actions.update_gyro();
-    request_log.begin_std_dict("UPDATED");
-    request_log.print('}');
+    response.insert("ty").set("UPDATED");
   }
 
   void enqueue_single_action() {
