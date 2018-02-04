@@ -1,0 +1,40 @@
+syntax = "proto2";
+
+message Example {
+   required int32 value = 1;
+}
+
+enum WorkerType {
+    BUILDER = 1;
+}
+
+message Status {
+    optional WorkerType worker_type = 1;
+
+    optional SystemStatus system = 2;
+
+    // (Raw) I/O
+    optional SensorStatus sensor = 3;
+    optional OutputStatus output = 4;
+
+    // ActionQueue
+    optional ExecStatus exec = 5;
+    optional QueueStatus queue = 6;
+}
+
+message SystemStatus {
+}
+
+message SensorStatus {
+
+}
+
+message OutputStatus {
+}
+
+message ExecStatus {
+}
+
+message QueueStatus {
+
+}
