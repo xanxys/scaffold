@@ -2,11 +2,14 @@
 
 #include "hardware_twelite.hpp"
 #include "hardware_motor.hpp"
+#include "hardware_imu.hpp"
 #include "hardware_sensor.hpp"
 
 #ifdef WORKER_TYPE_BUILDER
 #include "hardware_builder.hpp"
 #endif
+
+#include <I2C.h>
 
 // Safely calculate va + (vb - va) * (ix / num)
 uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
@@ -27,16 +30,7 @@ public:
   uint8_t train_cutoff_thresh = 255;
   #endif
 
-  #ifdef WORKER_TYPE_FEEDER
-  // Set train=0 when T sensor reading < this value.
-  // WARNING: The < is flipped due to hardware construction.
-  // 255 means disable this functionality.
-  uint8_t stop_cutoff_thresh = 0;  // negative polarity
 
-  // Set train=0 when O sensor reading > this value.
-  // 0 means disale this functionality.
-  uint8_t origin_cutoff_thresh = 255;
-  #endif
 
   // Note this can be 0, but action still has effect.
   uint16_t duration_step;
@@ -256,6 +250,9 @@ public:
 
   MultiplexedSensor sensor;
 
+  IMU imu;
+  uint8_t gv = 0;
+
   static const uint8_t TCCR1A_FAST_PWM_8 = _BV(WGM10);
   static const uint8_t TCCR1B_FAST_PWM_8 = _BV(WGM12);
   static const uint8_t TCCR1A_A_NON_INVERT = _BV(COM1A1);
@@ -283,13 +280,6 @@ public:
         DCMotor(0xc8)
       }
       #endif
-      #ifdef WORKER_TYPE_FEEDER
-      servo_pos{5, 5, 5},
-      motors{
-        // vert
-        DCMotor(0xc0)
-      }
-      #endif
        {
 
   }
@@ -305,19 +295,16 @@ public:
     DDRD |= _BV(3); // PWMB
     #endif
 
-    #ifdef WORKER_TYPE_FEEDER
-    // Init servo PWM in Timer1 (freq=30.5Hz dur = 32ms)
-    TCCR1A = TCCR1A_FAST_PWM_8 | TCCR1A_A_NON_INVERT | TCCR1A_B_NON_INVERT;
-    TCCR1B = TCCR1B_FAST_PWM_8 | TCCR1B_PRESCALER_1024;
-    DDRB |= _BV(1) | _BV(2);
-    // Timer 2
-    DDRD |= _BV(3); // PWMB
-    #endif
-
-    // Init I2C bus for DC PWM motors.
-    Wire.begin();
+    // Init I2C bus.
+    I2c.begin();
+    I2c.pullup(0);  // we use external Pullups
+    I2c.timeOut(10);
 
     commit_posvel();
+  }
+
+  void update_gyro() {
+    gv = imu.read_ang_x();
   }
 
   void loop1ms() {
@@ -451,6 +438,8 @@ private:
 
   void print_sensor_status() const {
     request_log.print('[');
+    request_log.print(gv);
+    request_log.print(',');
     request_log.print(sensor.get_sensor0());
     request_log.print(',');
     request_log.print(sensor.get_sensor1());

@@ -21,6 +21,18 @@ enum MotorIx : uint8_t {
 };
 
 
+
+void set_5v_power(bool enabled) {
+  const uint8_t EN5V = _BV(0);
+
+  if (enabled) {
+    PORTB |= EN5V;
+  } else {
+    PORTB &= ~EN5V;
+  } 
+}
+
+
 class Indicator {
 private:
   bool error;

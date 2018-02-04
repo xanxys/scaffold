@@ -2,10 +2,10 @@
 
 #include <Arduino.h>
 #include <MsTimer2.h>
-#include <Wire.h>
 
 #include "logger.hpp"
 #include "action.hpp"
+#include "hardware_builder.hpp"
 
 ActionExecutorSingleton actions;
 
@@ -38,6 +38,7 @@ public:
       switch (code) {
         case 'x': exec_cancel_actions(); break;
         case 'p': exec_print_actions(); break;
+        case 's': exec_update_sensor(); break;
         case 'e': exec_enqueue(); break;
         default:
           twelite.warn("unknown command");
@@ -125,6 +126,12 @@ private: // Command Handler
     request_log.print_dict_key("in_queue");
     request_log.print(actions.queue.count());
 
+    request_log.print('}');
+  }
+
+  void exec_update_sensor() {
+    actions.update_gyro();
+    request_log.begin_std_dict("UPDATED");
     request_log.print('}');
   }
 
@@ -219,6 +226,8 @@ int main() {
   // Init arduino core things (e.g. Timer0).
   init();
   twelite.init();
+  set_5v_power(true);
+  delay(50);
   actions.init();
 
   #ifdef WORKER_TYPE_BUILDER
@@ -242,5 +251,6 @@ int main() {
   indicator.flash_blocking();
   #endif
   twelite.info("init2");
+
   command_processor.loop();
 }

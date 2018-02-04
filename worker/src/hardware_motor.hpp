@@ -1,10 +1,14 @@
 #pragma once
 
+#include <I2C.h>
+
 
 class DCMotor {
 private:
   // 7-bit address (common for read & write, MSB is 0)
   const uint8_t i2c_addr7b;
+
+  static constexpr uint8_t REG_CONTROL = 0;
 public:
   DCMotor(uint8_t i2c_addr) : i2c_addr7b(i2c_addr >> 1) {
   }
@@ -23,14 +27,14 @@ public:
     }
 
     sei();  // w/o this, TWI gets stuck after sending start condtion.
-    Wire.beginTransmission(i2c_addr7b);
-    Wire.write(0);  // CONTROL register
-    Wire.write((byte)value);
-    uint8_t res = Wire.endTransmission();
+    I2c.write(i2c_addr7b, REG_CONTROL, value);
+ //   uint8_t res = Wire.endTransmission();
     cli();
-
+    return;
+    /*
     if (res != 0) {
       twelite.warn("I2C failed");
     }
+    */
   }
 };
