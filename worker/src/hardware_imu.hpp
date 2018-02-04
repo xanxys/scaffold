@@ -2,6 +2,9 @@
 
 #include <I2C.h>
 
+/**
+ * Driver for STMicro LSM6DS3 Inertial Measurement Unit.
+ */
 class IMU {
  private:
   // 7-bit address (common for read & write, MSB is 0)
@@ -18,18 +21,16 @@ class IMU {
   static constexpr uint8_t XLDA = 0x1;
   static constexpr uint8_t GDA = 0x2;
 
-  const uint8_t OUTX_L_G = 0x22;
-  const uint8_t OUTX_H_G = 0x23;
-  const uint8_t OUTY_L_G = 0x24;
-  const uint8_t OUTY_H_G = 0x25;
-  const uint8_t OUTZ_L_G = 0x26;
-  const uint8_t OUTZ_H_G = 0x27;
-
-  const uint8_t OUTX_L_XL = 0x28;
-
-  int16_t gx;
+  static constexpr uint8_t OUTX_L_G = 0x22;  // ~0x27(OUTZ_H_G)
+  static constexpr uint8_t OUTX_L_XL = 0x28;
 
  public:
+  // 8.75mdps / LSB
+  int16_t gyro[3];
+
+  // 0.061mg / LSB
+  int16_t acc[3];
+
   IMU() {}
 
   /**
@@ -53,16 +54,23 @@ class IMU {
     uint8_t status = I2c.receive();
 
     if (status & GDA) {
-      I2c.read(i2c_addr7b, OUTX_L_G, (uint8_t)2);
-
-      // 8.75mdps / LSB
-      uint16_t raw_gx = I2c.receive();
-      raw_gx = static_cast<uint16_t>(I2c.receive()) << 8;
-      gx = raw_gx;
+      I2c.read(i2c_addr7b, OUTX_L_G, (uint8_t)6);
+      for (uint8_t axis = 0; axis < 3; axis++) {
+        uint16_t val = I2c.receive();
+        val |= static_cast<uint16_t>(I2c.receive()) << 8;
+        gyro[axis] = val;
+      }
     }
 
-    // 0.061mg / LSB
+    if (status & XLDA) {
+      I2c.read(i2c_addr7b, OUTX_L_XL, (uint8_t)6);
+      for (uint8_t axis = 0; axis < 3; axis++) {
+        uint16_t val = I2c.receive();
+        val |= static_cast<uint16_t>(I2c.receive()) << 8;
+        acc[axis] = val;
+      }
+    }
   }
 
-  int16_t read_ang_x() { return gx; }
+  int16_t read_ang_x() { return gyro[0]; }
 };
