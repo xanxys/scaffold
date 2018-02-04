@@ -1499,7 +1499,6 @@ def parse_file(filename, fdesc, options):
 
     if not fdesc:
         data = open(filename, 'rb').read()
-        print("ABC", filename, data, descriptor.FileDescriptorSet.FromString(data))
         fdesc = descriptor.FileDescriptorSet.FromString(data).file[0]
 
     # Check if there is a separate .options file
