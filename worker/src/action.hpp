@@ -246,12 +246,12 @@ class ActionExecutorSingleton {
 #ifdef WORKER_TYPE_BUILDER
         servo_pos{50, 5},
         motors {
-    // train
-    DCMotor(0xc0),
+        // train
+        DCMotor(0x60),
         // ori
-        DCMotor(0xc2),
+        DCMotor(0x61),
         // screw
-        DCMotor(0xc4)
+        DCMotor(0x62)
   }
 #endif
   {}
