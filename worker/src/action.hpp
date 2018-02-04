@@ -267,8 +267,6 @@ class ActionExecutorSingleton {
     commit_posvel();
   }
 
-  void update_gyro() { imu.poll(); }
-
   void loop1ms() {
     sensor.loop1ms();
 

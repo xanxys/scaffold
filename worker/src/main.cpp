@@ -47,9 +47,6 @@ class CommandProcessorSingleton {
         case 'p':
           exec_print_actions(response);
           break;
-        case 'u':
-          exec_update_sensor(response);
-          break;
         case 's':
           actions.print_scan(response);
           break;
@@ -136,11 +133,6 @@ class CommandProcessorSingleton {
     }
     response.insert("ty").set("ENQUEUED");
     response.insert("in_queue").set(actions.queue.count());
-  }
-
-  void exec_update_sensor(JsonDict& response) {
-    actions.update_gyro();
-    response.insert("ty").set("UPDATED");
   }
 
   void enqueue_single_action() {
@@ -246,16 +238,24 @@ class CommandProcessorSingleton {
 
 CommandProcessorSingleton command_processor;
 
+constexpr uint8_t IMU_POLL_CYCLE = 19;
+uint8_t imu_poll_index = 0;
+
 void loop1ms() {
-  // Called @ 976.5625 Hz w/ 16MHz crystal.
   actions.loop1ms();
+  if (imu_poll_index == 0) {
+    imu.poll();
+  }
+  imu_poll_index++;
+  if (imu_poll_index >= IMU_POLL_CYCLE) {
+    imu_poll_index = 0;
+  }
 }
 
 int main() {
   //// Minimum AVR & 3.3V (TWELITE) init.
   // Init arduino core things (e.g. Timer0).
   init();
-  setMillisHook(loop1ms);
   twelite.init();
   indicator.flash_blocking();
   twelite.info("init1");
@@ -276,7 +276,6 @@ int main() {
   twelite.info("init2");
 
   actions.init();
-
 // Initialize servo pos to safe (i.e. not colliding with rail) position.
 #ifdef WORKER_TYPE_BUILDER
   {
@@ -286,5 +285,8 @@ int main() {
     actions.enqueue(action);
   }
 #endif
+
+  // Fully initialized. Start realtime periodic process & idle tasks.
+  setMillisHook(loop1ms);
   command_processor.loop();
 }
