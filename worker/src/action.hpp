@@ -277,7 +277,7 @@ public:
         // ori
         DCMotor(0xc2),
         // screw
-        DCMotor(0xc8)
+        DCMotor(0xc4)
       }
       #endif
        {
@@ -352,6 +352,39 @@ public:
       motor_vel[i] = 0;
     }
     commit_posvel();
+  }
+
+  void print_scan() const {
+    request_log.begin_std_dict("SCAN");
+
+    request_log.print_dict_key("dev");
+    request_log.print('[');
+
+    bool error = false;
+    bool is_first = true;
+    for (uint8_t addr = 0; addr <= 0x7F; addr++) {
+      DeviceCheck st = I2c.check_device(addr);
+      if (st == DeviceCheck::FOUND) {
+        if (is_first) {
+          is_first = false;
+        } else {
+          request_log.print(',');
+        }
+
+        request_log.print(addr);
+      } else if (st == DeviceCheck::ERR_TIMEOUT) {
+        error = true;
+        break;
+      }
+    }
+    request_log.print(']');
+
+    request_log.print(',');
+
+    request_log.print_dict_key("aborted_by_error");
+    request_log.print(error);
+
+    request_log.print('}');
   }
 
   void print() const {

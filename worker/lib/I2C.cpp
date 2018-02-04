@@ -186,6 +186,24 @@ void I2C::scan()
   timeOutDelay = tempTime;
 }
 
+DeviceCheck I2C::check_device(uint8_t addr) {
+  uint16_t tempTime = timeOutDelay;
+  timeOut(80);
+
+  uint8_t returnStatus = start();
+  if(!returnStatus) { 
+    returnStatus = sendAddress(SLA_W(addr));
+  }
+  timeOutDelay = tempTime;
+
+  if(returnStatus == 1) {
+    return DeviceCheck::ERR_TIMEOUT;
+  }
+  stop();
+
+  return returnStatus ? DeviceCheck::NOT_FOUND : DeviceCheck::FOUND;
+}
+
 
 uint8_t I2C::available()
 {

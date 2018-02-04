@@ -81,6 +81,11 @@
 #define MAX_BUFFER_SIZE 32
 
 
+enum DeviceCheck : uint8_t {
+  FOUND,
+  NOT_FOUND,
+  ERR_TIMEOUT
+};
 
 
 class I2C
@@ -93,6 +98,9 @@ class I2C
     void setSpeed(uint8_t); 
     void pullup(uint8_t);
     void scan();
+
+    DeviceCheck check_device(uint8_t addr);
+
     uint8_t available();
     uint8_t receive();
     uint8_t write(uint8_t, uint8_t);

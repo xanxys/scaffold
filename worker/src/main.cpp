@@ -38,7 +38,8 @@ public:
       switch (code) {
         case 'x': exec_cancel_actions(); break;
         case 'p': exec_print_actions(); break;
-        case 's': exec_update_sensor(); break;
+        case 'u': exec_update_sensor(); break;
+        case 's': actions.print_scan(); break;
         case 'e': exec_enqueue(); break;
         default:
           twelite.warn("unknown command");
