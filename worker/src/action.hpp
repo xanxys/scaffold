@@ -380,14 +380,27 @@ class ActionExecutorSingleton {
   }
 
   void print_sensor_status(JsonElement e) const {
-    JsonArray values = e.as_array();
+    JsonDict ss = e.as_dict();
 
-    values.add().set(imu.read_ang_x());
+    JsonArray gyro = ss.insert("gyro").as_array();
+    gyro.add().set(-imu.gyro[1]);
+    gyro.add().set(imu.gyro[0]);
+    gyro.add().set(imu.gyro[2]);
+    gyro.end();
+  
+    JsonArray acc = ss.insert("acc").as_array();
+    acc.add().set(-imu.acc[1]);
+    acc.add().set(imu.acc[0]);
+    acc.add().set(imu.acc[2]);
+    acc.end();
+
+    JsonArray values = ss.insert("optical").as_array();
     values.add().set(sensor.get_sensor0());
     values.add().set(sensor.get_sensor1());
     values.add().set(sensor.get_sensor2());
-
     values.end();
+
+    ss.end();
   }
 
   void commit_posvel() {

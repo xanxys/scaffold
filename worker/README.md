@@ -14,6 +14,18 @@ Feeder 1.0
 * Discrete data (command type): Ignore & warn
 * Analog data (duration, pos, vel): Clip & warn
 
+
+## Coordinate System
+
+![S60-TB](https://i.gyazo.com/acf5a1336afa0637301c8abcf6b6cee1.jpg)
+
+|Canonical | IMU |
+|--------|-------|
+| X      | -Y    |
+| Y      | X     |
+| Z      | Z     |
+
+
 ## Sensor Commands & Pins
 
 |New name|ADC pin| Legacy Name | TB               | FDW-RS           | TB legacy commands          | FDW-RS legacy commands     |
