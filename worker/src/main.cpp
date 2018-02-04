@@ -35,17 +35,23 @@ public:
       request_log.clear();
 
       char code = read();
+
+      char buffer[200];
+      StringWriter writer(buffer, 200);
+
+      JsonDict response(&writer);
       switch (code) {
-        case 'x': exec_cancel_actions(); break;
-        case 'p': exec_print_actions(); break;
-        case 'u': exec_update_sensor(); break;
-        case 's': actions.print_scan(); break;
-        case 'e': exec_enqueue(); break;
+        case 'x': exec_cancel_actions(response); break;
+        case 'p': exec_print_actions(response); break;
+        case 'u': exec_update_sensor(response); break;
+        case 's': actions.print_scan(response); break;
+        case 'e': exec_enqueue(response); break;
         default:
           twelite.warn("unknown command");
           continue;
       }
-      twelite.send_datagram(request_log.buffer, request_log.index);
+      response.end();
+      twelite.send_datagram(writer.ptr_begin, writer.ptr - writer.ptr_begin);
     }
   }
 
@@ -105,17 +111,16 @@ private:
     return positive ? v : -v;
   }
 private: // Command Handler
-  void exec_cancel_actions() {
+  void exec_cancel_actions(JsonDict& response) {
     actions.cancel_all();
-    request_log.begin_std_dict("CANCELLED");
-    request_log.print('}');
+    response.insert("ty").set("CANCELLED");
   }
 
-  void exec_print_actions() {
-    actions.print();
+  void exec_print_actions(JsonDict& response) {
+    actions.print(response);
   }
 
-  void exec_enqueue() {
+  void exec_enqueue(JsonDict& response) {
     while (true) {
       enqueue_single_action();
       if (!consume(',')) {
@@ -130,7 +135,7 @@ private: // Command Handler
     request_log.print('}');
   }
 
-  void exec_update_sensor() {
+  void exec_update_sensor(JsonDict& response) {
     actions.update_gyro();
     request_log.begin_std_dict("UPDATED");
     request_log.print('}');

@@ -21,7 +21,7 @@ uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
 class Action {
 public:
   // At the beginning of this action, report sensor cache.
-  // Note that reporting can cause some jankiness (a few ms) in command execution.
+  // Note that reporting can cause some jankiness (astate few ms) in command execution.
   bool report;
 
   #ifdef WORKER_TYPE_BUILDER
@@ -54,39 +54,32 @@ public:
     }
   }
 
-  void print_json() const {
-    request_log.print('[');
+  void print_json(JsonElement e) const {
+    JsonArray arr = e.as_array();
 
-    request_log.print('[');
+    JsonArray sv = arr.add().as_array();
     for (int i = 0; i < N_SERVOS; i++) {
       uint8_t v = servo_pos[i];
       if (v == SERVO_POS_KEEP) {
-        request_log.print_str("KEEP");
+        sv.add().set("KEEP");
       } else {
-        request_log.print(v);
-      }
-      if (i != N_SERVOS - 1) {
-        request_log.print(',');
+        sv.add().set(v);
       }
     }
-    request_log.print(']');
-    request_log.print(',');
+    sv.end();
 
-    request_log.print('[');
+    JsonArray mot = arr.add().as_array();
     for (int i = 0; i < N_MOTORS; i++) {
       int8_t v = motor_vel[i];
       if (v == MOTOR_VEL_KEEP) {
-        request_log.print_str("KEEP");
+        mot.add().set("KEEP");
       } else {
-        request_log.print(v);
-      }
-      if (i != N_MOTORS - 1) {
-        request_log.print(",");
+        mot.add().set(v);
       }
     }
-    request_log.print(']');
+    mot.end();
 
-    request_log.print(']');
+    arr.end();
   }
 };
 
@@ -146,27 +139,20 @@ public:
     return action != NULL && (elapsed_step <= action->duration_step);
   }
 
-  void print_json() const {
-    request_log.print('{');
+  void print_json(JsonElement e) const {
+    JsonDict astate = e.as_dict();
 
-    request_log.print_dict_key("type");
     if (is_running()) {
-      request_log.print_str("run");
-      request_log.print(',');
-
-      request_log.print_dict_key("elapsed/ms");
-      request_log.print(elapsed_step);
-      request_log.print(',');
-
-      request_log.print_dict_key("duration/ms");
-      request_log.print(action->duration_step);
+      astate.insert("type").set("run");
+      astate.insert("elapsed/ms").set(elapsed_step);
+      astate.insert("duration/ms").set(action->duration_step);
     } else if (action != NULL) {
-      request_log.print_str("done");
+      astate.insert("type").set("done");
     } else {
-      request_log.print_str("idle");
+      astate.insert("type").set("idle");
     }
 
-    request_log.print('}');
+    astate.end();
   }
 };
 
@@ -178,8 +164,8 @@ private:
   uint8_t ix = 0;
   uint8_t n = 0;
 public:
-  void enqueue(const Action& a) {
-    queue[(ix + n) % SIZE] = a;
+  void enqueue(const Action& astate) {
+    queue[(ix + n) % SIZE] = astate;
     n += 1;
   }
 
@@ -210,24 +196,18 @@ public:
     return n;
   }
 
-  void print_json() const {
-    request_log.print('{');
+  void print_json(JsonElement e) const {
+    JsonDict status = e.as_dict();
 
-    request_log.print_dict_key("actions");
-    request_log.print('[');
+    JsonArray actions = status.insert("actions").as_array();
     for (int i = 0; i < n; i++) {
-      queue[(ix + i) % SIZE].print_json();
-      if (i != n -1) {
-        request_log.print(',');
-      }
+      queue[(ix + i) % SIZE].print_json(actions.add());
     }
-    request_log.print(']');
-    request_log.print(',');
+    actions.end();
 
-    request_log.print_dict_key("free");
-    request_log.print(SIZE - n);
+    status.insert("free").set(SIZE - n);
 
-    request_log.print('}');
+    status.end();
   }
 };
 
@@ -337,8 +317,8 @@ public:
     }
   }
 
-  void enqueue(Action& a) {
-    queue.enqueue(a);
+  void enqueue(Action& astate) {
+    queue.enqueue(astate);
   }
 
   bool is_idle() const {
@@ -354,72 +334,40 @@ public:
     commit_posvel();
   }
 
-  void print_scan() const {
-    request_log.begin_std_dict("SCAN");
+  void print_scan(JsonDict& response) const {
+    response.insert("ty").set("SCAN");
 
-    request_log.print_dict_key("dev");
-    request_log.print('[');
-
+    JsonArray devs = response.insert("dev").as_array();
     bool error = false;
-    bool is_first = true;
     for (uint8_t addr = 0; addr <= 0x7F; addr++) {
       DeviceCheck st = I2c.check_device(addr);
       if (st == DeviceCheck::FOUND) {
-        if (is_first) {
-          is_first = false;
-        } else {
-          request_log.print(',');
-        }
-
-        request_log.print(addr);
+        devs.add().set(addr);
       } else if (st == DeviceCheck::ERR_TIMEOUT) {
         error = true;
         break;
       }
     }
-    request_log.print(']');
+    devs.end();
 
-    request_log.print(',');
-
-    request_log.print_dict_key("aborted_by_error");
-    request_log.print(error);
-
-    request_log.print('}');
+    response.insert("aborted_by_error").set(error);
   }
 
-  void print() const {
-    request_log.begin_std_dict("STATUS");
+  void print(JsonDict& response) const {
+    response.insert("ty").set("STATUS");
 
-    request_log.print_dict_key("wtype");
+    JsonElement e = response.insert("wtype");
     #ifdef WORKER_TYPE_BUILDER
-    request_log.print_str("TB");
-    #elif defined WORKER_TYPE_FEEDER
-    request_log.print_str("FDW-RS");
+    e.set("TB");
     #else
-    request_log.print("null");
+    e.set_null();
     #endif
-    request_log.print(',');
 
-    request_log.print_dict_key("out");
-    print_output_json();
-    request_log.print(',');
-
-    request_log.print_dict_key("system");
-    print_system_status();
-    request_log.print(',');
-
-    request_log.print_dict_key("sensor");
-    print_sensor_status();
-    request_log.print(',');
-
-    request_log.print_dict_key("state");
-    state.print_json();
-    request_log.print(',');
-
-    request_log.print_dict_key("queue");
-    queue.print_json();
-
-    request_log.print('}');
+    print_output_json(response.insert("out"));
+    print_system_status(response.insert("system"));
+    print_sensor_status(response.insert("sensor"));
+    state.print_json(response.insert("state"));
+    queue.print_json(response.insert("queue"));
   }
 private:
   void report_cache() const {
@@ -448,37 +396,26 @@ private:
     request_log.send_soon();
   }
 
-  void print_system_status() const {
-    request_log.print('{');
+  void print_system_status(JsonElement e) const {
+    JsonDict status = e.as_dict();
 
-    request_log.print_dict_key("vcc/mV");
-    request_log.print((uint16_t) sensor.get_vcc_mv());
-    request_log.print(',');
+    status.insert("vcc/mV").set((uint16_t) sensor.get_vcc_mv());
+    status.insert("bat/mV").set((uint16_t) sensor.get_bat_mv());
+    status.insert("recv/B").set(twelite.get_data_bytes_recv());
+    status.insert("sent/B").set(twelite.get_data_bytes_sent());
 
-    request_log.print_dict_key("bat/mV");
-    request_log.print((uint16_t) sensor.get_bat_mv());
-    request_log.print(',');
-
-    request_log.print_dict_key("recv/B");
-    request_log.print(twelite.get_data_bytes_recv());
-    request_log.print(',');
-
-    request_log.print_dict_key("sent/B");
-    request_log.print(twelite.get_data_bytes_sent());
-
-    request_log.print('}');
+    status.end();
   }
 
-  void print_sensor_status() const {
-    request_log.print('[');
-    request_log.print(gv);
-    request_log.print(',');
-    request_log.print(sensor.get_sensor0());
-    request_log.print(',');
-    request_log.print(sensor.get_sensor1());
-    request_log.print(',');
-    request_log.print(sensor.get_sensor2());
-    request_log.print(']');
+  void print_sensor_status(JsonElement e) const {
+    JsonArray values = e.as_array();
+
+    values.add().set(gv);
+    values.add().set(sensor.get_sensor0());
+    values.add().set(sensor.get_sensor1());
+    values.add().set(sensor.get_sensor2());
+
+    values.end();
   }
 
   void commit_posvel() {
@@ -503,31 +440,21 @@ private:
     }
   }
 
-  void print_output_json() const {
-    request_log.print('[');
+  void print_output_json(JsonElement outp) const {
+    JsonArray values = outp.as_array();
 
-    request_log.print('[');
+    JsonArray servos = values.add().as_array();
     for (int i = 0; i < N_SERVOS; i++) {
-      uint8_t v = servo_pos[i];
-      request_log.print(v);
-      if (i != N_SERVOS - 1) {
-        request_log.print(',');
-      }
+      servos.add().set(servo_pos[i]);
     }
-    request_log.print(']');
+    servos.end();
 
-    request_log.print(',');
-
-    request_log.print('[');
+    JsonArray motors = values.add().as_array();
     for (int i = 0; i < N_MOTORS; i++) {
-      int8_t v = motor_vel[i];
-      request_log.print(v);
-      if (i != N_MOTORS - 1) {
-        request_log.print(",");
-      }
+      motors.add().set(motor_vel[i]);
     }
-    request_log.print(']');
+    motors.end();
 
-    request_log.print(']');
+    values.end();
   }
 };
