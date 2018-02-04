@@ -1,26 +1,15 @@
 #pragma once
 /* Hardware usage
-* Timer0: system clock
-* Timer1: action loop
-* Timer2: Servo PWM
-*/
+ * Timer0: system clock
+ * Timer1: action loop
+ * Timer2: Servo PWM
+ */
 
 #include <stdint.h>
 
-enum ServoIx : uint8_t {
-  CIX_A,
-  CIX_B,
-  N_SERVOS
-};
+enum ServoIx : uint8_t { CIX_A, CIX_B, N_SERVOS };
 
-enum MotorIx : uint8_t {
-  MV_TRAIN,
-  MV_ORI,
-  MV_SCREW_DRIVER,
-  N_MOTORS
-};
-
-
+enum MotorIx : uint8_t { MV_TRAIN, MV_ORI, MV_SCREW_DRIVER, N_MOTORS };
 
 void set_5v_power(bool enabled) {
   const uint8_t EN5V = _BV(0);
@@ -29,17 +18,15 @@ void set_5v_power(bool enabled) {
     PORTB |= EN5V;
   } else {
     PORTB &= ~EN5V;
-  } 
+  }
 }
 
-
 class Indicator {
-private:
+ private:
   bool error;
-public:
-  Indicator() {
-    DDRC |= _BV(PC0);
-  }
+
+ public:
+  Indicator() { DDRC |= _BV(PC0); }
 
   void flash_blocking() {
     PORTC |= _BV(PC0);
@@ -52,7 +39,8 @@ public:
     error = true;
     apply_error();
   }
-private:
+
+ private:
   void apply_error() {
     if (error) {
       PORTC |= _BV(PC0);

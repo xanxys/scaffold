@@ -1,11 +1,10 @@
 #pragma once
 
-
-// Perodically measure fixed number of ADC inputs & controls sensor multiplexing.
-// Each phase is 2ms.
+// Perodically measure fixed number of ADC inputs & controls sensor
+// multiplexing. Each phase is 2ms.
 //
 class MultiplexedSensor {
-private:
+ private:
   // Sensor channels.
   static const uint8_t I_BAT = 2;
   static const uint8_t I_SEN_T = 1;
@@ -26,9 +25,9 @@ private:
   const static uint8_t phase_length = 2;
 
   uint16_t value_cache[NUM_PHASES];
-public:
-  MultiplexedSensor() : current_phase(PHASE_SEN_T), phase_index(0) {
-  }
+
+ public:
+  MultiplexedSensor() : current_phase(PHASE_SEN_T), phase_index(0) {}
 
   void loop1ms() {
     phase_index++;
@@ -44,34 +43,20 @@ public:
   }
 
   // 0: 0V, 255: 5V ("max")
-  uint8_t get_sensor0() const {
-    return value_cache[PHASE_SEN_T] >> 2;
-  }
+  uint8_t get_sensor0() const { return value_cache[PHASE_SEN_T] >> 2; }
 
-  uint8_t get_sensor1() const {
-    return value_cache[PHASE_SEN_O] >> 2;
-  }
+  uint8_t get_sensor1() const { return value_cache[PHASE_SEN_O] >> 2; }
 
-  uint8_t get_sensor2() const {
-    return value_cache[PHASE_SEN_X] >> 2;
-  }
+  uint8_t get_sensor2() const { return value_cache[PHASE_SEN_X] >> 2; }
 
   // DEPRECATED
-  uint8_t get_sensor_t() const {
-    return value_cache[PHASE_SEN_T] >> 2;
-  }
+  uint8_t get_sensor_t() const { return value_cache[PHASE_SEN_T] >> 2; }
 
-  uint8_t get_sensor_o() const {
-    return value_cache[PHASE_SEN_O] >> 2;
-  }
+  uint8_t get_sensor_o() const { return value_cache[PHASE_SEN_O] >> 2; }
 
-  uint8_t get_sensor_x() const {
-    return value_cache[PHASE_SEN_X] >> 2;
-  }
+  uint8_t get_sensor_x() const { return value_cache[PHASE_SEN_X] >> 2; }
 
-  uint8_t get_sensor_v() const {
-    return value_cache[PHASE_SEN_T] >> 2;
-  }
+  uint8_t get_sensor_v() const { return value_cache[PHASE_SEN_T] >> 2; }
 
   uint16_t get_bat_mv() const {
     uint32_t t = value_cache[PHASE_BAT] * 5000L;
@@ -81,18 +66,15 @@ public:
 
   uint16_t get_vcc_mv() const {
     uint32_t result = value_cache[PHASE_AVCC];
-    result = (1024L * 1100L) / result; // Back-calculate AVcc in mV
+    result = (1024L * 1100L) / result;  // Back-calculate AVcc in mV
     return result;
   }
 
-  uint8_t get_rate_ms() const {
-    return NUM_PHASES * phase_length;
-  }
+  uint8_t get_rate_ms() const { return NUM_PHASES * phase_length; }
 
-  bool is_start() const {
-    return phase_index == 0 && current_phase == 0;
-  }
-private:
+  bool is_start() const { return phase_index == 0 && current_phase == 0; }
+
+ private:
   void on_phase_begin() {
     // Connect AVcc to Vref.
     ADMUX = _BV(REFS0);

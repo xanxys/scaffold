@@ -2,15 +2,15 @@
 
 #include <EEPROM.h>
 
-#include "slice.hpp"
 #include "json_writer.hpp"
+#include "slice.hpp"
 
 char async_tx_buffer[200];
 char warn_tx_buffer[70];
 
 // Parse ":..." ASCII messages from standard TWELITE MWAPP.
 class TweliteInterface {
-private:
+ private:
   // RX buffer.
   // Decodex command without ":" or newlines, but includes checksum.
   const static uint8_t BUF_SIZE = 150;
@@ -26,12 +26,9 @@ private:
 
   uint32_t uid = 0;
 
-  enum class RecvResult : uint8_t {
-    OK,
-    OVERFLOW,
-    INVALID
-  };
-public:
+  enum class RecvResult : uint8_t { OK, OVERFLOW, INVALID };
+
+ public:
   void init() {
     Serial.begin(38400);
     // Refresh UID and persist to EEPROM.
@@ -39,7 +36,7 @@ public:
 
     uid = read_eeprom_be(UID_EEPROM_ADDR);
     if (uid == 0xffffffff) {
-      uid = 0; // default is 0xff...., treat them as 0.
+      uid = 0;  // default is 0xff...., treat them as 0.
     }
 
     if (uid == 0 && hdr_uid != 0) {
@@ -48,17 +45,14 @@ public:
     }
   }
 
-  void queue_send_async(uint8_t async_size) {
-    send_async_size = async_size;
-  }
+  void queue_send_async(uint8_t async_size) { send_async_size = async_size; }
 
   // If fails, returns 0.
-  uint32_t get_device_id() {
-    return uid;
-  }
+  uint32_t get_device_id() { return uid; }
 
   // Wait for next datagram addressed (including broadcast) to this device.
-  // retval: slice of buffer held by this instance. returns invalid slice when overflown.
+  // retval: slice of buffer held by this instance. returns invalid slice when
+  // overflown.
   MaybeSlice get_datagram() {
     while (true) {
       MaybeSlice packet;
@@ -86,7 +80,7 @@ public:
     send_u32_be(uid);
     send_u32_be(millis());
     // Data in hex.
-    for(uint8_t i = 0; i < size; i++) {
+    for (uint8_t i = 0; i < size; i++) {
       send_byte(ptr[i]);
     }
     // csum (omitted) + CRLF
@@ -98,22 +92,15 @@ public:
   // Warning=non-critical, expected errors.
   // e.g.
   // * network data corruption
-  void warn(const char* message) {
-    send_status("WARN", message);
-  }
+  void warn(const char* message) { send_status("WARN", message); }
 
-  void info(const char* message) {
-    send_status("INFO", message);
-  }
+  void info(const char* message) { send_status("INFO", message); }
 
-  uint32_t get_data_bytes_sent() {
-    return data_bytes_sent;
-  }
+  uint32_t get_data_bytes_sent() { return data_bytes_sent; }
 
-  uint32_t get_data_bytes_recv() {
-    return data_bytes_recv;
-  }
-private:
+  uint32_t get_data_bytes_recv() { return data_bytes_recv; }
+
+ private:
   void send_u32_be(uint32_t v) {
     send_byte(v >> 24);
     send_byte((v >> 16) & 0xff);
@@ -121,7 +108,8 @@ private:
     send_byte(v & 0xff);
   }
 
-  // TWELITE-Modbus level check. We only accept valid ASCII packets with origin=0x00, command=0x01
+  // TWELITE-Modbus level check. We only accept valid ASCII packets with
+  // origin=0x00, command=0x01
   MaybeSlice validate_and_extract_modbus(MaybeSlice modbus_packet) {
     if (!modbus_packet.is_valid()) {
       return MaybeSlice();
@@ -226,7 +214,7 @@ private:
   uint8_t decode_nibble(char c) {
     if ('0' <= c && c <= '9') {
       return c - '0';
-    } else if ('A' <= c && c <= 'F'){
+    } else if ('A' <= c && c <= 'F') {
       return (c - 'A') + 10;
     } else {
       warn("corrupt hex from TWELITE");
@@ -235,7 +223,8 @@ private:
   }
 
   RecvResult receive_modbus_command(MaybeSlice* out_slice) {
-    while (getch_concurrent() != ':');
+    while (getch_concurrent() != ':')
+      ;
 
     uint8_t size = 0;
     bool first_nibble = true;

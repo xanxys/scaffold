@@ -3,7 +3,7 @@
 #include <I2C.h>
 
 class IMU {
-private:
+ private:
   // 7-bit address (common for read & write, MSB is 0)
   const uint8_t i2c_addr7b = 0x6a;
 
@@ -15,26 +15,26 @@ private:
   const uint8_t OUTZ_H_G = 0x27;
 
   const uint8_t OUTX_L_XL = 0x28;
-public:
-  IMU() {
-  }
+
+ public:
+  IMU() {}
 
   uint16_t read_ang_x() {
     sei();  // w/o this, TWI gets stuck after sending start condtion.
     if (I2c.read(i2c_addr7b, OUTX_L_G, (uint8_t)1)) {
-        cli();
-        return 255;
+      cli();
+      return 255;
     }
     cli();
     return 100;
     I2c.receive();
     cli();
 
-/*
-    if (res != 0) {
-      twelite.warn("I2C failed");
-    }
-    */
+    /*
+        if (res != 0) {
+          twelite.warn("I2C failed");
+        }
+        */
     return 123;
   }
 };

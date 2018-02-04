@@ -1,17 +1,15 @@
 #pragma once
 
 class StringWriter {
-public:
+ public:
   char* const ptr_begin;
   char* ptr;
-  char* const ptr_end; 
+  char* const ptr_end;
 
-  StringWriter(char* p, uint8_t size) : ptr_begin(p), ptr(p), ptr_end(p + size) {
-  }
+  StringWriter(char* p, uint8_t size)
+      : ptr_begin(p), ptr(p), ptr_end(p + size) {}
 
-  uint8_t size_written() const {
-    return ptr - ptr_begin;
-  }
+  uint8_t size_written() const { return ptr - ptr_begin; }
 
   void write(char c) {
     if (ptr < ptr_end) {
@@ -21,7 +19,7 @@ public:
   }
 
   void write(const char* str) {
-    while(*str) {
+    while (*str) {
       write(*str);
       str++;
     }
@@ -29,7 +27,7 @@ public:
 
   void write_json_escaped(const char* s) {
     write('"');
-    while(*s != 0) {
+    while (*s != 0) {
       char c = *s;
       if (c == '"') {
         write("\\\"");
@@ -44,23 +42,20 @@ public:
   }
 };
 
-
 class JsonArray;
 class JsonDict;
 
 // Streaming JSON writer.
 class JsonElement {
-private:
+ private:
   StringWriter* writer;
-public:
-  JsonElement(StringWriter* writer) : writer(writer) {
-  }
 
-  void set(const char* s) {
-    writer->write_json_escaped(s);
-  }
+ public:
+  JsonElement(StringWriter* writer) : writer(writer) {}
 
-  template<typename T>
+  void set(const char* s) { writer->write_json_escaped(s); }
+
+  template <typename T>
   void set(const T& v) {
     String s(v);
     for (uint8_t i = 0; i < s.length(); i++) {
@@ -68,19 +63,18 @@ public:
     }
   }
 
-  void set_null() {
-    writer->write("null");
-  }
+  void set_null() { writer->write("null"); }
 
   JsonArray as_array();
   JsonDict as_dict();
 };
 
 class JsonArray {
-private:
+ private:
   StringWriter* writer;
   bool is_first = true;
-public:
+
+ public:
   JsonArray(StringWriter* writer) : writer(writer), is_first(true) {
     writer->write('[');
   }
@@ -94,16 +88,15 @@ public:
     return JsonElement(writer);
   }
 
-  void end() {
-    writer->write(']');
-  }
+  void end() { writer->write(']'); }
 };
 
 class JsonDict {
-private:
+ private:
   StringWriter* writer;
   bool is_first = true;
-public:
+
+ public:
   JsonDict(StringWriter* writer) : writer(writer), is_first(true) {
     writer->write('{');
   }
@@ -119,15 +112,9 @@ public:
     return JsonElement(writer);
   }
 
-  void end() {
-    writer->write('}');
-  }
+  void end() { writer->write('}'); }
 };
 
-JsonArray JsonElement::as_array() {
-  return JsonArray(writer);
-}
+JsonArray JsonElement::as_array() { return JsonArray(writer); }
 
-JsonDict JsonElement::as_dict() {
-  return JsonDict(writer);
-}
+JsonDict JsonElement::as_dict() { return JsonDict(writer); }

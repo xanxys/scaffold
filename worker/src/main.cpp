@@ -3,9 +3,9 @@
 #include <Arduino.h>
 #include <MsTimer2.h>
 
-#include "json_writer.hpp"
 #include "action.hpp"
 #include "hardware_builder.hpp"
+#include "json_writer.hpp"
 
 ActionExecutorSingleton actions;
 
@@ -14,10 +14,11 @@ ActionExecutorSingleton actions;
 // Command = CommandCode[a-zA-Z] CommandBody[^/]* ("\n" | "/")
 //
 class CommandProcessorSingleton {
-private:
+ private:
   MaybeSlice datagram;  // dependent on buffer inside twelite.
   int r_ix;
-public:
+
+ public:
   CommandProcessorSingleton() : r_ix(0) {}
 
   void loop() {
@@ -29,9 +30,9 @@ public:
       }
       r_ix = 0;
 
-      #ifdef WORKER_TYPE_BUILDER
+#ifdef WORKER_TYPE_BUILDER
       indicator.flash_blocking();
-      #endif
+#endif
 
       char code = read();
 
@@ -40,11 +41,21 @@ public:
 
       JsonDict response(&writer);
       switch (code) {
-        case 'x': exec_cancel_actions(response); break;
-        case 'p': exec_print_actions(response); break;
-        case 'u': exec_update_sensor(response); break;
-        case 's': actions.print_scan(response); break;
-        case 'e': exec_enqueue(response); break;
+        case 'x':
+          exec_cancel_actions(response);
+          break;
+        case 'p':
+          exec_print_actions(response);
+          break;
+        case 'u':
+          exec_update_sensor(response);
+          break;
+        case 's':
+          actions.print_scan(response);
+          break;
+        case 'e':
+          exec_enqueue(response);
+          break;
         default:
           twelite.warn("unknown command");
           continue;
@@ -54,7 +65,7 @@ public:
     }
   }
 
-private:
+ private:
   // Consume next byte if it matches target (return true).
   // If it doesn't match, doesn't consume anything (return false).
   bool consume(char target) {
@@ -75,9 +86,7 @@ private:
     }
   }
 
-  bool available() {
-    return r_ix < datagram.size;
-  }
+  bool available() { return r_ix < datagram.size; }
 
   char read() {
     if (r_ix < datagram.size) {
@@ -109,15 +118,14 @@ private:
     }
     return positive ? v : -v;
   }
-private: // Command Handler
+
+ private:  // Command Handler
   void exec_cancel_actions(JsonDict& response) {
     actions.cancel_all();
     response.insert("ty").set("CANCELLED");
   }
 
-  void exec_print_actions(JsonDict& response) {
-    actions.print(response);
-  }
+  void exec_print_actions(JsonDict& response) { actions.print(response); }
 
   void exec_enqueue(JsonDict& response) {
     while (true) {
@@ -149,21 +157,43 @@ private: // Command Handler
     while (true) {
       char target = read();
       switch (target) {
-        #ifdef WORKER_TYPE_BUILDER
-        case '!': action.report = true; break;
-        case 'a': action.servo_pos[CIX_A] = safe_read_pos(); break;
-        case 'b': action.servo_pos[CIX_B] = safe_read_pos(); break;
-        case 't': action.motor_vel[MV_TRAIN] = safe_read_vel(); break;
-        case 'o': action.motor_vel[MV_ORI] = safe_read_vel(); break;
-        case 's': action.motor_vel[MV_SCREW_DRIVER] = safe_read_vel(); break;
-        case 'T': action.train_cutoff_thresh = safe_read_thresh(); break;
-        #endif
-        #ifdef WORKER_TYPE_FEEDER
-        case '!': action.report = true; break;
-        case 'v': action.motor_vel[MV_VERT] = safe_read_vel(); break;
-        case 'S': action.stop_cutoff_thresh = safe_read_thresh(); break;
-        case 'O': action.origin_cutoff_thresh = safe_read_thresh(); break;
-        #endif
+#ifdef WORKER_TYPE_BUILDER
+        case '!':
+          action.report = true;
+          break;
+        case 'a':
+          action.servo_pos[CIX_A] = safe_read_pos();
+          break;
+        case 'b':
+          action.servo_pos[CIX_B] = safe_read_pos();
+          break;
+        case 't':
+          action.motor_vel[MV_TRAIN] = safe_read_vel();
+          break;
+        case 'o':
+          action.motor_vel[MV_ORI] = safe_read_vel();
+          break;
+        case 's':
+          action.motor_vel[MV_SCREW_DRIVER] = safe_read_vel();
+          break;
+        case 'T':
+          action.train_cutoff_thresh = safe_read_thresh();
+          break;
+#endif
+#ifdef WORKER_TYPE_FEEDER
+        case '!':
+          action.report = true;
+          break;
+        case 'v':
+          action.motor_vel[MV_VERT] = safe_read_vel();
+          break;
+        case 'S':
+          action.stop_cutoff_thresh = safe_read_thresh();
+          break;
+        case 'O':
+          action.origin_cutoff_thresh = safe_read_thresh();
+          break;
+#endif
         default:
           twelite.warn("unknown action target");
       }
@@ -216,7 +246,6 @@ private: // Command Handler
 
 CommandProcessorSingleton command_processor;
 
-
 void loop1ms() {
   // Called @ 976.5625 Hz w/ 16MHz crystal.
   actions.loop1ms();
@@ -230,26 +259,26 @@ int main() {
   delay(50);
   actions.init();
 
-  #ifdef WORKER_TYPE_BUILDER
+#ifdef WORKER_TYPE_BUILDER
   indicator.flash_blocking();
-  #endif
+#endif
   twelite.info("init1");
 
   setMillisHook(loop1ms);
 
-  // Initialize servo pos to safe (i.e. not colliding with rail) position.
-  #ifdef WORKER_TYPE_BUILDER
+// Initialize servo pos to safe (i.e. not colliding with rail) position.
+#ifdef WORKER_TYPE_BUILDER
   {
     Action action(1 /* dur_ms */);
     action.servo_pos[CIX_A] = 13;
     action.servo_pos[CIX_B] = 11;
     actions.enqueue(action);
   }
-  #endif
+#endif
 
-  #ifdef WORKER_TYPE_BUILDER
+#ifdef WORKER_TYPE_BUILDER
   indicator.flash_blocking();
-  #endif
+#endif
   twelite.info("init2");
 
   command_processor.loop();

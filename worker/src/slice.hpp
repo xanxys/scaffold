@@ -1,11 +1,9 @@
 #pragma once
 
 class MaybeSlice {
-public:
-  // Should be const, but non-const to avoid unnecessary local variable creations in callers.
-  // e.g.
-  // MaybeSlice p;
-  // p = f(p);  // ERROR if const
+ public:
+  // Should be const, but non-const to avoid unnecessary local variable
+  // creations in callers. e.g. MaybeSlice p; p = f(p);  // ERROR if const
   // Forced to write:
   // MaybeSlice q = f(p);  // Note this is copy constructor, not assignment.
   uint8_t* ptr;
@@ -14,9 +12,7 @@ public:
   MaybeSlice() : ptr(NULL), size(0) {}
   MaybeSlice(uint8_t* ptr, uint8_t size) : ptr(ptr), size(size) {}
 
-  bool is_valid() const {
-    return ptr != NULL;
-  }
+  bool is_valid() const { return ptr != NULL; }
 
   MaybeSlice slice(uint8_t offset) const {
     if (offset > size) {
@@ -46,11 +42,10 @@ public:
     if (size < 4) {
       return 0;
     } else {
-      return
-          (static_cast<uint32_t>(ptr[0]) << 24) |
-          (static_cast<uint32_t>(ptr[1]) << 16) |
-          (static_cast<uint32_t>(ptr[2]) << 8) |
-          (static_cast<uint32_t>(ptr[3]));
+      return (static_cast<uint32_t>(ptr[0]) << 24) |
+             (static_cast<uint32_t>(ptr[1]) << 16) |
+             (static_cast<uint32_t>(ptr[2]) << 8) |
+             (static_cast<uint32_t>(ptr[3]));
     }
   }
 };

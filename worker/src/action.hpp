@@ -1,9 +1,9 @@
 #pragma once
 
-#include "hardware_twelite.hpp"
-#include "hardware_motor.hpp"
 #include "hardware_imu.hpp"
+#include "hardware_motor.hpp"
 #include "hardware_sensor.hpp"
+#include "hardware_twelite.hpp"
 
 #ifdef WORKER_TYPE_BUILDER
 #include "hardware_builder.hpp"
@@ -19,18 +19,17 @@ uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
 }
 
 class Action {
-public:
+ public:
   // At the beginning of this action, report sensor cache.
-  // Note that reporting can cause some jankiness (astate few ms) in command execution.
+  // Note that reporting can cause some jankiness (astate few ms) in command
+  // execution.
   bool report;
 
-  #ifdef WORKER_TYPE_BUILDER
+#ifdef WORKER_TYPE_BUILDER
   // Set train=0 when sensor reading > this value.
   // 255 means disable this functionality.
   uint8_t train_cutoff_thresh = 255;
-  #endif
-
-
+#endif
 
   // Note this can be 0, but action still has effect.
   uint16_t duration_step;
@@ -85,7 +84,7 @@ public:
 
 // ActionExecState = Zero | Executing
 class ActionExecState {
-private:
+ private:
   // Nullable current action being executed.
   const Action* action;
   // elapsed time since starting exec of current action.
@@ -93,16 +92,19 @@ private:
   uint16_t elapsed_step;
 
   uint8_t servo_pos_pre[N_SERVOS];
-public:
+
+ public:
   ActionExecState() : action(NULL) {}
 
-  ActionExecState(const Action* action, const uint8_t* servo_pos) : action(action), elapsed_step(0) {
+  ActionExecState(const Action* action, const uint8_t* servo_pos)
+      : action(action), elapsed_step(0) {
     for (int i = 0; i < N_SERVOS; i++) {
       servo_pos_pre[i] = servo_pos[i];
     }
   }
 
-  void step(const MultiplexedSensor& sensor, uint8_t* servo_pos_out, int8_t* motor_vel_out) {
+  void step(const MultiplexedSensor& sensor, uint8_t* servo_pos_out,
+            int8_t* motor_vel_out) {
     if (action == NULL) {
       return;
     }
@@ -110,7 +112,9 @@ public:
     for (int8_t i = 0; i < N_SERVOS; i++) {
       const uint8_t targ_pos = action->servo_pos[i];
       if (targ_pos != Action::SERVO_POS_KEEP) {
-        servo_pos_out[i] = interp(servo_pos_pre[i], targ_pos, (elapsed_step >> 5) + 1, (action->duration_step >> 5) + 1);
+        servo_pos_out[i] =
+            interp(servo_pos_pre[i], targ_pos, (elapsed_step >> 5) + 1,
+                   (action->duration_step >> 5) + 1);
       }
     }
     for (int8_t i = 0; i < N_MOTORS; i++) {
@@ -119,19 +123,19 @@ public:
         motor_vel_out[i] = targ_vel;
       }
     }
-    #ifdef WORKER_TYPE_BUILDER
+#ifdef WORKER_TYPE_BUILDER
     if (sensor.get_sensor_t() > action->train_cutoff_thresh) {
       motor_vel_out[MV_TRAIN] = 0;
     }
-    #endif
-    #ifdef WORKER_TYPE_FEEDER
+#endif
+#ifdef WORKER_TYPE_FEEDER
     if (sensor.get_sensor0() < action->stop_cutoff_thresh) {
       motor_vel_out[MV_VERT] = 0;
     }
     if (sensor.get_sensor1() > action->origin_cutoff_thresh) {
       motor_vel_out[MV_VERT] = 0;
     }
-    #endif
+#endif
     elapsed_step++;
   }
 
@@ -157,13 +161,15 @@ public:
 };
 
 class ActionQueue {
-public:
+ public:
   const static uint8_t SIZE = 8;
-private:
+
+ private:
   Action queue[SIZE];
   uint8_t ix = 0;
   uint8_t n = 0;
-public:
+
+ public:
   void enqueue(const Action& astate) {
     queue[(ix + n) % SIZE] = astate;
     n += 1;
@@ -188,13 +194,9 @@ public:
     }
   }
 
-  void clear() {
-    n = 0;
-  }
+  void clear() { n = 0; }
 
-  uint8_t count() const {
-    return n;
-  }
+  uint8_t count() const { return n; }
 
   void print_json(JsonElement e) const {
     JsonDict status = e.as_dict();
@@ -213,17 +215,16 @@ public:
 
 // Must be instantiated at most only after reset.
 class ActionExecutorSingleton {
-public:
+ public:
   ActionQueue queue;
   ActionExecState state;
 
-  // Position based control. Set position will be maintained automatically (using Timer1)
-  // in Calibrated Servo.
+  // Position based control. Set position will be maintained automatically
+  // (using Timer1) in Calibrated Servo.
   uint8_t servo_pos[N_SERVOS];
 
-  // Velocity based control for DC motors. This class is responsible for PWM-ing them,
-  // even when no action is being executed.
-  // -0x7f~0x7f (7 bit effective)
+  // Velocity based control for DC motors. This class is responsible for PWM-ing
+  // them, even when no action is being executed. -0x7f~0x7f (7 bit effective)
   DCMotor motors[N_MOTORS];
   int8_t motor_vel[N_MOTORS];
   int8_t motor_vel_prev[N_MOTORS];
@@ -242,38 +243,39 @@ public:
   static const uint8_t TCCR2A_FAST_PWM = _BV(WGM21) | _BV(WGM20);
   static const uint8_t TCCR2A_A_NON_INVERT = _BV(COM2A1);
   static const uint8_t TCCR2A_B_NON_INVERT = _BV(COM2B1);
-  static const uint8_t TCCR2B_PRESCALER_1024 = _BV(CS22) | _BV(CS21) | _BV(CS20);
+  static const uint8_t TCCR2B_PRESCALER_1024 =
+      _BV(CS22) | _BV(CS21) | _BV(CS20);
 
   static const uint8_t T_SEN_CACHE_SIZE = 100;
   uint8_t tr_sensor_cache[T_SEN_CACHE_SIZE];
   uint8_t tr_sensor_cache_ix;
-public:
-  ActionExecutorSingleton() :
-      #ifdef WORKER_TYPE_BUILDER
-      servo_pos{50, 5},
-      motors{
-        // train
-        DCMotor(0xc0),
+
+ public:
+  ActionExecutorSingleton()
+      :
+#ifdef WORKER_TYPE_BUILDER
+        servo_pos{50, 5},
+        motors {
+    // train
+    DCMotor(0xc0),
         // ori
         DCMotor(0xc2),
         // screw
         DCMotor(0xc4)
-      }
-      #endif
-       {
-
   }
+#endif
+  {}
 
   void init() {
     // Init servo PWM (freq_pwm=61.0Hz, dur=16.4 ms)
     TCCR2A = TCCR2A_FAST_PWM | TCCR2A_A_NON_INVERT | TCCR2A_B_NON_INVERT;
     TCCR2B = TCCR2B_PRESCALER_1024;
 
-    #ifdef WORKER_TYPE_BUILDER
+#ifdef WORKER_TYPE_BUILDER
     // Set PWM ports as output.
-    DDRB |= _BV(3); // PWMA
-    DDRD |= _BV(3); // PWMB
-    #endif
+    DDRB |= _BV(3);  // PWMA
+    DDRD |= _BV(3);  // PWMB
+#endif
 
     // Init I2C bus.
     I2c.begin();
@@ -283,27 +285,25 @@ public:
     commit_posvel();
   }
 
-  void update_gyro() {
-    gv = imu.read_ang_x();
-  }
+  void update_gyro() { gv = imu.read_ang_x(); }
 
   void loop1ms() {
     sensor.loop1ms();
 
     if (state.is_running()) {
-        state.step(sensor, servo_pos, motor_vel);
-        if (sensor.is_start()) {
-          if (tr_sensor_cache_ix < T_SEN_CACHE_SIZE) {
-            #ifdef WORKER_TYPE_BUILDER
-            tr_sensor_cache[tr_sensor_cache_ix] = sensor.get_sensor_t();
-            #endif
-            #ifdef WORKER_TYPE_FEEDER
-            tr_sensor_cache[tr_sensor_cache_ix] = sensor.get_sensor_v();
-            #endif
-            tr_sensor_cache_ix++;
-          }
+      state.step(sensor, servo_pos, motor_vel);
+      if (sensor.is_start()) {
+        if (tr_sensor_cache_ix < T_SEN_CACHE_SIZE) {
+#ifdef WORKER_TYPE_BUILDER
+          tr_sensor_cache[tr_sensor_cache_ix] = sensor.get_sensor_t();
+#endif
+#ifdef WORKER_TYPE_FEEDER
+          tr_sensor_cache[tr_sensor_cache_ix] = sensor.get_sensor_v();
+#endif
+          tr_sensor_cache_ix++;
         }
-        commit_posvel();
+      }
+      commit_posvel();
     } else {
       // Fetch new action.
       Action* new_action = queue.pop();
@@ -317,13 +317,9 @@ public:
     }
   }
 
-  void enqueue(Action& astate) {
-    queue.enqueue(astate);
-  }
+  void enqueue(Action& astate) { queue.enqueue(astate); }
 
-  bool is_idle() const {
-    return queue.count() == 0 && !state.is_running();
-  }
+  bool is_idle() const { return queue.count() == 0 && !state.is_running(); }
 
   void cancel_all() {
     state = ActionExecState();
@@ -357,11 +353,11 @@ public:
     response.insert("ty").set("STATUS");
 
     JsonElement e = response.insert("wtype");
-    #ifdef WORKER_TYPE_BUILDER
+#ifdef WORKER_TYPE_BUILDER
     e.set("TB");
-    #else
+#else
     e.set_null();
-    #endif
+#endif
 
     print_output_json(response.insert("out"));
     print_system_status(response.insert("system"));
@@ -369,7 +365,8 @@ public:
     state.print_json(response.insert("state"));
     queue.print_json(response.insert("queue"));
   }
-private:
+
+ private:
   void report_cache() const {
     // check send_async_size
 
@@ -394,8 +391,8 @@ private:
   void print_system_status(JsonElement e) const {
     JsonDict status = e.as_dict();
 
-    status.insert("vcc/mV").set((uint16_t) sensor.get_vcc_mv());
-    status.insert("bat/mV").set((uint16_t) sensor.get_bat_mv());
+    status.insert("vcc/mV").set((uint16_t)sensor.get_vcc_mv());
+    status.insert("bat/mV").set((uint16_t)sensor.get_bat_mv());
     status.insert("recv/B").set(twelite.get_data_bytes_recv());
     status.insert("sent/B").set(twelite.get_data_bytes_sent());
 
@@ -414,16 +411,16 @@ private:
   }
 
   void commit_posvel() {
-    // Set PWM
-    #ifdef WORKER_TYPE_BUILDER
+// Set PWM
+#ifdef WORKER_TYPE_BUILDER
     OCR2A = servo_pos[CIX_A];
     OCR2B = servo_pos[CIX_B];
-    #endif
-    #ifdef WORKER_TYPE_FEEDER
+#endif
+#ifdef WORKER_TYPE_FEEDER
     OCR1A = servo_pos[CIX_GR_ROT];
     OCR1B = servo_pos[CIX_GR_CLOSE];
     OCR2B = servo_pos[CIX_LOCK];
-    #endif
+#endif
 
     // I2C takes time, need to conserve time. Otherwise MCU become
     // unresponsive.
