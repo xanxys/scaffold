@@ -252,19 +252,30 @@ void loop1ms() {
 }
 
 int main() {
+  //// Minimum AVR & 3.3V (TWELITE) init.
   // Init arduino core things (e.g. Timer0).
   init();
+  setMillisHook(loop1ms);
   twelite.init();
-  set_5v_power(true);
-  delay(50);
-  actions.init();
-
-#ifdef WORKER_TYPE_BUILDER
   indicator.flash_blocking();
-#endif
   twelite.info("init1");
 
-  setMillisHook(loop1ms);
+  //// Enable 5V & peripherals.
+  set_5v_power(true);
+  delay(50);  // IMU(20ms), 5V DC/DC (?ms)
+
+  // Init I2C bus.
+  I2c.begin();
+  I2c.pullup(0);  // we use external pullup registers
+  I2c.timeOut(10);
+
+  // Start 6-axis sensor.
+  imu.init();
+
+  indicator.flash_blocking();
+  twelite.info("init2");
+
+  actions.init();
 
 // Initialize servo pos to safe (i.e. not colliding with rail) position.
 #ifdef WORKER_TYPE_BUILDER
@@ -275,11 +286,5 @@ int main() {
     actions.enqueue(action);
   }
 #endif
-
-#ifdef WORKER_TYPE_BUILDER
-  indicator.flash_blocking();
-#endif
-  twelite.info("init2");
-
   command_processor.loop();
 }

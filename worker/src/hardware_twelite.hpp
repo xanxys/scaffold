@@ -314,5 +314,3 @@ class TweliteInterface {
     }
   }
 };
-
-TweliteInterface twelite;

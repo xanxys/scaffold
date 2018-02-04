@@ -7,6 +7,11 @@
 
 #include <stdint.h>
 
+#include "hardware_twelite.hpp"
+#include "hardware_imu.hpp"
+#include "hardware_motor.hpp"
+#include "hardware_sensor.hpp"
+
 enum ServoIx : uint8_t { CIX_A, CIX_B, N_SERVOS };
 
 enum MotorIx : uint8_t { MV_TRAIN, MV_ORI, MV_SCREW_DRIVER, N_MOTORS };
@@ -50,4 +55,10 @@ class Indicator {
   }
 };
 
+
 Indicator indicator;
+TweliteInterface twelite;
+
+IMU imu;
+DCMotor motor_screw(98);
+MultiplexedSensor sensor;

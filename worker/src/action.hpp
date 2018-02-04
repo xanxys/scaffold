@@ -1,13 +1,6 @@
 #pragma once
 
-#include "hardware_imu.hpp"
-#include "hardware_motor.hpp"
-#include "hardware_sensor.hpp"
-#include "hardware_twelite.hpp"
-
-#ifdef WORKER_TYPE_BUILDER
 #include "hardware_builder.hpp"
-#endif
 
 #include <I2C.h>
 
@@ -229,9 +222,6 @@ class ActionExecutorSingleton {
   int8_t motor_vel[N_MOTORS];
   int8_t motor_vel_prev[N_MOTORS];
 
-  MultiplexedSensor sensor;
-
-  IMU imu;
   uint8_t gv = 0;
 
   static const uint8_t TCCR1A_FAST_PWM_8 = _BV(WGM10);
@@ -271,21 +261,13 @@ class ActionExecutorSingleton {
     TCCR2A = TCCR2A_FAST_PWM | TCCR2A_A_NON_INVERT | TCCR2A_B_NON_INVERT;
     TCCR2B = TCCR2B_PRESCALER_1024;
 
-#ifdef WORKER_TYPE_BUILDER
     // Set PWM ports as output.
     DDRB |= _BV(3);  // PWMA
     DDRD |= _BV(3);  // PWMB
-#endif
-
-    // Init I2C bus.
-    I2c.begin();
-    I2c.pullup(0);  // we use external Pullups
-    I2c.timeOut(10);
-
     commit_posvel();
   }
 
-  void update_gyro() { gv = imu.read_ang_x(); }
+  void update_gyro() { imu.poll(); }
 
   void loop1ms() {
     sensor.loop1ms();
@@ -402,7 +384,7 @@ class ActionExecutorSingleton {
   void print_sensor_status(JsonElement e) const {
     JsonArray values = e.as_array();
 
-    values.add().set(gv);
+    values.add().set(imu.read_ang_x());
     values.add().set(sensor.get_sensor0());
     values.add().set(sensor.get_sensor1());
     values.add().set(sensor.get_sensor2());

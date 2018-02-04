@@ -7,6 +7,17 @@ class IMU {
   // 7-bit address (common for read & write, MSB is 0)
   const uint8_t i2c_addr7b = 0x6a;
 
+  static constexpr uint8_t CTRL1_XL = 0x10;
+  static constexpr uint8_t CTRL2_G = 0x11;
+  static constexpr uint8_t ODR_52Hz = 0x30;
+
+  static constexpr uint8_t CTRL9_XL = 0x18;
+  static constexpr uint8_t CTRL10_C = 0x19;
+
+  static constexpr uint8_t STATUS = 0x1e;
+  static constexpr uint8_t XLDA = 0x1;
+  static constexpr uint8_t GDA = 0x2;
+
   const uint8_t OUTX_L_G = 0x22;
   const uint8_t OUTX_H_G = 0x23;
   const uint8_t OUTY_L_G = 0x24;
@@ -16,25 +27,36 @@ class IMU {
 
   const uint8_t OUTX_L_XL = 0x28;
 
+  uint8_t gx;
+
  public:
   IMU() {}
 
-  uint16_t read_ang_x() {
-    sei();  // w/o this, TWI gets stuck after sending start condtion.
-    if (I2c.read(i2c_addr7b, OUTX_L_G, (uint8_t)1)) {
-      cli();
-      return 255;
-    }
-    cli();
-    return 100;
-    I2c.receive();
-    cli();
+  /**
+   * Consult AN4650
+   */
+  void init() {
+    // Start both. Should be in High Performance mode (default).
+    I2c.write(i2c_addr7b, CTRL9_XL, (uint8_t)0x38);  // enable X,Y,Z
+    I2c.write(i2c_addr7b, CTRL1_XL, ODR_52Hz);
 
-    /*
-        if (res != 0) {
-          twelite.warn("I2C failed");
-        }
-        */
-    return 123;
+    I2c.write(i2c_addr7b, CTRL10_C, (uint8_t)0x38);  // enable X,Y,Z
+    I2c.write(i2c_addr7b, CTRL2_G, ODR_52Hz);
   }
+
+  /**
+   * Call at least every 19ms to fetch latest sensor readings.
+   * If called too infrequently, aliasing can happen.
+   */
+  void poll() {
+    I2c.read(i2c_addr7b, STATUS, (uint8_t)1);
+    uint8_t status = I2c.receive();
+
+    if (status & GDA) {
+      I2c.read(i2c_addr7b, OUTX_L_G, (uint8_t)1);
+      gx = I2c.receive();
+    }
+  }
+
+  uint16_t read_ang_x() { return gx; }
 };
