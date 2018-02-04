@@ -10,7 +10,7 @@ class DCMotor {
   static constexpr uint8_t REG_CONTROL = 0;
 
  public:
-  DCMotor(uint8_t i2c_addr) : i2c_addr7b(i2c_addr >> 1) {}
+  DCMotor(uint8_t i2c_addr) : i2c_addr7b(i2c_addr) {}
 
   void set_velocity(int8_t speed) {
     uint8_t abs_speed = (speed > 0) ? speed : (-speed);

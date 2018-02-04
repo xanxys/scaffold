@@ -27,7 +27,7 @@ class IMU {
 
   const uint8_t OUTX_L_XL = 0x28;
 
-  uint8_t gx;
+  int16_t gx;
 
  public:
   IMU() {}
@@ -53,10 +53,16 @@ class IMU {
     uint8_t status = I2c.receive();
 
     if (status & GDA) {
-      I2c.read(i2c_addr7b, OUTX_L_G, (uint8_t)1);
-      gx = I2c.receive();
+      I2c.read(i2c_addr7b, OUTX_L_G, (uint8_t)2);
+
+      // 8.75mdps / LSB
+      uint16_t raw_gx = I2c.receive();
+      raw_gx = static_cast<uint16_t>(I2c.receive()) << 8;
+      gx = raw_gx;
     }
+
+    // 0.061mg / LSB
   }
 
-  uint16_t read_ang_x() { return gx; }
+  int16_t read_ang_x() { return gx; }
 };
