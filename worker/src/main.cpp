@@ -2,11 +2,7 @@
 
 #include <Arduino.h>
 #include <MsTimer2.h>
-
-/*
-#include <nanopb/pb_encode.h>
 #include <proto/builder.pb.h>
-*/
 
 #include "action.hpp"
 #include "hardware_builder.hpp"
@@ -54,7 +50,19 @@ class CommandProcessorSingleton {
           break;
         case 's':
           actions.print_scan(response);
-          break;
+          response.end();
+          twelite.send_datagram(writer.ptr_begin,
+                                writer.ptr - writer.ptr_begin);
+
+          {
+            buffer[0] = PacketType_I2C_SCAN_RESULT;
+            pb_ostream_t stream = pb_ostream_from_buffer(
+                (pb_byte_t*)(buffer + 1), sizeof(buffer) - 1);
+            actions.emit_i2c_scan_result(stream);
+            twelite.send_datagram(buffer, 1 + stream.bytes_written);
+          }
+
+          continue;
         case 'e':
           exec_enqueue(response);
           break;
@@ -290,14 +298,6 @@ int main() {
     actions.enqueue(action);
   }
 #endif
-
-/*
-  Status status;
-
-  uint8_t buffer[16];
-  pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-  pb_encode(&stream, Status_fields, &status);
-  */
 
   // Fully initialized. Start realtime periodic process & idle tasks.
   setMillisHook(loop1ms);

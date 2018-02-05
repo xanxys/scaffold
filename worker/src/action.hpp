@@ -2,6 +2,8 @@
 
 #include "hardware_builder.hpp"
 
+#include <nanopb/pb_encode.h>
+#include <proto/builder.pb.h>
 #include <I2C.h>
 
 // Safely calculate va + (vb - va) * (ix / num)
@@ -327,6 +329,30 @@ class ActionExecutorSingleton {
     devs.end();
 
     response.insert("aborted_by_error").set(error);
+  }
+
+  void emit_i2c_scan_result(pb_ostream_t& stream) const {
+    I2CScanResult result;
+    result.type = I2CScanResult_ResultType_OK;
+
+    const uint8_t MAX_NUM_DEVICES = sizeof(result.device) / sizeof(result.device[0]);
+    uint8_t dev_ix = 0;
+    for (uint8_t addr = 0; addr <= 0x7F; addr++) {
+      DeviceCheck st = I2c.check_device(addr);
+      if (st == DeviceCheck::FOUND) {
+        if (dev_ix < MAX_NUM_DEVICES) {
+          result.device[dev_ix++] = addr;
+        } else {
+          result.type = I2CScanResult_ResultType_ERROR_TOO_MANY;
+          break;
+        }
+      } else if (st == DeviceCheck::ERR_TIMEOUT) {
+        result.type = I2CScanResult_ResultType_ERROR_ABORTED;
+        break;
+      }
+    }
+    result.device_count = dev_ix;
+    pb_encode(&stream, I2CScanResult_fields, &result);
   }
 
   void print(JsonDict& response) const {

@@ -1,21 +1,41 @@
-syntax = "proto2";
+syntax = "proto3";
 
 enum WorkerType {
+    RESERVED_WT = 0;
     BUILDER = 1;
 }
 
-message Status {
-    optional WorkerType worker_type = 1;
+// For compatibility reason, this won't be used as proto.
+// Instead, it will precede proto (or other message) as one-byte type.
+enum PacketType {
+    RESERVED_PT = 0;
+    I2C_SCAN_RESULT = 5;
+    // Corresponds to '{', initiator of JSON messages.
+    LEGACY = 123;
+}
 
-    optional SystemStatus system = 2;
+message I2CScanResult {
+    enum ResultType {
+        OK = 0;
+        ERROR_ABORTED = 1;
+        ERROR_TOO_MANY = 2;
+    }
+    ResultType type = 1;
+    repeated uint32 device = 2;
+}
+
+message Status {
+    WorkerType worker_type = 1;
+
+    SystemStatus system = 2;
 
     // (Raw) I/O
-    optional SensorStatus sensor = 3;
-    optional OutputStatus output = 4;
+    SensorStatus sensor = 3;
+    OutputStatus output = 4;
 
     // ActionQueue
-    optional ExecStatus exec = 5;
-    optional QueueStatus queue = 6;
+    ExecStatus exec = 5;
+    QueueStatus queue = 6;
 }
 
 message SystemStatus {

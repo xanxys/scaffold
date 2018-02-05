@@ -4,14 +4,15 @@ genrule(
     name = "proto_desc",
     srcs = ["builder.proto"],
     outs = ["builder.protodesc"],
+    local = 1,  # Use locally intalled protoc
     cmd = "protoc -o $(OUTS) $(SRCS)",
 )
 
 genrule(
     name = "proto_nanopb",
-    srcs = [":proto_desc"],
+    srcs = [":proto_desc", "builder.options"],
     outs = ["builder.pb.h", "builder.pb.c"],
-    cmd = "python $(location //nanopb:generator_bin) --no-timestamp $(SRCS)",
+    cmd = "python $(location //nanopb:generator_bin) --no-timestamp -I $$(dirname $(location builder.options)) -f builder.options $(location :proto_desc)",
     tools = ["//nanopb:generator_bin", "//nanopb:generator_lib"],
 )
 
