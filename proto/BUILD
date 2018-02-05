@@ -19,7 +19,7 @@ genrule(
 genrule(
     name = "proto_js",
     srcs = ["builder.proto"],
-    outs = ["builder.js"],
+    outs = ["builder_pb.js"],
     local = 1,  # Use locally installed protoc
-    cmd = "protoc --proto_path $$(dirname $(location builder.proto)) --js_out=library=builder,binary:$$(dirname $(location builder.js)) $(SRCS)"
+    cmd = "protoc --proto_path $$(dirname $(location builder.proto)) --js_out=import_style=commonjs,binary:$$(dirname $(location builder_pb.js)) $(SRCS)"
 )

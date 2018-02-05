@@ -2,6 +2,7 @@
 declare var window: any;
 const SerialPort: any = window.require('serialport');
 import * as fs from 'fs';
+import * as builder_pb from './builder_pb.js';
 
 export type WorkerAddr = number;
 
@@ -25,6 +26,10 @@ export class WorkerBridge {
     private handlePacket?: (packet: Packet) => void;
 
     constructor(private fakePath?: string) {
+        let testpb = Uint8Array.from([18, 2, 98, 106]);
+        console.log(builder_pb);
+        let msg = builder_pb.I2CScanResult.deserializeBinary(testpb);
+        console.log(msg, msg.getType(), msg.getDeviceList(), msg.toObject());
     }
 
     open(handleUpdate: (br: WorkerBridge) => void, handlePacket: (packet: Packet) => void): void {
