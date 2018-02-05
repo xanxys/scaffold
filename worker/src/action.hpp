@@ -367,7 +367,7 @@ class ActionExecutorSingleton {
 
     print_output_json(response.insert("out"));
     print_system_status(response.insert("system"));
-    print_sensor_status(response.insert("sensor"));
+    // print_sensor_status(response.insert("sensor"));
     state.print_json(response.insert("state"));
     queue.print_json(response.insert("queue"));
   }
