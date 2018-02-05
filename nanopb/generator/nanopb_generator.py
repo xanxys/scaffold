@@ -1389,7 +1389,7 @@ def read_options_file(infile):
             sys.stderr.write("%s:%d: " % (infile.name, i + 1) +
                              "Option lines should have space between field name and options. " +
                              "Skipping line: '%s'\n" % line)
-            continue
+            sys.exit(1)
 
         opts = nanopb_pb2.NanoPBOptions()
 
@@ -1399,7 +1399,7 @@ def read_options_file(infile):
             sys.stderr.write("%s:%d: " % (infile.name, i + 1) +
                              "Unparseable option line: '%s'. " % line +
                              "Error: %s\n" % str(e))
-            continue
+            sys.exit(1)
         results.append((parts[0], opts))
 
     return results
