@@ -9,6 +9,7 @@ enum WorkerType {
 // Instead, it will precede proto (or other message) as one-byte type.
 enum PacketType {
     RESERVED_PT = 0;
+    STATUS = 1;
     I2C_SCAN_RESULT = 5;
     // Corresponds to '{', initiator of JSON messages.
     LEGACY = 123;
@@ -39,18 +40,53 @@ message Status {
 }
 
 message SystemStatus {
+    uint32 vcc_mv = 1;
+    uint32 bat_mv = 2;
+    uint32 recv_byte = 3;
+    uint32 sent_byte = 4;
 }
 
 message SensorStatus {
+    // Unit: in degree/sec.
+    sint32 gyro_x_dps = 1;
+    sint32 gyro_y_dps = 2;
+    sint32 gyro_z_dps = 3;
 
+    // Unit: in milli-G (1 mg = 9.8 mm/s^2)
+    sint32 acc_x_mg = 4;
+    sint32 acc_y_mg = 5;
+    sint32 acc_z_mg = 6;
 }
 
+// Actuator output values at certain time.
+//
+// vel is in: [-0x7f, 0x7f]
 message OutputStatus {
+    sint32 loc_forward_vel = 1;  // Z+
+
+    // Rotation axis (Y+) velocity seen from top.
+    // CCW is positive.
+    sint32 loc_rotation_vel = 2;
+
+    sint32 driver_lock_vel = 3;
+    uint32 driver_z_pos = 4;
+    uint32 driver_y_pos = 5;
+
+    uint32 rail_arm_pos = 6;
 }
 
 message ExecStatus {
+    enum Status {
+        IDLE = 0;
+        RUNNING = 1;
+        DONE = 2;
+    }
+    Status status = 1;
+    uint32 duration_ms = 2;
+    uint32 elapsed_ms = 3;
 }
 
 message QueueStatus {
-
+    uint32 queued = 1;
+    uint32 free = 2;
 }

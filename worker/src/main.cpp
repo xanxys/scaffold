@@ -37,7 +37,7 @@ class CommandProcessorSingleton {
 
       char code = read();
 
-      char buffer[150];
+      char buffer[100];
       StringWriter writer(buffer, sizeof(buffer));
 
       JsonDict response(&writer);
@@ -45,32 +45,27 @@ class CommandProcessorSingleton {
         case 'x':
           exec_cancel_actions(response);
           break;
-        case 'p':
-          exec_print_actions(response);
-          break;
-          
-        case 's':
-          actions.print_scan(response);
-          response.end();
-          
-          twelite.send_datagram(writer.ptr_begin,
-                                writer.ptr - writer.ptr_begin);
+        case 'p': {
+          Status status;
+          actions.fill_status(status);
 
-          
-          {
-            buffer[0] = PacketType_I2C_SCAN_RESULT;
-            
-            pb_ostream_t stream = pb_ostream_from_buffer(
-                (pb_byte_t*)(buffer + 1), sizeof(buffer) - 1);
-                
-            actions.emit_i2c_scan_result(stream);
-            
-            twelite.send_datagram(buffer, 1 + stream.bytes_written);  
-          }
-          
+          buffer[0] = PacketType_STATUS;
+          pb_ostream_t stream = pb_ostream_from_buffer((pb_byte_t*)(buffer + 1),
+                                                       sizeof(buffer) - 1);
+          pb_encode(&stream, Status_fields, &status);
+          twelite.send_datagram(buffer, 1 + stream.bytes_written);
+        } break;
+        case 's': {
+          I2CScanResult result;
+          actions.fill_i2c_scan_result(result);
 
+          buffer[0] = PacketType_I2C_SCAN_RESULT;
+          pb_ostream_t stream = pb_ostream_from_buffer((pb_byte_t*)(buffer + 1),
+                                                       sizeof(buffer) - 1);
+          pb_encode(&stream, I2CScanResult_fields, &result);
+          twelite.send_datagram(buffer, 1 + stream.bytes_written);
+        }
           continue;
-          
         case 'e':
           exec_enqueue(response);
           break;
@@ -142,8 +137,6 @@ class CommandProcessorSingleton {
     actions.cancel_all();
     response.insert("ty").set("CANCELLED");
   }
-
-  void exec_print_actions(JsonDict& response) { actions.print(response); }
 
   void exec_enqueue(JsonDict& response) {
     while (true) {

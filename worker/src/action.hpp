@@ -2,9 +2,9 @@
 
 #include "hardware_builder.hpp"
 
+#include <I2C.h>
 #include <nanopb/pb_encode.h>
 #include <proto/builder.pb.h>
-#include <I2C.h>
 
 // Safely calculate va + (vb - va) * (ix / num)
 uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
@@ -46,34 +46,6 @@ class Action {
     for (int i = 0; i < N_MOTORS; i++) {
       motor_vel[i] = MOTOR_VEL_KEEP;
     }
-  }
-
-  void print_json(JsonElement e) const {
-    JsonArray arr = e.as_array();
-
-    JsonArray sv = arr.add().as_array();
-    for (int i = 0; i < N_SERVOS; i++) {
-      uint8_t v = servo_pos[i];
-      if (v == SERVO_POS_KEEP) {
-        sv.add().set("KEEP");
-      } else {
-        sv.add().set(v);
-      }
-    }
-    sv.end();
-
-    JsonArray mot = arr.add().as_array();
-    for (int i = 0; i < N_MOTORS; i++) {
-      int8_t v = motor_vel[i];
-      if (v == MOTOR_VEL_KEEP) {
-        mot.add().set("KEEP");
-      } else {
-        mot.add().set(v);
-      }
-    }
-    mot.end();
-
-    arr.end();
   }
 };
 
@@ -138,20 +110,18 @@ class ActionExecState {
     return action != NULL && (elapsed_step <= action->duration_step);
   }
 
-  void print_json(JsonElement e) const {
-    JsonDict astate = e.as_dict();
-
+  void fill_status(ExecStatus& status) const {
+    status.duration_ms = action->duration_step;
     if (is_running()) {
-      astate.insert("type").set("run");
-      astate.insert("elapsed/ms").set(elapsed_step);
-      astate.insert("duration/ms").set(action->duration_step);
+      status.status = ExecStatus_Status_RUNNING;
+      status.elapsed_ms = elapsed_step;
     } else if (action != NULL) {
-      astate.insert("type").set("done");
+      status.status = ExecStatus_Status_DONE;
+      status.elapsed_ms = status.duration_ms;
     } else {
-      astate.insert("type").set("idle");
+      status.status = ExecStatus_Status_IDLE;
+      status.elapsed_ms = 0;
     }
-
-    astate.end();
   }
 };
 
@@ -193,18 +163,9 @@ class ActionQueue {
 
   uint8_t count() const { return n; }
 
-  void print_json(JsonElement e) const {
-    JsonDict status = e.as_dict();
-
-    JsonArray actions = status.insert("actions").as_array();
-    for (int i = 0; i < n; i++) {
-      queue[(ix + i) % SIZE].print_json(actions.add());
-    }
-    actions.end();
-
-    status.insert("free").set(SIZE - n);
-
-    status.end();
+  void fill_status(QueueStatus& status) const {
+    status.queued = n;
+    status.free = SIZE - n;
   }
 };
 
@@ -248,8 +209,8 @@ class ActionExecutorSingleton {
 #ifdef WORKER_TYPE_BUILDER
         servo_pos{50, 5},
         motors {
-        // train
-        DCMotor(0x60),
+    // train
+    DCMotor(0x60),
         // ori
         DCMotor(0x61),
         // screw
@@ -331,11 +292,11 @@ class ActionExecutorSingleton {
     response.insert("aborted_by_error").set(error);
   }
 
-  void emit_i2c_scan_result(pb_ostream_t& stream) const {
-    I2CScanResult result;
+  void fill_i2c_scan_result(I2CScanResult& result) const {
     result.type = I2CScanResult_ResultType_OK;
 
-    const uint8_t MAX_NUM_DEVICES = sizeof(result.device) / sizeof(result.device[0]);
+    const uint8_t MAX_NUM_DEVICES =
+        sizeof(result.device) / sizeof(result.device[0]);
     uint8_t dev_ix = 0;
     for (uint8_t addr = 0; addr <= 0x7F; addr++) {
       DeviceCheck st = I2c.check_device(addr);
@@ -352,24 +313,15 @@ class ActionExecutorSingleton {
       }
     }
     result.device_count = dev_ix;
-    pb_encode(&stream, I2CScanResult_fields, &result);
   }
 
-  void print(JsonDict& response) const {
-    response.insert("ty").set("STATUS");
-
-    JsonElement e = response.insert("wtype");
-#ifdef WORKER_TYPE_BUILDER
-    e.set("TB");
-#else
-    e.set_null();
-#endif
-
-    print_output_json(response.insert("out"));
-    print_system_status(response.insert("system"));
-    // print_sensor_status(response.insert("sensor"));
-    state.print_json(response.insert("state"));
-    queue.print_json(response.insert("queue"));
+  void fill_status(Status& status) const {
+    status.worker_type = WorkerType_BUILDER;
+    fill_status_system(status.system);
+    fill_status_sensor(status.sensor);
+    fill_status_output(status.output);
+    state.fill_status(status.exec);
+    queue.fill_status(status.queue);
   }
 
  private:
@@ -394,39 +346,36 @@ class ActionExecutorSingleton {
     twelite.queue_send_async(writer.size_written());
   }
 
-  void print_system_status(JsonElement e) const {
-    JsonDict status = e.as_dict();
-
-    status.insert("vcc/mV").set((uint16_t)sensor.get_vcc_mv());
-    status.insert("bat/mV").set((uint16_t)sensor.get_bat_mv());
-    status.insert("recv/B").set(twelite.get_data_bytes_recv());
-    status.insert("sent/B").set(twelite.get_data_bytes_sent());
-
-    status.end();
+  void fill_status_system(SystemStatus& status) const {
+    status.vcc_mv = sensor.get_vcc_mv();
+    status.bat_mv = sensor.get_bat_mv();
+    status.recv_byte = twelite.get_data_bytes_recv();
+    status.sent_byte = twelite.get_data_bytes_sent();
   }
 
-  void print_sensor_status(JsonElement e) const {
-    JsonDict ss = e.as_dict();
+  void fill_status_sensor(SensorStatus& status) const {
+    // TODO: scaling
+    status.gyro_x_dps = -imu.gyro[1];
+    status.gyro_y_dps = imu.gyro[0];
+    status.gyro_z_dps = imu.gyro[2];
 
-    JsonArray gyro = ss.insert("gyro").as_array();
-    gyro.add().set(-imu.gyro[1]);
-    gyro.add().set(imu.gyro[0]);
-    gyro.add().set(imu.gyro[2]);
-    gyro.end();
-  
-    JsonArray acc = ss.insert("acc").as_array();
-    acc.add().set(-imu.acc[1]);
-    acc.add().set(imu.acc[0]);
-    acc.add().set(imu.acc[2]);
-    acc.end();
+    status.acc_x_mg = -imu.acc[1];
+    status.acc_y_mg = imu.acc[0];
+    status.acc_z_mg = imu.acc[2];
+  }
 
-    JsonArray values = ss.insert("optical").as_array();
-    values.add().set(sensor.get_sensor0());
-    values.add().set(sensor.get_sensor1());
-    values.add().set(sensor.get_sensor2());
-    values.end();
+  void fill_status_output(OutputStatus& status) const {
+    // TODO: Proper index mapping
+    status.loc_forward_vel = motor_vel[0];
+    status.loc_rotation_vel = motor_vel[1];
 
-    ss.end();
+    // Right block.
+    status.driver_lock_vel = motor_vel[2];
+    status.driver_z_pos = servo_pos[0];
+    status.driver_y_pos = servo_pos[1];
+
+    // Left block.
+    status.rail_arm_pos = servo_pos[1];
   }
 
   void commit_posvel() {
@@ -449,23 +398,5 @@ class ActionExecutorSingleton {
         motor_vel_prev[i] = motor_vel[i];
       }
     }
-  }
-
-  void print_output_json(JsonElement outp) const {
-    JsonArray values = outp.as_array();
-
-    JsonArray servos = values.add().as_array();
-    for (int i = 0; i < N_SERVOS; i++) {
-      servos.add().set(servo_pos[i]);
-    }
-    servos.end();
-
-    JsonArray motors = values.add().as_array();
-    for (int i = 0; i < N_MOTORS; i++) {
-      motors.add().set(motor_vel[i]);
-    }
-    motors.end();
-
-    values.end();
   }
 };
