@@ -1,5 +1,3 @@
-// Scaffold worker v1 firmware
-
 #include <Arduino.h>
 #include <MsTimer2.h>
 #include <proto/builder.pb.h>

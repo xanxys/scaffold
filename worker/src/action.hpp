@@ -273,25 +273,6 @@ class ActionExecutorSingleton {
     commit_posvel();
   }
 
-  void print_scan(JsonDict& response) const {
-    response.insert("ty").set("SCAN");
-
-    JsonArray devs = response.insert("dev").as_array();
-    bool error = false;
-    for (uint8_t addr = 0; addr <= 0x7F; addr++) {
-      DeviceCheck st = I2c.check_device(addr);
-      if (st == DeviceCheck::FOUND) {
-        devs.add().set(addr);
-      } else if (st == DeviceCheck::ERR_TIMEOUT) {
-        error = true;
-        break;
-      }
-    }
-    devs.end();
-
-    response.insert("aborted_by_error").set(error);
-  }
-
   void fill_i2c_scan_result(I2CScanResult& result) const {
     result.type = I2CScanResult_ResultType_OK;
 

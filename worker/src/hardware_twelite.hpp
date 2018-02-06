@@ -5,8 +5,8 @@
 #include "json_writer.hpp"
 #include "slice.hpp"
 
-uint8_t async_tx_buffer[100];
-uint8_t warn_tx_buffer[70];
+uint8_t async_tx_buffer[80];
+uint8_t warn_tx_buffer[80];
 
 #define SIGROW_SERNUM0 0x0e
 #define SIGROW_SERNUM1 0x0f
@@ -17,7 +17,7 @@ uint8_t warn_tx_buffer[70];
 class TweliteInterface {
  private:
   // RX buffer.
-  // Decodex command without ":" or newlines, but includes checksum.
+  // Decoded command without ":" or newlines, but includes checksum.
   const static uint8_t BUF_SIZE = 150;
   uint8_t buffer[BUF_SIZE];
 
@@ -140,44 +140,6 @@ class TweliteInterface {
     return ovm_packet.trim(4, 0);
   }
 
-  uint32_t intercept_header() {
-    // Search SID=xxxx. Abandon at 100B.
-    uint8_t n_read = 0;
-    const char* target = "SID=";
-    uint8_t ok_ix = 0;
-    while (true) {
-      if (n_read > 100) {
-        return 0;  // failed to get SID=.
-      }
-
-      char c = getch();
-      n_read++;
-      if (c == ':') {
-        // exit on command start, to not mess up other commands
-        // when e.g. AVR is re-flashed while TWELITE is connected to power
-        return 0;
-      } else if (c == target[ok_ix]) {
-        ok_ix++;
-        if (ok_ix >= 4) {
-          break;
-        }
-      } else {
-        ok_ix = 0;
-      }
-    }
-
-    // Discard "0x";
-    getch();
-    getch();
-
-    uint32_t v = 0;
-    for (uint8_t i = 0; i < 8; i++) {
-      v <<= 4;
-      v |= decode_nibble(getch());
-    }
-    return v;
-  }
-
   void send_status(const char* type, const char* message) {
     StringWriter writer((char*)warn_tx_buffer, sizeof(warn_tx_buffer));
 
@@ -265,17 +227,6 @@ class TweliteInterface {
     while (Serial.available() == 0) {
     }
     return Serial.read();
-  }
-
-  void send_cstr(const char* ptr) {
-    while (true) {
-      uint8_t v = *ptr;
-      if (v == 0) {
-        break;
-      }
-      send_byte(v);
-      ptr++;
-    }
   }
 
   inline void send_byte(uint8_t v) {
