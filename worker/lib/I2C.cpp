@@ -188,7 +188,7 @@ void I2C::scan()
 
 DeviceCheck I2C::check_device(uint8_t addr) {
   uint16_t tempTime = timeOutDelay;
-  timeOut(80);
+  timeOut(5);
 
   uint8_t returnStatus = start();
   if(!returnStatus) { 
