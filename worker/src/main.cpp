@@ -31,9 +31,7 @@ class CommandProcessorSingleton {
       }
       r_ix = 0;
 
-#ifdef WORKER_TYPE_BUILDER
       indicator.flash_blocking();
-#endif
 
       char code = read();
       switch (code) {
@@ -57,7 +55,7 @@ class CommandProcessorSingleton {
             twelite.warn("p/enc error");
           }
         }
-        delay(10);
+          delay(10);
           {
             IOStatus status;
             actions.fill_io_status(status);
@@ -184,7 +182,6 @@ class CommandProcessorSingleton {
     while (true) {
       char target = read();
       switch (target) {
-#ifdef WORKER_TYPE_BUILDER
         case '!':
           action.report = true;
           break;
@@ -206,21 +203,6 @@ class CommandProcessorSingleton {
         case 'T':
           action.train_cutoff_thresh = safe_read_thresh();
           break;
-#endif
-#ifdef WORKER_TYPE_FEEDER
-        case '!':
-          action.report = true;
-          break;
-        case 'v':
-          action.motor_vel[MV_VERT] = safe_read_vel();
-          break;
-        case 'S':
-          action.stop_cutoff_thresh = safe_read_thresh();
-          break;
-        case 'O':
-          action.origin_cutoff_thresh = safe_read_thresh();
-          break;
-#endif
         default:
           twelite.warn("unknown action target");
       }
@@ -311,15 +293,13 @@ int main() {
   twelite.info("init2");
 
   actions.init();
-// Initialize servo pos to safe (i.e. not colliding with rail) position.
-#ifdef WORKER_TYPE_BUILDER
+  // Initialize servo pos to safe (i.e. not colliding with rail) position.
   {
     Action action(1 /* dur_ms */);
     action.servo_pos[CIX_A] = 13;
     action.servo_pos[CIX_B] = 11;
     actions.enqueue(action);
   }
-#endif
 
   // Fully initialized. Start realtime periodic process & idle tasks.
   setMillisHook(loop1ms);

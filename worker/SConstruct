@@ -33,7 +33,7 @@ env.Library('build/libs.a', Glob('lib/*.cpp') + Glob('lib/*.c'))
 # For now, invoke "bazel build //proto:proto_nanopb" manually before calling "scons", whenever .proto files are updated.
 # bazel build //proto:proto_nanopb && scons
 
-env.Object('build/builder-main.o', 'build/main.cpp', CPPDEFINES=['WORKER_TYPE_BUILDER'])
+env.Object('build/builder-main.o', 'build/main.cpp')
 env.Object('build/proto.o', '../bazel-genfiles/proto/builder.pb.c')
 env.Object('build/pb_encode.o', '../nanopb/pb_encode.c')
 env.Object('build/pb_common.o', '../nanopb/pb_common.c')

@@ -20,11 +20,9 @@ class Action {
   // execution.
   bool report;
 
-#ifdef WORKER_TYPE_BUILDER
   // Set train=0 when sensor reading > this value.
   // 255 means disable this functionality.
   uint8_t train_cutoff_thresh = 255;
-#endif
 
   // Note this can be 0, but action still has effect.
   uint16_t duration_step;
@@ -90,19 +88,9 @@ class ActionExecState {
         motor_vel_out[i] = targ_vel;
       }
     }
-#ifdef WORKER_TYPE_BUILDER
     if (sensor.get_sensor_t() > action->train_cutoff_thresh) {
       motor_vel_out[MV_TRAIN] = 0;
     }
-#endif
-#ifdef WORKER_TYPE_FEEDER
-    if (sensor.get_sensor0() < action->stop_cutoff_thresh) {
-      motor_vel_out[MV_VERT] = 0;
-    }
-    if (sensor.get_sensor1() > action->origin_cutoff_thresh) {
-      motor_vel_out[MV_VERT] = 0;
-    }
-#endif
     elapsed_step++;
   }
 
@@ -205,19 +193,13 @@ class ActionExecutorSingleton {
 
  public:
   ActionExecutorSingleton()
-      :
-#ifdef WORKER_TYPE_BUILDER
-        servo_pos{50, 5},
-        motors {
-    // train
-    DCMotor(0x60),
-        // ori
-        DCMotor(0x61),
-        // screw
-        DCMotor(0x62)
-  }
-#endif
-  {}
+      : servo_pos{50, 5},
+        motors{// train
+               DCMotor(0x60),
+               // ori
+               DCMotor(0x61),
+               // screw
+               DCMotor(0x62)} {}
 
   void init() {
     // Init servo PWM (freq_pwm=61.0Hz, dur=16.4 ms)
@@ -237,12 +219,7 @@ class ActionExecutorSingleton {
       state.step(sensor, servo_pos, motor_vel);
       if (sensor.is_start()) {
         if (tr_sensor_cache_ix < T_SEN_CACHE_SIZE) {
-#ifdef WORKER_TYPE_BUILDER
           tr_sensor_cache[tr_sensor_cache_ix] = sensor.get_sensor_t();
-#endif
-#ifdef WORKER_TYPE_FEEDER
-          tr_sensor_cache[tr_sensor_cache_ix] = sensor.get_sensor_v();
-#endif
           tr_sensor_cache_ix++;
         }
       }
@@ -364,16 +341,9 @@ class ActionExecutorSingleton {
   }
 
   void commit_posvel() {
-// Set PWM
-#ifdef WORKER_TYPE_BUILDER
+    // Set PWM
     OCR2A = servo_pos[CIX_A];
     OCR2B = servo_pos[CIX_B];
-#endif
-#ifdef WORKER_TYPE_FEEDER
-    OCR1A = servo_pos[CIX_GR_ROT];
-    OCR1B = servo_pos[CIX_GR_CLOSE];
-    OCR2B = servo_pos[CIX_LOCK];
-#endif
 
     // I2C takes time, need to conserve time. Otherwise MCU become
     // unresponsive.
