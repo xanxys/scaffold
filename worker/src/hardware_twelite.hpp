@@ -1,12 +1,17 @@
 #pragma once
 
-#include <EEPROM.h>
+#include <avr/boot.h>
 
 #include "json_writer.hpp"
 #include "slice.hpp"
 
 uint8_t async_tx_buffer[100];
 uint8_t warn_tx_buffer[70];
+
+#define SIGROW_SERNUM0 0x0e
+#define SIGROW_SERNUM1 0x0f
+#define SIGROW_SERNUM2 0x10
+#define SIGROW_SERNUM3 0x11
 
 // Parse ":..." ASCII messages from standard TWELITE MWAPP.
 class TweliteInterface {
@@ -22,33 +27,22 @@ class TweliteInterface {
   uint32_t data_bytes_sent = 0;
   uint32_t data_bytes_recv = 0;
 
-  const uint32_t UID_EEPROM_ADDR = 0;
-
-  uint32_t uid = 0;
-
   enum class RecvResult : uint8_t { OK, OVERFLOW, INVALID };
 
  public:
-  void init() {
-    Serial.begin(38400);
-    // Refresh UID and persist to EEPROM.
-    uint32_t hdr_uid = intercept_header();
-
-    uid = read_eeprom_be(UID_EEPROM_ADDR);
-    if (uid == 0xffffffff) {
-      uid = 0;  // default is 0xff...., treat them as 0.
-    }
-
-    if (uid == 0 && hdr_uid != 0) {
-      uid = hdr_uid;
-      write_eeprom_be(UID_EEPROM_ADDR, uid);
-    }
-  }
+  void init() { Serial.begin(38400); }
 
   void queue_send_async(uint8_t async_size) { send_async_size = async_size; }
 
-  // If fails, returns 0.
-  uint32_t get_device_id() { return uid; }
+  uint32_t get_device_id() {
+    return static_cast<uint32_t>(boot_signature_byte_get(SIGROW_SERNUM0)) |
+           (static_cast<uint32_t>(boot_signature_byte_get(SIGROW_SERNUM1))
+            << 8) |
+           (static_cast<uint32_t>(boot_signature_byte_get(SIGROW_SERNUM2))
+            << 16) |
+           (static_cast<uint32_t>(boot_signature_byte_get(SIGROW_SERNUM3))
+            << 24);
+  }
 
   // Wait for next datagram addressed (including broadcast) to this device.
   // retval: slice of buffer held by this instance. returns invalid slice when
@@ -77,7 +71,7 @@ class TweliteInterface {
     // Parent, Send
     Serial.write(":0001");
     // Overmind info.
-    send_u32_be(uid);
+    send_u32_be(get_device_id());
     send_u32_be(millis());
     // Data in hex.
     for (uint8_t i = 0; i < size; i++) {
@@ -140,7 +134,7 @@ class TweliteInterface {
       return MaybeSlice();
     }
     uint32_t addr = ovm_packet.u32_be();
-    if (addr != uid && addr != 0xffffffff) {
+    if (addr != get_device_id() && addr != 0xffffffff) {
       return MaybeSlice();
     }
     return ovm_packet.trim(4, 0);
@@ -180,22 +174,6 @@ class TweliteInterface {
     for (uint8_t i = 0; i < 8; i++) {
       v <<= 4;
       v |= decode_nibble(getch());
-    }
-    return v;
-  }
-
-  static void write_eeprom_be(uint16_t addr, uint32_t v) {
-    for (uint8_t i = 0; i < 4; i++) {
-      EEPROM.write(addr + i, v >> 24);
-      v <<= 8;
-    }
-  }
-
-  static uint32_t read_eeprom_be(uint16_t addr) {
-    uint32_t v = 0;
-    for (uint8_t i = 0; i < 4; i++) {
-      v <<= 8;
-      v |= EEPROM.read(addr + i);
     }
     return v;
   }
