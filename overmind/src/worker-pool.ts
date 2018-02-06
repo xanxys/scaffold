@@ -102,7 +102,7 @@ export class WorkerPool {
             message.status = 'corrupt';
             message.head = 'CORRUPT JSON';
             message.desc = String.fromCharCode.apply(String, packet.datagram);
-        } else if (packet.data.ty === undefined) {
+        } else if (packet.data.ty === undefined && packet.ty === undefined) {
             message.status = 'corrupt';
             message.head = 'MISSING TYPE';
             message.desc = JSON.stringify(packet, null, 2);

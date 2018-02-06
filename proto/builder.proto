@@ -29,14 +29,17 @@ message Status {
     WorkerType worker_type = 1;
 
     SystemStatus system = 2;
+    
 
     // (Raw) I/O
     SensorStatus sensor = 3;
     OutputStatus output = 4;
 
+/*
     // ActionQueue
     ExecStatus exec = 5;
     QueueStatus queue = 6;
+    */
 }
 
 message SystemStatus {

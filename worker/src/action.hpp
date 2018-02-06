@@ -318,17 +318,21 @@ class ActionExecutorSingleton {
   void fill_status(Status& status) const {
     status.worker_type = WorkerType_BUILDER;
     fill_status_system(status.system);
+
     fill_status_sensor(status.sensor);
-    fill_status_output(status.output);
+    // fill_status_output(status.output);
+
+    /*
     state.fill_status(status.exec);
     queue.fill_status(status.queue);
+    */
   }
 
  private:
   void report_cache() const {
     // check send_async_size
 
-    StringWriter writer(async_tx_buffer, sizeof(async_tx_buffer));
+    StringWriter writer((char*)async_tx_buffer, sizeof(async_tx_buffer));
 
     JsonDict response(&writer);
 

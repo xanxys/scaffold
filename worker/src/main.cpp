@@ -19,6 +19,8 @@ class CommandProcessorSingleton {
   MaybeSlice datagram;  // dependent on buffer inside twelite.
   int r_ix;
 
+  uint8_t buffer[80];
+
  public:
   CommandProcessorSingleton() : r_ix(0) {}
 
@@ -36,15 +38,14 @@ class CommandProcessorSingleton {
 #endif
 
       char code = read();
-
-      char buffer[100];
-      StringWriter writer(buffer, sizeof(buffer));
-
-      JsonDict response(&writer);
       switch (code) {
-        case 'x':
+        case 'x': {
+          StringWriter writer((char*)buffer, sizeof(buffer));
+          JsonDict response(&writer);
           exec_cancel_actions(response);
-          break;
+          response.end();
+          twelite.send_datagram(buffer, writer.size_written());
+        } break;
         case 'p': {
           Status status;
           actions.fill_status(status);
@@ -52,8 +53,11 @@ class CommandProcessorSingleton {
           buffer[0] = PacketType_STATUS;
           pb_ostream_t stream = pb_ostream_from_buffer((pb_byte_t*)(buffer + 1),
                                                        sizeof(buffer) - 1);
-          pb_encode(&stream, Status_fields, &status);
-          twelite.send_datagram(buffer, 1 + stream.bytes_written);
+          if (pb_encode(&stream, Status_fields, &status)) {
+            twelite.send_datagram(buffer, 1 + stream.bytes_written);
+          } else {
+            twelite.warn("p/enc error");
+          }
         } break;
         case 's': {
           I2CScanResult result;
@@ -62,19 +66,23 @@ class CommandProcessorSingleton {
           buffer[0] = PacketType_I2C_SCAN_RESULT;
           pb_ostream_t stream = pb_ostream_from_buffer((pb_byte_t*)(buffer + 1),
                                                        sizeof(buffer) - 1);
-          pb_encode(&stream, I2CScanResult_fields, &result);
-          twelite.send_datagram(buffer, 1 + stream.bytes_written);
-        }
-          continue;
-        case 'e':
+          if (pb_encode(&stream, I2CScanResult_fields, &result)) {
+            twelite.send_datagram(buffer, 1 + stream.bytes_written);
+          } else {
+            twelite.warn("s/enc error");
+          }
+        } break;
+        case 'e': {
+          StringWriter writer((char*)buffer, sizeof(buffer));
+          JsonDict response(&writer);
           exec_enqueue(response);
-          break;
+          response.end();
+          twelite.send_datagram(buffer, writer.size_written());
+        } break;
         default:
           twelite.warn("unknown command");
-          continue;
+          break;
       }
-      response.end();
-      twelite.send_datagram(writer.ptr_begin, writer.ptr - writer.ptr_begin);
     }
   }
 

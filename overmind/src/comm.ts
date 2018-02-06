@@ -2,7 +2,7 @@
 declare var window: any;
 const SerialPort: any = window.require('serialport');
 import * as fs from 'fs';
-import * as builder_pb from './builder_pb.js';
+import * as builder_pb from './builder_pb';
 
 export type WorkerAddr = number;
 
@@ -14,13 +14,16 @@ export interface Packet {
     srcTs?: number;
     datagram?: Uint8Array;
 
-    // Decoded datagram JSON.
+    // Decoded datagram JSON or proto.
     data?: any;
+
+    // Type enum value.
+    ty?: number;
 }
 
 export class WorkerBridge {
     private port: any;
-    path = '/dev/ttyUSB0';
+    path = '/dev/ttyUSB1';
     isOpen = false;
     latestPacket?: Date;
     private handlePacket?: (packet: Packet) => void;
@@ -77,12 +80,24 @@ export class WorkerBridge {
 
             packet.src = new DataView(ovm_packet).getUint32(0);
             packet.srcTs = new DataView(ovm_packet).getUint32(4);
-            packet.datagram = new Uint8Array(ovm_packet, 8);
-            try {
-                packet.data = JSON.parse(String.fromCharCode.apply(String, packet.datagram));
-            } catch (e) { }
+            const ty = new DataView(ovm_packet).getUint8(8);
+            console.log(ty);
+            if (ty === builder_pb.PacketType.LEGACY) {
+                packet.datagram = new Uint8Array(ovm_packet, 8);
+                try {
+                    packet.data = JSON.parse(String.fromCharCode.apply(String, packet.datagram));
+                } catch (e) { }
+            } else {
+                packet.datagram = new Uint8Array(ovm_packet, 9);
+                console.log("incoming proto size", packet.datagram.length);
+                packet.ty = ty;
+                if (ty === builder_pb.PacketType.I2C_SCAN_RESULT) {
+                    packet.data = builder_pb.I2CScanResult.deserializeBinary(packet.datagram).toObject();
+                } else if (ty === builder_pb.PacketType.STATUS) {
+                    packet.data = builder_pb.Status.deserializeBinary(packet.datagram).toObject();
+                }
+            }
         }
-
         this.latestPacket = new Date();
         this.handlePacket(packet);
     }

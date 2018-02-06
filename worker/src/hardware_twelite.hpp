@@ -5,8 +5,8 @@
 #include "json_writer.hpp"
 #include "slice.hpp"
 
-char async_tx_buffer[200];
-char warn_tx_buffer[70];
+uint8_t async_tx_buffer[100];
+uint8_t warn_tx_buffer[70];
 
 // Parse ":..." ASCII messages from standard TWELITE MWAPP.
 class TweliteInterface {
@@ -72,8 +72,8 @@ class TweliteInterface {
   }
 
   // Send specified buffer.
-  // Ideally <=80 bytes to fit in one packet.
-  void send_datagram(const char* ptr, uint8_t size) {
+  // Ideally size<=80 bytes to fit in one packet.
+  void send_datagram(const uint8_t* ptr, uint8_t size) {
     // Parent, Send
     Serial.write(":0001");
     // Overmind info.
@@ -201,7 +201,7 @@ class TweliteInterface {
   }
 
   void send_status(const char* type, const char* message) {
-    StringWriter writer(warn_tx_buffer, sizeof(warn_tx_buffer));
+    StringWriter writer((char*)warn_tx_buffer, sizeof(warn_tx_buffer));
 
     JsonDict resp(&writer);
     resp.insert("ty").set(type);
