@@ -4,8 +4,11 @@ genrule(
     name = "proto_desc",
     srcs = ["builder.proto"],
     outs = ["builder.protodesc"],
-    local = 1,  # Use locally intalled protoc
-    cmd = "protoc -o $(OUTS) $(SRCS)",
+    cmd = "$(location @protoc_bin//:protoc) -o $(OUTS) $(SRCS)",
+    tools = [
+        "@protoc_bin//:protoc",
+        "@protoc_bin//:lib"
+    ],
 )
 
 genrule(
@@ -20,6 +23,9 @@ genrule(
     name = "proto_js",
     srcs = ["builder.proto"],
     outs = ["builder_pb.js"],
-    local = 1,  # Use locally installed protoc
-    cmd = "protoc --proto_path $$(dirname $(location builder.proto)) --js_out=import_style=commonjs,binary:$$(dirname $(location builder_pb.js)) $(SRCS)"
+    cmd = "$(location @protoc_bin//:protoc) --proto_path $$(dirname $(location builder.proto)) --js_out=import_style=commonjs,binary:$$(dirname $(location builder_pb.js)) $(SRCS)",
+    tools = [
+        "@protoc_bin//:protoc",
+        "@protoc_bin//:lib"
+    ],
 )
