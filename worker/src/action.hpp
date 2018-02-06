@@ -300,13 +300,13 @@ class ActionExecutorSingleton {
     status.worker_type = WorkerType_BUILDER;
     fill_status_system(status.system);
 
-    fill_status_sensor(status.sensor);
-    // fill_status_output(status.output);
-
-    /*
     state.fill_status(status.exec);
     queue.fill_status(status.queue);
-    */
+  }
+
+  void fill_io_status(IOStatus& status) const {
+    fill_status_sensor(status.sensor);
+    fill_status_output(status.output);
   }
 
  private:
@@ -340,9 +340,9 @@ class ActionExecutorSingleton {
 
   void fill_status_sensor(SensorStatus& status) const {
     // TODO: scaling
-    status.gyro_x_dps = -imu.gyro[1];
-    status.gyro_y_dps = imu.gyro[0];
-    status.gyro_z_dps = imu.gyro[2];
+    status.gyro_x_cdps = -imu.gyro[1];
+    status.gyro_y_cdps = imu.gyro[0];
+    status.gyro_z_cdps = imu.gyro[2];
 
     status.acc_x_mg = -imu.acc[1];
     status.acc_y_mg = imu.acc[0];

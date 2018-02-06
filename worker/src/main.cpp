@@ -56,7 +56,22 @@ class CommandProcessorSingleton {
           } else {
             twelite.warn("p/enc error");
           }
-        } break;
+        }
+        delay(10);
+          {
+            IOStatus status;
+            actions.fill_io_status(status);
+
+            buffer[0] = PacketType_IO_STATUS;
+            pb_ostream_t stream = pb_ostream_from_buffer(
+                (pb_byte_t*)(buffer + 1), sizeof(buffer) - 1);
+            if (pb_encode(&stream, IOStatus_fields, &status)) {
+              twelite.send_datagram(buffer, 1 + stream.bytes_written);
+            } else {
+              twelite.warn("p2/enc error");
+            }
+          }
+          break;
         case 's': {
           I2CScanResult result;
           actions.fill_i2c_scan_result(result);

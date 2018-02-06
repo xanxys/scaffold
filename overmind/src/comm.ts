@@ -23,7 +23,7 @@ export interface Packet {
 
 export class WorkerBridge {
     private port: any;
-    path = '/dev/ttyUSB1';
+    path = '/dev/ttyUSB0';
     isOpen = false;
     latestPacket?: Date;
     private handlePacket?: (packet: Packet) => void;
@@ -95,6 +95,8 @@ export class WorkerBridge {
                     packet.data = builder_pb.I2CScanResult.deserializeBinary(packet.datagram).toObject();
                 } else if (ty === builder_pb.PacketType.STATUS) {
                     packet.data = builder_pb.Status.deserializeBinary(packet.datagram).toObject();
+                }  else if (ty === builder_pb.PacketType.IO_STATUS) {
+                    packet.data = builder_pb.IOStatus.deserializeBinary(packet.datagram).toObject();
                 }
             }
         }

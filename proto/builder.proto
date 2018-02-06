@@ -10,6 +10,7 @@ enum WorkerType {
 enum PacketType {
     RESERVED_PT = 0;
     STATUS = 1;
+    IO_STATUS = 2;
     I2C_SCAN_RESULT = 5;
     // Corresponds to '{', initiator of JSON messages.
     LEGACY = 123;
@@ -29,17 +30,18 @@ message Status {
     WorkerType worker_type = 1;
 
     SystemStatus system = 2;
-    
 
-    // (Raw) I/O
-    SensorStatus sensor = 3;
-    OutputStatus output = 4;
-
-/*
     // ActionQueue
     ExecStatus exec = 5;
     QueueStatus queue = 6;
-    */
+
+    reserved 3, 4;
+}
+
+// Splitted from Status to avoid stack overflow when processing.
+message IOStatus {
+    SensorStatus sensor = 1;
+    OutputStatus output = 2;
 }
 
 message SystemStatus {
@@ -50,10 +52,10 @@ message SystemStatus {
 }
 
 message SensorStatus {
-    // Unit: in degree/sec.
-    sint32 gyro_x_dps = 1;
-    sint32 gyro_y_dps = 2;
-    sint32 gyro_z_dps = 3;
+    // Unit: in centi-degree/sec.
+    sint32 gyro_x_cdps = 1;
+    sint32 gyro_y_cdps = 2;
+    sint32 gyro_z_cdps = 3;
 
     // Unit: in milli-G (1 mg = 9.8 mm/s^2)
     sint32 acc_x_mg = 4;
