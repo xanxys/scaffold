@@ -68,7 +68,7 @@ ISR(USART0_RX_vect)
 ISR(USART_RXC_vect)  // ATmega8
 #endif
 {
-#if defined(UDR0)
+
   if (bit_is_clear(UCSR0A, UPE0)) {
     unsigned char c = UDR0;
     if (Serial.recv_callback) {
@@ -77,18 +77,6 @@ ISR(USART_RXC_vect)  // ATmega8
   } else {
     unsigned char c = UDR0;
   };
-#elif defined(UDR)
-  if (bit_is_clear(UCSRA, PE)) {
-    unsigned char c = UDR;
-    if (Serial.recv_callback) {
-      Serial.recv_callback(Serial.cb_base, c);
-    }
-  } else {
-    unsigned char c = UDR;
-  };
-#else
-#error UDR not defined
-#endif
 }
 #endif
 #endif
@@ -115,26 +103,6 @@ ISR(USART_UDRE_vect)
 #endif
 #endif
 
-// Constructors ////////////////////////////////////////////////////////////////
-
-HardwareSerial::HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
-                               volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
-                               volatile uint8_t *ucsrc, volatile uint8_t *udr,
-                               uint8_t rxen, uint8_t txen, uint8_t rxcie,
-                               uint8_t udrie, uint8_t u2x) {
-  _ubrrh = ubrrh;
-  _ubrrl = ubrrl;
-  _ucsra = ucsra;
-  _ucsrb = ucsrb;
-  _ucsrc = ucsrc;
-  _udr = udr;
-  _rxen = rxen;
-  _txen = txen;
-  _rxcie = rxcie;
-  _udrie = udrie;
-  _u2x = u2x;
-}
-
 void HardwareSerial::set_recv_callback(void *cb_base,
                                        void (*hook)(void *, uint8_t)) {
   this->cb_base = cb_base;
@@ -150,10 +118,10 @@ void HardwareSerial::begin(unsigned long baud) {
 try_again:
 
   if (use_u2x) {
-    *_ucsra = 1 << _u2x;
+    UCSR0A = 1 << U2X0;
     baud_setting = (F_CPU / 4 / baud - 1) / 2;
   } else {
-    *_ucsra = 0;
+    UCSR0A = 0;
     baud_setting = (F_CPU / 8 / baud - 1) / 2;
   }
 
@@ -163,13 +131,13 @@ try_again:
   }
 
   // assign the baud_setting, a.k.a. ubbr (USART Baud Rate Register)
-  *_ubrrh = baud_setting >> 8;
-  *_ubrrl = baud_setting;
+  UBRR0H = baud_setting >> 8;
+  UBRR0L = baud_setting;
 
-  sbi(*_ucsrb, _rxen);
-  sbi(*_ucsrb, _txen);
-  sbi(*_ucsrb, _rxcie);
-  cbi(*_ucsrb, _udrie);
+  sbi(UCSR0B, RXEN0);
+  sbi(UCSR0B, TXEN0);
+  sbi(UCSR0B, RXCIE0);
+  cbi(UCSR0B, UDRIE0);
 }
 
 void HardwareSerial::begin(unsigned long baud, byte config) {
@@ -179,10 +147,10 @@ void HardwareSerial::begin(unsigned long baud, byte config) {
 try_again:
 
   if (use_u2x) {
-    *_ucsra = 1 << _u2x;
+    UCSR0A = 1 << U2X0;
     baud_setting = (F_CPU / 4 / baud - 1) / 2;
   } else {
-    *_ucsra = 0;
+    UCSR0A = 0;
     baud_setting = (F_CPU / 8 / baud - 1) / 2;
   }
 
@@ -192,31 +160,30 @@ try_again:
   }
 
   // assign the baud_setting, a.k.a. ubbr (USART Baud Rate Register)
-  *_ubrrh = baud_setting >> 8;
-  *_ubrrl = baud_setting;
+  UBRR0H = baud_setting >> 8;
+  UBRR0L = baud_setting;
 
   // set the data bits, parity, and stop bits
 #if defined(__AVR_ATmega8__)
   config |= 0x80;  // select UCSRC register (shared with UBRRH)
 #endif
-  *_ucsrc = config;
+  UCSR0C = config;
 
-  sbi(*_ucsrb, _rxen);
-  sbi(*_ucsrb, _txen);
-  sbi(*_ucsrb, _rxcie);
-  cbi(*_ucsrb, _udrie);
+  sbi(UCSR0B, RXEN0);
+  sbi(UCSR0B, TXEN0);
+  sbi(UCSR0B, RXCIE0);
+  cbi(UCSR0B, UDRIE0);
 }
 
 void HardwareSerial::end() {
-  cbi(*_ucsrb, _rxen);
-  cbi(*_ucsrb, _txen);
-  cbi(*_ucsrb, _rxcie);
-  cbi(*_ucsrb, _udrie);
+  cbi(UCSR0B, RXEN0);
+  cbi(UCSR0B, TXEN0);
+  cbi(UCSR0B, RXCIE0);
+  cbi(UCSR0B, UDRIE0);
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
 
-HardwareSerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UCSR0C, &UDR0, RXEN0,
-                      TXEN0, RXCIE0, UDRIE0, U2X0);
+HardwareSerial Serial;
 
 #endif  // whole file

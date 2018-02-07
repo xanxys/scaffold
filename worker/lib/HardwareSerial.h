@@ -20,35 +20,15 @@
   Modified 14 August 2012 by Alarus
 */
 
-#ifndef HardwareSerial_h
-#define HardwareSerial_h
-
+#pragma once
 #include <inttypes.h>
 
 class HardwareSerial {
- private:
-  volatile uint8_t *_ubrrh;
-  volatile uint8_t *_ubrrl;
-  volatile uint8_t *_ucsra;
-  volatile uint8_t *_ucsrb;
-  volatile uint8_t *_ucsrc;
-  volatile uint8_t *_udr;
-  uint8_t _rxen;
-  uint8_t _txen;
-  uint8_t _rxcie;
-  uint8_t _udrie;
-  uint8_t _u2x;
-
  public:
   void *cb_base;
   void (*recv_callback)(void *, uint8_t) = NULL;
 
  public:
-  HardwareSerial(volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
-                 volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
-                 volatile uint8_t *ucsrc, volatile uint8_t *udr, uint8_t rxen,
-                 uint8_t txen, uint8_t rxcie, uint8_t udrie, uint8_t u2x);
-
   void set_recv_callback(void *cb_base, void (*hook)(void *, uint8_t));
 
   void begin(unsigned long);
@@ -82,8 +62,4 @@ class HardwareSerial {
 #define SERIAL_7O2 0x3C
 #define SERIAL_8O2 0x3E
 
-#if defined(UBRRH) || defined(UBRR0H)
 extern HardwareSerial Serial;
-#endif
-
-#endif
