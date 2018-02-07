@@ -213,7 +213,6 @@ extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 
 #ifdef __cplusplus
 #include "WCharacter.h"
-#include "WString.h"
 #include "HardwareSerial.h"
 
 uint16_t makeWord(uint16_t w);

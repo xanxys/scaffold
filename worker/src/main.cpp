@@ -5,7 +5,6 @@
 
 #include "action.hpp"
 #include "hardware_builder.hpp"
-#include "json_writer.hpp"
 
 ActionExecutorSingleton actions;
 
@@ -32,61 +31,18 @@ class CommandProcessorSingleton {
 
       char code = read();
       switch (code) {
-        case 'x': {
-          StringWriter writer((char*)buffer, sizeof(buffer));
-          JsonDict response(&writer);
-          exec_cancel_actions(response);
-          response.end();
-          twelite.send_datagram(buffer, writer.size_written());
-        } break;
-        case 'p': {
-          Status status;
-          actions.fill_status(status);
-
-          buffer[0] = PacketType_STATUS;
-          pb_ostream_t stream = pb_ostream_from_buffer((pb_byte_t*)(buffer + 1),
-                                                       sizeof(buffer) - 1);
-          if (pb_encode(&stream, Status_fields, &status)) {
-            twelite.send_datagram(buffer, 1 + stream.bytes_written);
-          } else {
-            TWELITE_ERROR(Cause_LOGIC_RT);
-          }
-        }
-          delay(10);
-          {
-            IOStatus status;
-            actions.fill_io_status(status);
-
-            buffer[0] = PacketType_IO_STATUS;
-            pb_ostream_t stream = pb_ostream_from_buffer(
-                (pb_byte_t*)(buffer + 1), sizeof(buffer) - 1);
-            if (pb_encode(&stream, IOStatus_fields, &status)) {
-              twelite.send_datagram(buffer, 1 + stream.bytes_written);
-            } else {
-              TWELITE_ERROR(Cause_LOGIC_RT);
-            }
-          }
+        case 'x':
+          exec_cancel_actions();
           break;
-        case 's': {
-          I2CScanResult result;
-          actions.fill_i2c_scan_result(result);
-
-          buffer[0] = PacketType_I2C_SCAN_RESULT;
-          pb_ostream_t stream = pb_ostream_from_buffer((pb_byte_t*)(buffer + 1),
-                                                       sizeof(buffer) - 1);
-          if (pb_encode(&stream, I2CScanResult_fields, &result)) {
-            twelite.send_datagram(buffer, 1 + stream.bytes_written);
-          } else {
-            TWELITE_ERROR(Cause_LOGIC_RT);
-          }
-        } break;
-        case 'e': {
-          StringWriter writer((char*)buffer, sizeof(buffer));
-          JsonDict response(&writer);
-          exec_enqueue(response);
-          response.end();
-          twelite.send_datagram(buffer, writer.size_written());
-        } break;
+        case 'p':
+          exec_print();
+          break;
+        case 's':
+          exec_scan();
+          break;
+        case 'e':
+          exec_enqueue();
+          break;
         default:
           TWELITE_ERROR(Cause_OVERMIND);  // unknown command
           break;
@@ -149,20 +105,63 @@ class CommandProcessorSingleton {
   }
 
  private:  // Command Handler
-  void exec_cancel_actions(JsonDict& response) {
+  void exec_cancel_actions() {
     actions.cancel_all();
-    response.insert("ty").set("CANCELLED");
+    TWELITE_INFO();  // Cancel executed.
   }
 
-  void exec_enqueue(JsonDict& response) {
+  void exec_enqueue() {
     while (true) {
       enqueue_single_action();
       if (!consume(',')) {
         break;
       }
     }
-    response.insert("ty").set("ENQUEUED");
-    response.insert("in_queue").set(actions.queue.count());
+    TWELITE_INFO();  // Enqueue executed.
+  }
+
+  void exec_print() {
+    {
+      Status status;
+      actions.fill_status(status);
+
+      buffer[0] = PacketType_STATUS;
+      pb_ostream_t stream =
+          pb_ostream_from_buffer((pb_byte_t*)(buffer + 1), sizeof(buffer) - 1);
+      if (pb_encode(&stream, Status_fields, &status)) {
+        twelite.send_datagram(buffer, 1 + stream.bytes_written);
+      } else {
+        TWELITE_ERROR(Cause_LOGIC_RT);
+      }
+    }
+    delay(10);
+    {
+      IOStatus status;
+      actions.fill_io_status(status);
+
+      buffer[0] = PacketType_IO_STATUS;
+      pb_ostream_t stream =
+          pb_ostream_from_buffer((pb_byte_t*)(buffer + 1), sizeof(buffer) - 1);
+      if (pb_encode(&stream, IOStatus_fields, &status)) {
+        twelite.send_datagram(buffer, 1 + stream.bytes_written);
+      } else {
+        TWELITE_ERROR(Cause_LOGIC_RT);
+      }
+    }
+  }
+
+  void exec_scan() {
+    I2CScanResult result;
+    actions.fill_i2c_scan_result(result);
+
+    buffer[0] = PacketType_I2C_SCAN_RESULT;
+    pb_ostream_t stream =
+        pb_ostream_from_buffer((pb_byte_t*)(buffer + 1), sizeof(buffer) - 1);
+    if (pb_encode(&stream, I2CScanResult_fields, &result)) {
+      twelite.send_datagram(buffer, 1 + stream.bytes_written);
+    } else {
+      TWELITE_ERROR(Cause_LOGIC_RT);
+    }
   }
 
   void enqueue_single_action() {
@@ -272,7 +271,7 @@ int main() {
   init();
   twelite.init();
   indicator.flash_blocking();
-  TWELITE_INFO();  // Mimumum HW initialized.
+  TWELITE_INFO();  // Minimum HW initialized.
 
   //// Enable 5V & peripherals.
   set_5v_power(true);

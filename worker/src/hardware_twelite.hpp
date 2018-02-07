@@ -5,7 +5,6 @@
 #include <nanopb/pb_encode.h>
 #include <proto/builder.pb.h>
 
-#include "json_writer.hpp"
 #include "slice.hpp"
 
 uint8_t async_tx_buffer[80];

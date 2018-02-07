@@ -289,6 +289,7 @@ class ActionExecutorSingleton {
   void report_cache() const {
     // check send_async_size
 
+    /*
     StringWriter writer((char*)async_tx_buffer, sizeof(async_tx_buffer));
 
     JsonDict response(&writer);
@@ -303,6 +304,7 @@ class ActionExecutorSingleton {
     values.end();
 
     response.end();
+    */
 
     // twelite.queue_send_async(writer.size_written());
   }
