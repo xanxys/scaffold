@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <MsTimer2.h>
+#include <nanopb/pb_encode.h>
 #include <proto/builder.pb.h>
 
 #include "action.hpp"
@@ -48,7 +49,7 @@ class CommandProcessorSingleton {
           if (pb_encode(&stream, Status_fields, &status)) {
             twelite.send_datagram(buffer, 1 + stream.bytes_written);
           } else {
-            twelite.warn("p/enc error");
+            TWELITE_ERROR(Cause_LOGIC_RT);
           }
         }
           delay(10);
@@ -62,7 +63,7 @@ class CommandProcessorSingleton {
             if (pb_encode(&stream, IOStatus_fields, &status)) {
               twelite.send_datagram(buffer, 1 + stream.bytes_written);
             } else {
-              twelite.warn("p2/enc error");
+              TWELITE_ERROR(Cause_LOGIC_RT);
             }
           }
           break;
@@ -76,7 +77,7 @@ class CommandProcessorSingleton {
           if (pb_encode(&stream, I2CScanResult_fields, &result)) {
             twelite.send_datagram(buffer, 1 + stream.bytes_written);
           } else {
-            twelite.warn("s/enc error");
+            TWELITE_ERROR(Cause_LOGIC_RT);
           }
         } break;
         case 'e': {
@@ -87,7 +88,7 @@ class CommandProcessorSingleton {
           twelite.send_datagram(buffer, writer.size_written());
         } break;
         default:
-          twelite.warn("unknown command");
+          TWELITE_ERROR(Cause_OVERMIND);  // unknown command
           break;
       }
     }
@@ -168,10 +169,10 @@ class CommandProcessorSingleton {
     int16_t dur_ms = parse_int();
     if (dur_ms < 1) {
       dur_ms = 1;
-      twelite.warn("dur capped to 1ms");
+      TWELITE_ERROR(Cause_OVERMIND);  // dur capped to 1ms
     } else if (dur_ms > 5000) {
       dur_ms = 5000;
-      twelite.warn("dur capped to 5s");
+      TWELITE_ERROR(Cause_OVERMIND);  // dur capped to 5s
     }
     Action action(dur_ms);
 
@@ -200,7 +201,7 @@ class CommandProcessorSingleton {
           action.train_cutoff_thresh = safe_read_thresh();
           break;
         default:
-          twelite.warn("unknown action target");
+          TWELITE_ERROR(Cause_OVERMIND);  // unknown action target
       }
 
       char next = peek();
@@ -215,10 +216,10 @@ class CommandProcessorSingleton {
     int16_t value = parse_int();
     if (value < 0) {
       value = 0;
-      twelite.warn("thresh capped to 0");
+      TWELITE_ERROR(Cause_OVERMIND);  // too small value
     } else if (value > 255) {
       value = 255;
-      twelite.warn("thresh capped to 25");
+      TWELITE_ERROR(Cause_OVERMIND);  // too big value
     }
     return value;
   }
@@ -227,11 +228,11 @@ class CommandProcessorSingleton {
     int16_t value = parse_int();
     if (value < 10) {
       value = 10;
-      twelite.warn("pos capped to 10");
+      TWELITE_ERROR(Cause_OVERMIND);  // too small pos
     } else if (value > 33) {
       // note: 255 is reserved as SERVO_POS_KEEP.
       value = 33;
-      twelite.warn("pos capped to 33");
+      TWELITE_ERROR(Cause_OVERMIND);  // too big pos
     }
     return value;
   }
@@ -240,10 +241,10 @@ class CommandProcessorSingleton {
     int16_t value = parse_int();
     if (value < -127) {
       value = -127;
-      twelite.warn("vel capped to -127");
+      TWELITE_ERROR(Cause_OVERMIND);  // too small vel
     } else if (value > 127) {
       value = 127;
-      twelite.warn("vel capped to 127");
+      TWELITE_ERROR(Cause_OVERMIND);  // too big vel
     }
     return value;
   }
@@ -271,7 +272,7 @@ int main() {
   init();
   twelite.init();
   indicator.flash_blocking();
-  twelite.info("init1");
+  TWELITE_INFO();  // Mimumum HW initialized.
 
   //// Enable 5V & peripherals.
   set_5v_power(true);
@@ -286,7 +287,7 @@ int main() {
   imu.init();
 
   indicator.flash_blocking();
-  twelite.info("init2");
+  TWELITE_INFO();  // All HW initialized.
 
   actions.init();
   // Initialize servo pos to safe (i.e. not colliding with rail) position.

@@ -1,5 +1,8 @@
 I2CScanResult.device max_count:10 int_size:IS_8
 
+Checkpoint.tag max_size:4
+Checkpoint.at_line int_size:IS_16
+
 SystemStatus.*_mv int_size:IS_16
 SystemStatus.num_* int_size:IS_16
 

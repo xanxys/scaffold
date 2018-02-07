@@ -19,14 +19,59 @@ enum CommandType {
 
 // For compatibility reason, this won't be used as proto.
 // Instead, it will precede proto (or other message) as one-byte type.
+// Next ID: 6
 enum PacketType {
     RESERVED_PT = 0;
+
+    // Proto payload.
+    CHECKPOINT = 4;
     STATUS = 1;
     IO_STATUS = 2;
     I2C_SCAN_RESULT = 5;
     ENQUEUE_RESULT = 3;
+
+    // Legacy JSON payload.
     // Corresponds to '{', initiator of JSON messages.
     LEGACY = 123;
+}
+
+
+enum Criticality {
+    // The Checkpoint denotes normal operation.
+    INFO = 0;
+
+    // Somewhat gracefully recoverable.
+    ERROR = 1;
+
+    // Something terrible happened, system may or may not self-recover at all.
+    // Only guaranteed way out is system reset.
+    SEVERE = 2;
+}
+
+// Next ID: 6
+enum Cause {
+    UNKNOWN = 0;
+
+    // code logic error (i.e. never happen unless bug or system fatal error)
+    LOGIC = 1;
+
+    // runtime logic error (i.e. internal buffer overflow, stack overflow)
+    LOGIC_RT = 5;
+
+    // some issue with worker hardware, excluding rail errors. (i.e. disconnected I2C, power unstable)
+    HW = 2;
+
+    // Harsh envrironment (i.e. bad wireless condition, broken rail)
+    ENV = 3;
+
+    // Something is wrong with overmind (i.e. too big command, unexecutable actions)
+    OVERMIND = 4;
+}
+
+message Checkpoint {
+    Criticality criticality = 1;
+    Cause cause = 2;
+    uint32 at_line = 3;
 }
 
 

@@ -2,6 +2,8 @@
 
 #include <avr/boot.h>
 #include <avr/io.h>
+#include <nanopb/pb_encode.h>
+#include <proto/builder.pb.h>
 
 #include "json_writer.hpp"
 #include "slice.hpp"
@@ -107,6 +109,9 @@ class TweliteRecvStateMachine {
   }
 };
 
+#define TWELITE_ERROR_INTN(cause) \
+  send_checkpoint(Criticality_ERROR, cause, __LINE__)
+
 class TweliteInterface {
  private:
   // Size of 01 command data (excludes TWELITE header / csum) sent.
@@ -155,11 +160,11 @@ class TweliteInterface {
           num_invalid_packet++;
           continue;
         case TweliteRecvStateMachine::State::DONE_ERR_OVERFLOW:
-          warn("twelite:recv:overflow");
+          TWELITE_ERROR_INTN(Cause_OVERMIND);
           continue;
 
         default:
-          warn_assert("ht:ti:gd");
+          TWELITE_ERROR_INTN(Cause_OVERMIND);  // shouldn't reach here.
           continue;
       }
       MaybeSlice packet = recv_sm.get_buffer();
@@ -187,16 +192,22 @@ class TweliteInterface {
     serial_write_cstr_blocking("X\r\n");
   }
 
-  // Simple warning message.
-  // Warning=non-critical, expected errors.
-  // e.g.
-  // * network data corruption
-  void warn(const char* message) { send_status("WARN", message); }
+  void send_checkpoint(Criticality criticality, Cause cause, uint16_t line) {
+    Checkpoint cp;
+    cp.criticality = criticality;
+    cp.cause = cause;
+    cp.at_line = line;
 
-  // "Never happen" case, but can continue execution gracefully.
-  void warn_assert(const char* message) { send_status("WARN", message); }
-
-  void info(const char* message) { send_status("INFO", message); }
+    uint8_t buffer[16];
+    buffer[0] = PacketType_CHECKPOINT;
+    pb_ostream_t stream =
+        pb_ostream_from_buffer((pb_byte_t*)(buffer + 1), sizeof(buffer) - 1);
+    if (pb_encode(&stream, Checkpoint_fields, &cp)) {
+      send_datagram(buffer, 1 + stream.bytes_written);
+    } else {
+      // don't do anything, because it might cause infinite error loop.
+    }
+  }
 
   uint32_t get_data_bytes_sent() const { return data_bytes_sent; }
 
@@ -222,7 +233,7 @@ class TweliteInterface {
     // Filter / validate.
     // 3 = target(1) + command(1) + data(N) + checksum(1)
     if (modbus_packet.size < 3) {
-      warn("too small twelite packet");
+      TWELITE_ERROR_INTN(Cause_OVERMIND);  // too small to be valid
       return MaybeSlice();
     }
     if (modbus_packet.ptr[0] != 0x00 || modbus_packet.ptr[1] != 0x01) {
@@ -240,7 +251,7 @@ class TweliteInterface {
 
     // OvmPacket = <Addr : 4> <datagram>
     if (ovm_packet.size < 4) {
-      warn("no address");
+      TWELITE_ERROR_INTN(Cause_OVERMIND);  // address required but not found
       return MaybeSlice();
     }
     uint32_t addr = ovm_packet.u32_be();
@@ -248,17 +259,6 @@ class TweliteInterface {
       return MaybeSlice();
     }
     return ovm_packet.trim(4, 0);
-  }
-
-  void send_status(const char* type, const char* message) {
-    StringWriter writer((char*)warn_tx_buffer, sizeof(warn_tx_buffer));
-
-    JsonDict resp(&writer);
-    resp.insert("ty").set(type);
-    resp.insert("msg").set(message);
-    resp.end();
-
-    send_datagram(warn_tx_buffer, writer.size_written());
   }
 
   inline void send_byte(uint8_t v) {
@@ -288,3 +288,10 @@ class TweliteInterface {
     }
   }
 };
+
+#define TWELITE_INFO() \
+  twelite.send_checkpoint(Criticality_INFO, Cause_LOGIC, __LINE__)
+#define TWELITE_ERROR(cause) \
+  twelite.send_checkpoint(Criticality_ERROR, cause, __LINE__)
+#define TWELITE_SEVERE(cause) \
+  twelite.send_checkpoint(Criticality_SEVERE, cause, __LINE__)

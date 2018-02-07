@@ -3,7 +3,6 @@
 #include "hardware_builder.hpp"
 
 #include <I2C.h>
-#include <nanopb/pb_encode.h>
 #include <proto/builder.pb.h>
 
 // Safely calculate va + (vb - va) * (ix / num)

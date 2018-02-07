@@ -34,7 +34,7 @@ class DCMotor {
     return;
     /*
     if (res != 0) {
-      twelite.warn("I2C failed");
+      TWELITE_SEVERE(Cause_HW);  // I2C Failed
     }
     */
   }
