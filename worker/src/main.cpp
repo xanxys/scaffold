@@ -25,10 +25,6 @@ class CommandProcessorSingleton {
   void loop() {
     while (true) {
       datagram = twelite.get_datagram();
-      if (!datagram.is_valid()) {
-        twelite.warn("too long command");
-        continue;
-      }
       r_ix = 0;
 
       indicator.flash_blocking();

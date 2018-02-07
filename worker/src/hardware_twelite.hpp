@@ -34,7 +34,7 @@ class TweliteRecvStateMachine {
   };
 
  private:
-  State state;
+  volatile State state;
 
   uint8_t size_done = 0;
   uint8_t buffer[BUFFER_SIZE];
@@ -71,6 +71,7 @@ class TweliteRecvStateMachine {
     } else if (state == FIRST_NIBBLE) {
       if (c == '\r' || c == '\n') {
         state = DONE_OK;
+        return;
       }
       uint8_t nibble = decode_nibble(c);
       if (nibble == INVALID_NIBBLE) {
@@ -150,13 +151,13 @@ class TweliteInterface {
           break;
         case TweliteRecvStateMachine::State::DONE_ERR_INVALID:
           warn("twelite:INVALID");
-          return MaybeSlice();
+          continue;
         case TweliteRecvStateMachine::State::DONE_ERR_OVERFLOW:
           warn("twelite:recv:OVERFLOW");
-          return MaybeSlice();
+          continue;
         default:
           warn("twelite:recv:UNKNOWN");
-          return MaybeSlice();
+          continue;
       }
       MaybeSlice packet = recv_sm.get_buffer();
       packet = validate_and_extract_modbus(packet);
