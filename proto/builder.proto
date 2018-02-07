@@ -95,6 +95,7 @@ message SystemStatus {
     uint32 bat_mv = 2;
     uint32 recv_byte = 3;
     uint32 sent_byte = 4;
+    uint32 num_invalid_packet = 5;
 }
 
 message SensorStatus {

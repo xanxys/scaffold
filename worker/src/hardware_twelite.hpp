@@ -113,6 +113,8 @@ class TweliteInterface {
   uint32_t data_bytes_sent = 0;
   uint32_t data_bytes_recv = 0;
 
+  uint16_t num_invalid_packet = 0;
+
   TweliteRecvStateMachine recv_sm;
 
   enum class RecvResult : uint8_t { OK, OVERFLOW, INVALID };
@@ -150,13 +152,14 @@ class TweliteInterface {
         case TweliteRecvStateMachine::State::DONE_OK:
           break;
         case TweliteRecvStateMachine::State::DONE_ERR_INVALID:
-          warn("twelite:INVALID");
+          num_invalid_packet++;
           continue;
         case TweliteRecvStateMachine::State::DONE_ERR_OVERFLOW:
-          warn("twelite:recv:OVERFLOW");
+          warn("twelite:recv:overflow");
           continue;
+
         default:
-          warn("twelite:recv:UNKNOWN");
+          warn_assert("ht:ti:gd");
           continue;
       }
       MaybeSlice packet = recv_sm.get_buffer();
@@ -190,11 +193,16 @@ class TweliteInterface {
   // * network data corruption
   void warn(const char* message) { send_status("WARN", message); }
 
+  // "Never happen" case, but can continue execution gracefully.
+  void warn_assert(const char* message) { send_status("WARN", message); }
+
   void info(const char* message) { send_status("INFO", message); }
 
-  uint32_t get_data_bytes_sent() { return data_bytes_sent; }
+  uint32_t get_data_bytes_sent() const { return data_bytes_sent; }
 
-  uint32_t get_data_bytes_recv() { return data_bytes_recv; }
+  uint32_t get_data_bytes_recv() const { return data_bytes_recv; }
+
+  uint16_t get_num_invalid_packet() const { return num_invalid_packet; }
 
  private:
   void send_u32_be(uint32_t v) {

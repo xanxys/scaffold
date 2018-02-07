@@ -305,7 +305,7 @@ class ActionExecutorSingleton {
 
     response.end();
 
-    //twelite.queue_send_async(writer.size_written());
+    // twelite.queue_send_async(writer.size_written());
   }
 
   void fill_status_system(SystemStatus& status) const {
@@ -313,6 +313,7 @@ class ActionExecutorSingleton {
     status.bat_mv = sensor.get_bat_mv();
     status.recv_byte = twelite.get_data_bytes_recv();
     status.sent_byte = twelite.get_data_bytes_sent();
+    status.num_invalid_packet = twelite.get_num_invalid_packet();
   }
 
   void fill_status_sensor(SensorStatus& status) const {

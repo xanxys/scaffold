@@ -1,6 +1,8 @@
 I2CScanResult.device max_count:10 int_size:IS_8
 
 SystemStatus.*_mv int_size:IS_16
+SystemStatus.num_* int_size:IS_16
+
 OutputStatus.* int_size:IS_8
 SensorStatus.* int_size:IS_16
 ExecStatus.*_ms int_size:IS_16
