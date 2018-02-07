@@ -149,43 +149,6 @@ void I2C::pullup(uint8_t activate)
   }
 }
 
-void I2C::scan()
-{
-  uint16_t tempTime = timeOutDelay;
-  timeOut(80);
-  uint8_t totalDevicesFound = 0;
-  Serial.println("Scanning for devices...please wait");
-  Serial.println();
-  for(uint8_t s = 0; s <= 0x7F; s++)
-  {
-    returnStatus = 0;
-    returnStatus = start();
-    if(!returnStatus)
-    { 
-      returnStatus = sendAddress(SLA_W(s));
-    }
-    if(returnStatus)
-    {
-      if(returnStatus == 1)
-      {
-        Serial.println("There is a problem with the bus, could not complete scan");
-        timeOutDelay = tempTime;
-        return;
-      }
-    }
-    else
-    {
-      Serial.print("Found device at address - ");
-      Serial.print(" 0x");
-      Serial.println(s,HEX);
-      totalDevicesFound++;
-    }
-    stop();
-  }
-  if(!totalDevicesFound){Serial.println("No devices found");}
-  timeOutDelay = tempTime;
-}
-
 DeviceCheck I2C::check_device(uint8_t addr) {
   uint16_t tempTime = timeOutDelay;
   timeOut(5);

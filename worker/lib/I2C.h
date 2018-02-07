@@ -97,7 +97,6 @@ class I2C
     void timeOut(uint16_t);
     void setSpeed(uint8_t); 
     void pullup(uint8_t);
-    void scan();
 
     DeviceCheck check_device(uint8_t addr);
 

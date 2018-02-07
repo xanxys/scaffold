@@ -62,3 +62,7 @@ TweliteInterface twelite;
 IMU imu;
 DCMotor motor_screw(98);
 MultiplexedSensor sensor;
+
+// Non-realtime tasks to do when idle. Higher priority first.
+bool process_overmind_command;
+bool send_async_message;

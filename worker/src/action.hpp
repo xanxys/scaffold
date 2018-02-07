@@ -305,7 +305,7 @@ class ActionExecutorSingleton {
 
     response.end();
 
-    twelite.queue_send_async(writer.size_written());
+    //twelite.queue_send_async(writer.size_written());
   }
 
   void fill_status_system(SystemStatus& status) const {
