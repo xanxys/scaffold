@@ -54,6 +54,10 @@ export class WorldView {
     cadModels: Map<string, THREE.Geometry>;
     cachePointGeom: THREE.BufferGeometry;
 
+    // Temporary visualizer.
+    accVector: any;
+
+
     viewModel?: WorldViewModel;
 
     constructor(windowElem, viewportElem) {
@@ -89,6 +93,20 @@ export class WorldView {
         this.stlLoader = new STLLoader();
 
         // Model derived things.
+        const org = new THREE.Mesh(
+            new THREE.IcosahedronGeometry(0.01, 1),
+            new THREE.MeshBasicMaterial({
+                color: 'black'
+            }));
+        org.position.z = 0.1;
+        this.scene.add(org);
+        this.accVector = new THREE.Mesh(
+            new THREE.IcosahedronGeometry(0.01, 1),
+            new THREE.MeshBasicMaterial({
+                color: 'red'
+            }));
+        this.scene.add(this.accVector);
+
         this.addTable();
 
         this.cadModels = new Map();

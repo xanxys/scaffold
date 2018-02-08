@@ -4,6 +4,8 @@ import { Packet } from './comm';
 import { ActionSeq } from './action';
 import { WorkerAddr, WorkerBridge } from './comm';
 import * as fs from 'fs';
+import * as builder_pb from './builder_pb';
+import * as THREE from 'three';
 
 interface Worker {
     addr: number;
@@ -27,6 +29,8 @@ export class WorkerPool {
     workers: Array<Worker>;
     inactiveWorkers: Array<Worker> = [];
     lastUninit?: Date;
+
+    hackWorldView: any;
 
     private readonly actionsPath = "state/workers.json";
 
@@ -92,7 +96,7 @@ export class WorkerPool {
             size: 50
         });
     }
-
+ 
     handleDatagramInWorker(worker: Worker, packet: Packet) {
         let message: any = {
             status: 'known', // known, unknown, corrupt
@@ -133,6 +137,12 @@ export class WorkerPool {
                 worker.power.desc = bat + 'mV (Vcc=' + vcc + 'mV)';
             } else if (data.ty === 'SENSOR_CACHE') {
                 worker.readings = worker.readings.concat(data.val);
+            } else if (packet.ty === builder_pb.PacketType.IO_STATUS) {
+                const gVector = new THREE.Vector3(data.sensor.accXMg, data.sensor.accYMg, data.sensor.accZMg).multiplyScalar(1e-3);
+                console.log('acc', gVector);
+                gVector.multiplyScalar(0.03);
+                gVector.z += 0.1;
+                this.hackWorldView.accVector.position.copy(gVector);
             } else {
                 message.status = 'unknown';
                 message.head = `?${data.ty}?`;

@@ -50,6 +50,7 @@ export function runMain(parsedArgs: any) {
 
     appVm._data.worldView = worldView;
 
+    workerPool.hackWorldView = worldView;
 
     // For console debugging.
     global.sendCommand = (c, a) => bridge.sendCommand(c, a);
