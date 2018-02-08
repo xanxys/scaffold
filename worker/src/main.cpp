@@ -9,6 +9,21 @@
 
 ActionExecutorSingleton g_actions;
 
+int16_t convert_acc(int16_t raw) {
+  return (static_cast<int32_t>(raw) * 61) / 1000;
+}
+
+void fill_sensor_status(SensorStatus& status) {
+  // TODO: scaling
+  status.gyro_x_cdps = -imu.gyro[1];
+  status.gyro_y_cdps = imu.gyro[0];
+  status.gyro_z_cdps = imu.gyro[2];
+
+  status.acc_x_mg = convert_acc(-imu.acc[1]);
+  status.acc_y_mg = convert_acc(imu.acc[0]);
+  status.acc_z_mg = convert_acc(imu.acc[2]);
+}
+
 class CommandHandler {
  private:
   MaybeSlice datagram;  // dependent on buffer inside twelite.
@@ -124,7 +139,7 @@ class CommandHandler {
     delay(10);
     {
       IOStatus status;
-      g_actions.fill_io_status(status);
+      fill_io_status(status);
 
       buffer[0] = PacketType_IO_STATUS;
       pb_ostream_t stream =
@@ -146,7 +161,9 @@ class CommandHandler {
       return;
     }
 
-    TWELITE_INFO();
+    // TODO: Read value.
+    g_async_sensor_ttl_ms = 5000;  // command.verbose_sensor_ttl_ms;
+    g_async_sensor_since_last_sent_ms = 0;
   }
 
   void exec_scan() {
@@ -246,6 +263,11 @@ class CommandHandler {
     }
     return value;
   }
+
+  void fill_io_status(IOStatus& status) const {
+    fill_sensor_status(status.sensor);
+    g_actions.fill_output_status(status.output);
+  }
 };
 
 constexpr uint8_t IMU_POLL_CYCLE = 19;
@@ -253,6 +275,14 @@ uint8_t imu_poll_index = 0;
 
 void loop1ms() {
   g_actions.loop1ms();
+
+  uint16_t ttl_ms = g_async_sensor_ttl_ms;
+  if (ttl_ms > 0) {
+    ttl_ms--;
+  }
+  g_async_sensor_ttl_ms = ttl_ms;
+  g_async_sensor_since_last_sent_ms++;
+
   if (imu_poll_index == 0) {
     imu.poll();
   }
@@ -306,6 +336,23 @@ int main() {
       twelite.restart_recv();
     }
     if (g_async_message_avail) {
+    }
+    if (g_async_sensor_ttl_ms > 0 && g_async_sensor_since_last_sent_ms > 100) {
+      IOStatus status;
+      status.output = OutputStatus_init_default;
+      fill_sensor_status(status.sensor);
+
+      uint8_t buffer[80];
+      buffer[0] = PacketType_IO_STATUS;
+      pb_ostream_t stream =
+          pb_ostream_from_buffer((pb_byte_t*)(buffer + 1), sizeof(buffer) - 1);
+      if (pb_encode(&stream, IOStatus_fields, &status)) {
+        twelite.send_datagram(buffer, 1 + stream.bytes_written);
+      } else {
+        TWELITE_ERROR(Cause_LOGIC_RT);
+      }
+
+      g_async_sensor_since_last_sent_ms = 0;
     }
   }
 }

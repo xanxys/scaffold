@@ -8,6 +8,8 @@ MultiplexedSensor sensor;
 
 volatile bool g_twelite_packet_recv_done = false;
 volatile bool g_async_message_avail = false;
+volatile uint16_t g_async_sensor_ttl_ms = 0;
+volatile uint16_t g_async_sensor_since_last_sent_ms = 0;
 
 void set_5v_power(bool enabled) {
   const uint8_t EN5V = _BV(0);

@@ -39,3 +39,6 @@ extern MultiplexedSensor sensor;
 // Worker-wide shared status flags.
 extern volatile bool g_twelite_packet_recv_done;
 extern volatile bool g_async_message_avail;
+
+extern volatile uint16_t g_async_sensor_ttl_ms;
+extern volatile uint16_t g_async_sensor_since_last_sent_ms;

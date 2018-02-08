@@ -271,9 +271,18 @@ class ActionExecutorSingleton {
     queue.fill_status(status.queue);
   }
 
-  void fill_io_status(IOStatus& status) const {
-    fill_status_sensor(status.sensor);
-    fill_status_output(status.output);
+    void fill_output_status(OutputStatus& status) const {
+    // TODO: Proper index mapping
+    status.loc_forward_vel = motor_vel[0];
+    status.loc_rotation_vel = motor_vel[1];
+
+    // Right block.
+    status.driver_lock_vel = motor_vel[2];
+    status.driver_z_pos = servo_pos[0];
+    status.driver_y_pos = servo_pos[1];
+
+    // Left block.
+    status.rail_arm_pos = servo_pos[1];
   }
 
  private:
@@ -306,35 +315,6 @@ class ActionExecutorSingleton {
     status.recv_byte = twelite.get_data_bytes_recv();
     status.sent_byte = twelite.get_data_bytes_sent();
     status.num_invalid_packet = twelite.get_num_invalid_packet();
-  }
-
-  void fill_status_sensor(SensorStatus& status) const {
-    // TODO: scaling
-    status.gyro_x_cdps = -imu.gyro[1];
-    status.gyro_y_cdps = imu.gyro[0];
-    status.gyro_z_cdps = imu.gyro[2];
-
-    status.acc_x_mg = convert_acc(-imu.acc[1]);
-    status.acc_y_mg = convert_acc(imu.acc[0]);
-    status.acc_z_mg = convert_acc(imu.acc[2]);
-  }
-
-  static int16_t convert_acc(int16_t raw) {
-    return (static_cast<int32_t>(raw) * 61) / 1000;
-  }
-
-  void fill_status_output(OutputStatus& status) const {
-    // TODO: Proper index mapping
-    status.loc_forward_vel = motor_vel[0];
-    status.loc_rotation_vel = motor_vel[1];
-
-    // Right block.
-    status.driver_lock_vel = motor_vel[2];
-    status.driver_z_pos = servo_pos[0];
-    status.driver_y_pos = servo_pos[1];
-
-    // Left block.
-    status.rail_arm_pos = servo_pos[1];
   }
 
   void commit_posvel() {
