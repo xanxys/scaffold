@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 class MaybeSlice {
  public:
   // Should be const, but non-const to avoid unnecessary local variable
@@ -9,10 +11,10 @@ class MaybeSlice {
   uint8_t* ptr;
   uint8_t size;
 
-  MaybeSlice() : ptr(NULL), size(0) {}
+  MaybeSlice() : ptr(nullptr), size(0) {}
   MaybeSlice(uint8_t* ptr, uint8_t size) : ptr(ptr), size(size) {}
 
-  bool is_valid() const { return ptr != NULL; }
+  bool is_valid() const { return ptr != nullptr; }
 
   MaybeSlice slice(uint8_t offset) const {
     if (offset > size) {

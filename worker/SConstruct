@@ -33,12 +33,17 @@ env.Library('build/libs.a', Glob('lib/*.cpp') + Glob('lib/*.c'))
 # For now, invoke "bazel build //proto:proto_nanopb" manually before calling "scons", whenever .proto files are updated.
 # bazel build //proto:proto_nanopb && scons
 
-env.Object('build/builder-main.o', 'build/main.cpp')
+code_objs  = []
+for x in Glob('src/*.cpp'):
+    fn = x.name[:-4]
+    obj = 'build/builder-%s.o' % fn
+    code_objs.append(obj)
+    env.Object(obj, 'build/%s.cpp' % fn)
 env.Object('build/proto.o', '../bazel-genfiles/proto/builder.pb.c')
 env.Object('build/pb_encode.o', '../nanopb/pb_encode.c')
 env.Object('build/pb_common.o', '../nanopb/pb_common.c')
 
-env.Program('build/builder-fw.elf', ['build/builder-main.o', 'build/libs.a', 'build/proto.o', 'build/pb_encode.o', 'build/pb_common.o'])
+env.Program('build/builder-fw.elf', code_objs + ['build/libs.a', 'build/proto.o', 'build/pb_encode.o', 'build/pb_common.o'])
 env.Copy('build/builder-fw.hex', 'build/builder-fw.elf')
 env.Dump('build/builder-disasm.S', 'build/builder-fw.elf')
 env.Alias('write-builder', env.WriteProg(None, 'build/builder-fw.hex'))

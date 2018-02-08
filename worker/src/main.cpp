@@ -4,15 +4,11 @@
 #include <proto/builder.pb.h>
 
 #include "action.hpp"
-#include "hardware_builder.hpp"
+#include "shared_state.h"
 
-ActionExecutorSingleton actions;
+ActionExecutorSingleton g_actions;
 
-// Command format:
-// To ensure enqueue correctness,
-// Command = CommandCode[a-zA-Z] CommandBody[^/]* ("\n" | "/")
-//
-class CommandProcessorSingleton {
+class CommandHandler {
  private:
   MaybeSlice datagram;  // dependent on buffer inside twelite.
   int r_ix;
@@ -20,33 +16,29 @@ class CommandProcessorSingleton {
   uint8_t buffer[80];
 
  public:
-  CommandProcessorSingleton() : r_ix(0) {}
+  CommandHandler(MaybeSlice datagram) : datagram(datagram), r_ix(0) {}
 
-  void loop() {
-    while (true) {
-      datagram = twelite.get_datagram();
-      r_ix = 0;
+  void handle() {
+    r_ix = 0;
+    indicator.flash_blocking();
 
-      indicator.flash_blocking();
-
-      char code = read();
-      switch (code) {
-        case 'x':
-          exec_cancel_actions();
-          break;
-        case 'p':
-          exec_print();
-          break;
-        case 's':
-          exec_scan();
-          break;
-        case 'e':
-          exec_enqueue();
-          break;
-        default:
-          TWELITE_ERROR(Cause_OVERMIND);  // unknown command
-          break;
-      }
+    char code = read();
+    switch (code) {
+      case 'x':
+        exec_cancel_actions();
+        break;
+      case 'p':
+        exec_print();
+        break;
+      case 's':
+        exec_scan();
+        break;
+      case 'e':
+        exec_enqueue();
+        break;
+      default:
+        TWELITE_ERROR(Cause_OVERMIND);  // unknown command
+        break;
     }
   }
 
@@ -106,7 +98,7 @@ class CommandProcessorSingleton {
 
  private:  // Command Handler
   void exec_cancel_actions() {
-    actions.cancel_all();
+    g_actions.cancel_all();
     TWELITE_INFO();  // Cancel executed.
   }
 
@@ -123,7 +115,7 @@ class CommandProcessorSingleton {
   void exec_print() {
     {
       Status status;
-      actions.fill_status(status);
+      g_actions.fill_status(status);
 
       buffer[0] = PacketType_STATUS;
       pb_ostream_t stream =
@@ -137,7 +129,7 @@ class CommandProcessorSingleton {
     delay(10);
     {
       IOStatus status;
-      actions.fill_io_status(status);
+      g_actions.fill_io_status(status);
 
       buffer[0] = PacketType_IO_STATUS;
       pb_ostream_t stream =
@@ -152,7 +144,7 @@ class CommandProcessorSingleton {
 
   void exec_scan() {
     I2CScanResult result;
-    actions.fill_i2c_scan_result(result);
+    g_actions.fill_i2c_scan_result(result);
 
     buffer[0] = PacketType_I2C_SCAN_RESULT;
     pb_ostream_t stream =
@@ -208,7 +200,7 @@ class CommandProcessorSingleton {
         break;
       }
     }
-    actions.enqueue(action);
+    g_actions.enqueue(action);
   }
 
   uint8_t safe_read_thresh() {
@@ -249,13 +241,11 @@ class CommandProcessorSingleton {
   }
 };
 
-CommandProcessorSingleton command_processor;
-
 constexpr uint8_t IMU_POLL_CYCLE = 19;
 uint8_t imu_poll_index = 0;
 
 void loop1ms() {
-  actions.loop1ms();
+  g_actions.loop1ms();
   if (imu_poll_index == 0) {
     imu.poll();
   }
@@ -288,16 +278,24 @@ int main() {
   indicator.flash_blocking();
   TWELITE_INFO();  // All HW initialized.
 
-  actions.init();
+  g_actions.init();
   // Initialize servo pos to safe (i.e. not colliding with rail) position.
   {
     Action action(1 /* dur_ms */);
     action.servo_pos[CIX_A] = 13;
     action.servo_pos[CIX_B] = 11;
-    actions.enqueue(action);
+    g_actions.enqueue(action);
   }
 
   // Fully initialized. Start realtime periodic process & idle tasks.
   setMillisHook(loop1ms);
-  command_processor.loop();
+  while (true) {
+    if (g_twelite_packet_recv_done) {
+      CommandHandler command_handler(twelite.get_datagram());
+      command_handler.handle();
+      twelite.restart_recv();
+    }
+    if (g_async_message_avail) {
+    }
+  }
 }

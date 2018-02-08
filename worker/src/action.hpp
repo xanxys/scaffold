@@ -1,9 +1,9 @@
 #pragma once
 
-#include "hardware_builder.hpp"
-
 #include <I2C.h>
 #include <proto/builder.pb.h>
+
+#include "shared_state.h"
 
 // Safely calculate va + (vb - va) * (ix / num)
 uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
