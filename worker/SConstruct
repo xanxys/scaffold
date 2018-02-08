@@ -39,11 +39,16 @@ for x in Glob('src/*.cpp'):
     obj = 'build/builder-%s.o' % fn
     code_objs.append(obj)
     env.Object(obj, 'build/%s.cpp' % fn)
+
+env.Depends('build/proto.o', '../bazel-genfiles/proto/builder.pb.h')
+env.Depends('build/builder-main.o', '../bazel-genfiles/proto/builder.pb.h')
+
 env.Object('build/proto.o', '../bazel-genfiles/proto/builder.pb.c')
 env.Object('build/pb_encode.o', '../nanopb/pb_encode.c')
+env.Object('build/pb_decode.o', '../nanopb/pb_decode.c')
 env.Object('build/pb_common.o', '../nanopb/pb_common.c')
 
-env.Program('build/builder-fw.elf', code_objs + ['build/libs.a', 'build/proto.o', 'build/pb_encode.o', 'build/pb_common.o'])
+env.Program('build/builder-fw.elf', code_objs + ['build/libs.a', 'build/proto.o', 'build/pb_encode.o', 'build/pb_decode.o', 'build/pb_common.o'])
 env.Copy('build/builder-fw.hex', 'build/builder-fw.elf')
 env.Dump('build/builder-disasm.S', 'build/builder-fw.elf')
 env.Alias('write-builder', env.WriteProg(None, 'build/builder-fw.hex'))

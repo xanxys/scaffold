@@ -14,3 +14,5 @@ QueueStatus.* int_size:IS_8
 Action.*_ms int_size:IS_16
 Action.*_vel int_size:IS_8
 Action.*_pos int_size:IS_8
+
+ReadSensorCommand.*_ms int_size:IS_16

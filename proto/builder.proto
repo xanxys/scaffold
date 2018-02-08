@@ -8,13 +8,10 @@ enum WorkerType {
 // Overmind -> worker commands.
 enum CommandType {
     RESERVED_CT = 0;
-    PRINT_STATUS = 1; // () -> STATUS, IO_STATUS
-    SCAN_I2C = 2;  // () -> I2C_SCAN_RESULT
-    ENQUEUE = 3;  // EnqueueCommand -> ENQUEUE_RESULT
-    SET_MODE = 4;  // SetModeCommand -> ()  (async: IO_STATUS, conditional)
-
-    // planned.
-    READ_SENSOR_DUMP = 5;
+    PRINT_STATUS = 112; // 'p'; () -> STATUS, IO_STATUS
+    SCAN_I2C = 115;  // 's' () -> I2C_SCAN_RESULT
+    ENQUEUE = 101;  // 'e' EnqueueCommand -> ENQUEUE_RESULT
+    READ_SENSOR = 114;  // 'r' ReadSensorCommand -> ()  (async: IO_STATUS, conditional)
 }
 
 // For compatibility reason, this won't be used as proto.
@@ -81,7 +78,7 @@ message EnqueueCommand {
     repeated NewAction action = 1;
 }
 
-message SetModeCommand {
+message ReadSensorCommand {
     // Emit sensor data very frequently (1Hz~10Hz) for given TTL period.
     // Overwrites current TTL. 0 means disable now.
     uint32 verbose_sensor_ttl_ms = 1;

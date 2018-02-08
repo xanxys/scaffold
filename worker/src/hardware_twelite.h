@@ -99,9 +99,9 @@ class TweliteInterface {
 
   void send_byte(uint8_t v);
 
-  void serial_write_cstr_blocking(const char* p);
-  void serial_write_byte_blocking(uint8_t v);
-  static char format_half_byte(uint8_t v);
+  inline void serial_write_cstr_blocking(const char* p);
+  inline void serial_write_byte_blocking(uint8_t v);
+  inline static char format_half_byte(uint8_t v);
 };
 
 #define TWELITE_INFO() \

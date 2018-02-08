@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <MsTimer2.h>
+#include <nanopb/pb_decode.h>
 #include <nanopb/pb_encode.h>
 #include <proto/builder.pb.h>
 
@@ -21,20 +22,19 @@ class CommandHandler {
   void handle() {
     r_ix = 0;
     indicator.flash_blocking();
-
-    char code = read();
+    uint8_t code = read();
     switch (code) {
-      case 'x':
-        exec_cancel_actions();
-        break;
-      case 'p':
+      case CommandType_PRINT_STATUS:
         exec_print();
         break;
-      case 's':
+      case CommandType_SCAN_I2C:
         exec_scan();
         break;
-      case 'e':
+      case CommandType_ENQUEUE:
         exec_enqueue();
+        break;
+      case CommandType_READ_SENSOR:
+        exec_read_sensor();
         break;
       default:
         TWELITE_ERROR(Cause_OVERMIND);  // unknown command
@@ -97,11 +97,6 @@ class CommandHandler {
   }
 
  private:  // Command Handler
-  void exec_cancel_actions() {
-    g_actions.cancel_all();
-    TWELITE_INFO();  // Cancel executed.
-  }
-
   void exec_enqueue() {
     while (true) {
       enqueue_single_action();
@@ -140,6 +135,18 @@ class CommandHandler {
         TWELITE_ERROR(Cause_LOGIC_RT);
       }
     }
+  }
+
+  void exec_read_sensor() {
+    ReadSensorCommand command;
+    pb_istream_t stream =
+        pb_istream_from_buffer(datagram.ptr + 1, datagram.size - 1);
+    if (!pb_decode(&stream, ReadSensorCommand_fields, &command)) {
+      TWELITE_ERROR(Cause_OVERMIND);  // unparsable
+      return;
+    }
+
+    TWELITE_INFO();
   }
 
   void exec_scan() {

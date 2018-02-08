@@ -28,8 +28,9 @@ class IMU {
   // 8.75mdps / LSB
   int16_t gyro[3];
 
-  // 0.061mg / LSB
   int16_t acc[3];
+
+  static constexpr float acc_scale = 0.061;  // mg/LSB
 
   IMU() {}
 

@@ -240,15 +240,6 @@ class ActionExecutorSingleton {
 
   bool is_idle() const { return queue.count() == 0 && !state.is_running(); }
 
-  void cancel_all() {
-    state = ActionExecState();
-    queue.clear();
-    for (int i = 0; i < N_MOTORS; i++) {
-      motor_vel[i] = 0;
-    }
-    commit_posvel();
-  }
-
   void fill_i2c_scan_result(I2CScanResult& result) const {
     result.type = I2CScanResult_ResultType_OK;
 
@@ -323,9 +314,13 @@ class ActionExecutorSingleton {
     status.gyro_y_cdps = imu.gyro[0];
     status.gyro_z_cdps = imu.gyro[2];
 
-    status.acc_x_mg = -imu.acc[1];
-    status.acc_y_mg = imu.acc[0];
-    status.acc_z_mg = imu.acc[2];
+    status.acc_x_mg = convert_acc(-imu.acc[1]);
+    status.acc_y_mg = convert_acc(imu.acc[0]);
+    status.acc_z_mg = convert_acc(imu.acc[2]);
+  }
+
+  static int16_t convert_acc(int16_t raw) {
+    return (static_cast<int32_t>(raw) * 61) / 1000;
   }
 
   void fill_status_output(OutputStatus& status) const {
