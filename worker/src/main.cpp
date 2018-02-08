@@ -291,8 +291,11 @@ int main() {
   setMillisHook(loop1ms);
   while (true) {
     if (g_twelite_packet_recv_done) {
-      CommandHandler command_handler(twelite.get_datagram());
-      command_handler.handle();
+      MaybeSlice datagram = twelite.get_datagram();
+      if (datagram.is_valid()) {
+        CommandHandler command_handler(datagram);
+        command_handler.handle();
+      }
       twelite.restart_recv();
     }
     if (g_async_message_avail) {

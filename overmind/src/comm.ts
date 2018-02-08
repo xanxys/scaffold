@@ -91,12 +91,15 @@ export class WorkerBridge {
                 packet.datagram = new Uint8Array(ovm_packet, 9);
                 console.log("incoming proto size", packet.datagram.length);
                 packet.ty = ty;
-                if (ty === builder_pb.PacketType.I2C_SCAN_RESULT) {
-                    packet.data = builder_pb.I2CScanResult.deserializeBinary(packet.datagram).toObject();
-                } else if (ty === builder_pb.PacketType.STATUS) {
-                    packet.data = builder_pb.Status.deserializeBinary(packet.datagram).toObject();
-                }  else if (ty === builder_pb.PacketType.IO_STATUS) {
-                    packet.data = builder_pb.IOStatus.deserializeBinary(packet.datagram).toObject();
+
+                const type_map = new Map();
+                type_map.set(builder_pb.PacketType.CHECKPOINT, builder_pb.Checkpoint);
+                type_map.set(builder_pb.PacketType.STATUS, builder_pb.Status);
+                type_map.set(builder_pb.PacketType.IO_STATUS, builder_pb.IOStatus);
+                type_map.set(builder_pb.PacketType.I2C_SCAN_RESULT, builder_pb.I2CScanResult);
+
+                if (type_map.has(packet.ty)) {
+                    packet.data = type_map.get(packet.ty).deserializeBinary(packet.datagram).toObject();
                 }
             }
         }

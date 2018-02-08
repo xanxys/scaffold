@@ -71,6 +71,8 @@ enum Cause {
 message Checkpoint {
     Criticality criticality = 1;
     Cause cause = 2;
+
+    string file = 4;
     uint32 at_line = 3;
 }
 

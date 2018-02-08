@@ -75,13 +75,14 @@ class TweliteInterface {
   uint32_t get_device_id();
 
   void restart_recv();
-  // Wait for next datagram addressed (including broadcast) to this device.
+
+  /** Returns datagram if DONE_OK and packet is valid, otherwise returns empty slice. */
   MaybeSlice get_datagram();
 
   // Send specified buffer.
   // Ideally size<=80 bytes to fit in one packet.
   void send_datagram(const uint8_t* ptr, uint8_t size);
-  void send_checkpoint(Criticality criticality, Cause cause, uint16_t line);
+  void send_checkpoint(Criticality criticality, Cause cause, uint16_t line, const char* filename);
 
   uint32_t get_data_bytes_sent() const;
   uint32_t get_data_bytes_recv() const;
@@ -104,8 +105,8 @@ class TweliteInterface {
 };
 
 #define TWELITE_INFO() \
-  twelite.send_checkpoint(Criticality_INFO, Cause_LOGIC, __LINE__)
+  twelite.send_checkpoint(Criticality_INFO, Cause_LOGIC, __LINE__, __FILE__)
 #define TWELITE_ERROR(cause) \
-  twelite.send_checkpoint(Criticality_ERROR, cause, __LINE__)
+  twelite.send_checkpoint(Criticality_ERROR, cause, __LINE__, __FILE__)
 #define TWELITE_SEVERE(cause) \
-  twelite.send_checkpoint(Criticality_SEVERE, cause, __LINE__)
+  twelite.send_checkpoint(Criticality_SEVERE, cause, __LINE__, __FILE__)

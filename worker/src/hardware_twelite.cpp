@@ -16,7 +16,7 @@ uint8_t warn_tx_buffer[80];
 #define SIGROW_SERNUM3 0x11
 
 #define TWELITE_ERROR_INTN(cause) \
-  send_checkpoint(Criticality_ERROR, cause, __LINE__)
+  send_checkpoint(Criticality_ERROR, cause, __LINE__, __FILE__)
 
 TweliteRecvStateMachine::TweliteRecvStateMachine() { reset(); }
 
@@ -108,34 +108,29 @@ void TweliteInterface::restart_recv() {
   recv_sm.reset();
 }
 
-// Wait for next datagram addressed (including broadcast) to this device.
 MaybeSlice TweliteInterface::get_datagram() {
-  while (true) {
-    restart_recv();
-    while (!recv_sm.is_done()) {
-    }
-
-    switch (recv_sm.get_state()) {
-      case TweliteRecvStateMachine::State::DONE_OK:
-        break;
-      case TweliteRecvStateMachine::State::DONE_ERR_INVALID:
-        num_invalid_packet++;
-        continue;
-      case TweliteRecvStateMachine::State::DONE_ERR_OVERFLOW:
-        TWELITE_ERROR_INTN(Cause_OVERMIND);
-        continue;
-
-      default:
-        TWELITE_ERROR_INTN(Cause_OVERMIND);  // shouldn't reach here.
-        continue;
-    }
-    MaybeSlice packet = recv_sm.get_buffer();
-    packet = validate_and_extract_modbus(packet);
-    packet = validate_and_extract_overmind(packet);
-    if (packet.is_valid()) {
-      return packet;
-    }
+  if (!recv_sm.is_done()) {
+    return MaybeSlice();
   }
+
+  switch (recv_sm.get_state()) {
+    case TweliteRecvStateMachine::State::DONE_OK:
+      break;
+    case TweliteRecvStateMachine::State::DONE_ERR_INVALID:
+      num_invalid_packet++;
+      return MaybeSlice();
+    case TweliteRecvStateMachine::State::DONE_ERR_OVERFLOW:
+      TWELITE_ERROR_INTN(Cause_OVERMIND);
+      return MaybeSlice();
+
+    default:
+      TWELITE_ERROR_INTN(Cause_OVERMIND);  // shouldn't reach here.
+      return MaybeSlice();
+  }
+  MaybeSlice packet = recv_sm.get_buffer();
+  packet = validate_and_extract_modbus(packet);
+  packet = validate_and_extract_overmind(packet);
+  return packet;
 }
 
 // Send specified buffer.
@@ -155,13 +150,14 @@ void TweliteInterface::send_datagram(const uint8_t* ptr, uint8_t size) {
 }
 
 void TweliteInterface::send_checkpoint(Criticality criticality, Cause cause,
-                                       uint16_t line) {
+                                       uint16_t line, const char* filename) {
   Checkpoint cp;
   cp.criticality = criticality;
   cp.cause = cause;
   cp.at_line = line;
+  strncpy(cp.file, filename, sizeof(cp.file));
 
-  uint8_t buffer[16];
+  uint8_t buffer[28];
   buffer[0] = PacketType_CHECKPOINT;
   pb_ostream_t stream =
       pb_ostream_from_buffer((pb_byte_t*)(buffer + 1), sizeof(buffer) - 1);
