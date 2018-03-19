@@ -19,7 +19,9 @@ void fill_sensor_status(SensorStatus& status) {
   status.gyro_y_cdps = imu.gyro[0];
   status.gyro_z_cdps = imu.gyro[2];
 
-  status.acc_x_mg = convert_acc(-imu.acc[1]);
+  //status.acc_x_mg = convert_acc(-imu.acc[1]);
+  //
+  status.acc_x_mg = odometry.vx;
   status.acc_y_mg = convert_acc(imu.acc[0]);
   status.acc_z_mg = convert_acc(imu.acc[2]);
 }
@@ -285,6 +287,7 @@ void loop1ms() {
 
   if (imu_poll_index == 0) {
     imu.poll();
+    odometry.poll();
   }
   imu_poll_index++;
   if (imu_poll_index >= IMU_POLL_CYCLE) {

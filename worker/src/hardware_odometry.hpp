@@ -12,7 +12,8 @@
  */
 class Odometry {
  private:
-  constexpr static uint8_t addr = 0x0c;
+  constexpr static uint8_t addr =
+      20;  // designed to be 0x0c, but somehow ended up being 20.
 
   struct ReadMeasurementResult {
     uint8_t status;
@@ -28,15 +29,16 @@ class Odometry {
   };
 
  public:
+  uint16_t vx = 0;
+
   void init() {
     // Enter "Burst Mode", with measurement in all magnetic channels (Z, Y, X).
-    I2c.write(addr, (uint8_t) 0x1e);
+    I2c.write(addr, (uint8_t)0x1e);
   }
 
-  uint16_t read() {
+  void poll() {
     ReadMeasurementResult result;
     I2c.read(addr, 7, reinterpret_cast<uint8_t*>(&result));
-
-    return result.xh * 256 + result.xl;
+    vx = ((uint16_t)result.xh) << 8 + result.xl;
   }
 };

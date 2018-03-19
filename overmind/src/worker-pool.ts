@@ -143,6 +143,7 @@ export class WorkerPool {
                 gVector.multiplyScalar(0.03);
                 gVector.z += 0.1;
                 this.hackWorldView.accVector.position.copy(gVector);
+                message.head = `IO_STATUS`;
             } else {
                 message.status = 'unknown';
                 message.head = `?${data.ty}?`;
