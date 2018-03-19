@@ -312,6 +312,9 @@ int main() {
   // Start 6-axis sensor.
   imu.init();
 
+  // Start odometry magnetic sensor.
+  odometry.init();
+
   indicator.flash_blocking();
   TWELITE_INFO();  // All HW initialized.
 

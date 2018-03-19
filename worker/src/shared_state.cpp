@@ -5,6 +5,7 @@ TweliteInterface twelite;
 IMU imu;
 DCMotor motor_screw(98);
 MultiplexedSensor sensor;
+Odometry odometry;
 
 volatile bool g_twelite_packet_recv_done = false;
 volatile bool g_async_message_avail = false;

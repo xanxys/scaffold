@@ -9,6 +9,7 @@
 #include "hardware_motor.hpp"
 #include "hardware_sensor.hpp"
 #include "hardware_twelite.h"
+#include "hardware_odometry.hpp"
 
 enum ServoIx : uint8_t { CIX_A, CIX_B, N_SERVOS };
 enum MotorIx : uint8_t { MV_TRAIN, MV_ORI, MV_SCREW_DRIVER, N_MOTORS };
@@ -35,6 +36,7 @@ extern TweliteInterface twelite;
 extern IMU imu;
 extern DCMotor motor_screw;
 extern MultiplexedSensor sensor;
+extern Odometry odometry;
 
 // Worker-wide shared status flags.
 extern volatile bool g_twelite_packet_recv_done;
