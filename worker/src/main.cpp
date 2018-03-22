@@ -22,8 +22,8 @@ void fill_sensor_status(SensorStatus& status) {
   //status.acc_x_mg = convert_acc(-imu.acc[1]);
   //
   status.acc_x_mg = odometry.vx;
-  status.acc_y_mg = convert_acc(imu.acc[0]);
-  status.acc_z_mg = convert_acc(imu.acc[2]);
+  status.acc_y_mg = 0; convert_acc(imu.acc[0]);
+  status.acc_z_mg = 0; //convert_acc(imu.acc[2]);
 }
 
 class CommandHandler {

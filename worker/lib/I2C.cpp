@@ -234,11 +234,6 @@ uint8_t I2C::write(uint8_t address, uint8_t registerAddress)
   return(returnStatus);
 }
 
-uint8_t I2C::write(int address, int registerAddress)
-{
-  return(write((uint8_t) address, (uint8_t) registerAddress));
-}
-
 uint8_t I2C::write(uint8_t address, uint8_t registerAddress, uint8_t data)
 {
   returnStatus = 0;
@@ -268,19 +263,6 @@ uint8_t I2C::write(uint8_t address, uint8_t registerAddress, uint8_t data)
     if(returnStatus == 1){return(7);}
     return(returnStatus);
   }
-  return(returnStatus);
-}
-
-uint8_t I2C::write(int address, int registerAddress, int data)
-{
-  return(write((uint8_t) address, (uint8_t) registerAddress, (uint8_t) data));
-}
-
-uint8_t I2C::write(uint8_t address, uint8_t registerAddress, char *data)
-{
-  uint8_t bufferLength = strlen(data);
-  returnStatus = 0;
-  returnStatus = write(address, registerAddress, (uint8_t*)data, bufferLength);
   return(returnStatus);
 }
 
@@ -317,11 +299,6 @@ uint8_t I2C::write(uint8_t address, uint8_t registerAddress, uint8_t *data, uint
     return(returnStatus);
   }
   return(returnStatus);
-}
-
-uint8_t I2C::read(int address, int numberBytes)
-{
-  return(read((uint8_t) address, (uint8_t) numberBytes));
 }
 
 uint8_t I2C::read(uint8_t address, uint8_t numberBytes)
@@ -365,11 +342,6 @@ uint8_t I2C::read(uint8_t address, uint8_t numberBytes)
     return(returnStatus);
   }
   return(returnStatus);
-}
-
-uint8_t I2C::read(int address, int registerAddress, int numberBytes)
-{
-  return(read((uint8_t) address, (uint8_t) registerAddress, (uint8_t) numberBytes));
 }
 
 uint8_t I2C::read(uint8_t address, uint8_t registerAddress, uint8_t numberBytes)
