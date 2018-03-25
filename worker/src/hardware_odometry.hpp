@@ -21,33 +21,20 @@ class Odometry {
   constexpr static uint8_t STATUS_BURST_MODE = _BV(7);
   constexpr static uint8_t STATUS_ERROR = _BV(4);
 
+  struct __attribute__((__packed__)) U16Be {
+    uint8_t h;
+    uint8_t l;
+  };
+
   struct __attribute__((__packed__)) ReadMeasurementResult {
     uint8_t status;
-
-    uint8_t xh;
-    uint8_t xl;
-
-    uint8_t yh;
-    uint8_t yl;
-
-    uint8_t zh;
-    uint8_t zl;
+    U16Be x, y, z;
   };
 
  public:
   bool init_success = false;
   int16_t vx = 0;
-
-  void write_reg(uint8_t mem_addr, uint16_t val) {
-    uint8_t command[3];
-    command[0] = val >> 8;
-    command[1] = val & 0xff;
-    command[2] = mem_addr << 2;
-    I2c.write(addr, WRITE_REGISTER, command, (uint8_t)sizeof(command));
-
-    uint8_t status;
-    I2c.read(addr, 1, &status);
-  }
+  int16_t vy = 0;
 
   void init() {
     // Reset command.
@@ -56,7 +43,7 @@ class Odometry {
 
     // Set RES{x,y,z} = 2, OSR=0, DIG_FILT=0
     write_reg(2, 0b101010 << 5);
-    
+
     // COMM_MODE=I2C (0b11), BURST_DATE_RATE=1
     write_reg(1, (0b11 << 13) | 1);
 
@@ -111,12 +98,28 @@ class Odometry {
       vx = 5001;
       return;
     }
+    vx = decode_value(result.x);
+    vy = decode_value(result.y);
+  }
 
-    uint16_t temp = (((uint16_t)result.xh) << 8) + result.xl;
+ private:
+  void write_reg(uint8_t mem_addr, uint16_t val) {
+    uint8_t command[3];
+    command[0] = val >> 8;
+    command[1] = val & 0xff;
+    command[2] = mem_addr << 2;
+    I2c.write(addr, WRITE_REGISTER, command, (uint8_t)sizeof(command));
+
+    uint8_t status;
+    I2c.read(addr, 1, &status);
+  }
+
+  int16_t decode_value(const U16Be& v) {
+    uint16_t temp = (((uint16_t)v.h) << 8) + v.l;
     if (temp > 0x8000) {
-      vx = temp - 0x8000;
+      return temp - 0x8000;
     } else {
-      vx = -(0x8000 - temp);
+      return -(0x8000 - temp);
     }
   }
 };
