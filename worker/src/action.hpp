@@ -14,11 +14,6 @@ uint8_t interp(uint8_t va, uint8_t vb, uint8_t ix, uint8_t num) {
 
 class Action {
  public:
-  // At the beginning of this action, report sensor cache.
-  // Note that reporting can cause some jankiness (astate few ms) in command
-  // execution.
-  bool report;
-
   // Set train=0 when sensor reading > this value.
   // 255 means disable this functionality.
   uint8_t train_cutoff_thresh = 255;
@@ -36,7 +31,7 @@ class Action {
 
   Action() : Action(0) {}
 
-  Action(uint16_t duration_ms) : report(false), duration_step(duration_ms) {
+  Action(uint16_t duration_ms) : duration_step(duration_ms) {
     for (int i = 0; i < N_SERVOS; i++) {
       servo_pos[i] = SERVO_POS_KEEP;
     }
@@ -228,9 +223,6 @@ class ActionExecutorSingleton {
       Action* new_action = queue.pop();
       state = ActionExecState(new_action, servo_pos);
       if (new_action != NULL) {
-        if (new_action->report) {
-          report_cache();
-        }
         tr_sensor_cache_ix = 0;
       }
     }
@@ -271,7 +263,7 @@ class ActionExecutorSingleton {
     queue.fill_status(status.queue);
   }
 
-    void fill_output_status(OutputStatus& status) const {
+  void fill_output_status(OutputStatus& status) const {
     // TODO: Proper index mapping
     status.loc_forward_vel = motor_vel[0];
     status.loc_rotation_vel = motor_vel[1];
@@ -286,29 +278,6 @@ class ActionExecutorSingleton {
   }
 
  private:
-  void report_cache() const {
-    // check send_async_size
-
-    /*
-    StringWriter writer((char*)async_tx_buffer, sizeof(async_tx_buffer));
-
-    JsonDict response(&writer);
-
-    response.insert("ty").set("SENSOR_CACHE");
-    response.insert("rate/ms").set(sensor.get_rate_ms());
-
-    JsonArray values = response.insert("val").as_array();
-    for (uint8_t i = 0; i < tr_sensor_cache_ix; i++) {
-      values.add().set(tr_sensor_cache[i]);
-    }
-    values.end();
-
-    response.end();
-    */
-
-    // twelite.queue_send_async(writer.size_written());
-  }
-
   void fill_status_system(SystemStatus& status) const {
     status.vcc_mv = sensor.get_vcc_mv();
     status.bat_mv = sensor.get_bat_mv();

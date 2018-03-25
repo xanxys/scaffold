@@ -19,11 +19,12 @@ void fill_sensor_status(SensorStatus& status) {
   status.gyro_y_cdps = imu.gyro[0];
   status.gyro_z_cdps = imu.gyro[2];
 
-  //status.acc_x_mg = convert_acc(-imu.acc[1]);
+  // status.acc_x_mg = convert_acc(-imu.acc[1]);
   //
   status.acc_x_mg = odometry.vx;
-  status.acc_y_mg = 0; convert_acc(imu.acc[0]);
-  status.acc_z_mg = 0; //convert_acc(imu.acc[2]);
+  status.acc_y_mg = 0;
+  convert_acc(imu.acc[0]);
+  status.acc_z_mg = 0;  // convert_acc(imu.acc[2]);
 }
 
 class CommandHandler {
@@ -197,7 +198,7 @@ class CommandHandler {
       char target = read();
       switch (target) {
         case '!':
-          action.report = true;
+          // action.report = true;
           break;
         case 'a':
           action.servo_pos[CIX_A] = safe_read_pos();
