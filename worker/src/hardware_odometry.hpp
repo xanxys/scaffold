@@ -56,6 +56,7 @@ class Odometry {
   bool init_success = false;
   int16_t vx = 0;
   int16_t vy = 0;
+  uint8_t rot = 0;
 
   void init() {
     // Reset command.
@@ -121,7 +122,7 @@ class Odometry {
     }
     vx = decode_value(result.x);
     vy = decode_value(result.y);
-    atan2(vx >> 8, vy >> 8);
+    rot = atan2(vx >> 8, vy >> 8);
   }
 
  private:
@@ -162,7 +163,7 @@ class Odometry {
     uint8_t ix_b = 0;
     uint8_t ix_e = QUAD_ANGLE;
 
-    while (ix_b != ix_e) {
+    while (ix_b + 1 < ix_e) {
       uint8_t ix_m = (ix_b + ix_e) >> 1;
 
       // sin(i)/cos(i) > y/x   <=>  sin(i)*x > cos(i)*y
