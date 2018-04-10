@@ -27,16 +27,13 @@
             </div>
           </div>
           <br/>
-
-          <div v-if="show_raw">
-            <!-- Sensor readings -->
-            <div v-if="worker.wtype === 'TB'">
-                <line-chart :width="300" :height="200" :data="worker.readings"/>
-            </div>
-          </div>
         </div>
 
         <div class="col-md-3">
+          <!-- Sensor readings -->
+          <div v-if="worker.wtype === 'TB'">
+              <line-chart :width="300" :height="200" :data="worker.readings"/>
+          </div>
           <table class="table">
            <tbody style="max-height: 250px; overflow-y: auto; display: block">
              <tr v-for="msg in worker.messages"
@@ -98,7 +95,7 @@ Vue.component('line-chart', {
 });
 
 export default {
-    props: ['worker', 'show_raw'],
+    props: ['worker'],
     data() {
       return {
         command_palette: "",
