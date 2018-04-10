@@ -5,6 +5,11 @@
         <button style="float:right" @click='update_info' class="btn btn-default" title="refresh now">
           <span class="glyphicon glyphicon-refresh"></span>
         </button>
+        <button style="float:right" @click="setContinuous(!continuous)" class="btn btn-warning" title="toggle continuous refreshing">
+          <span class="glyphicon glyphicon-refresh"></span>
+          <span v-if="continuous">stop continuous</span>
+          <span v-if="!continuous">start continuous</span>
+        </button>
     </div>
     <div class="panel-body row">
         <div class="col-md-2">
@@ -100,6 +105,7 @@ export default {
       return {
         command_palette: "",
         commandHistory: new CommandHistory(),
+        continuous: false,
       };
     },
     methods: {
@@ -143,6 +149,10 @@ export default {
 
         update_info() {
             this.command('p');
+        },
+
+        setContinuous(newValue) {
+          this.continuous = newValue;
         },
     },
     computed: {
