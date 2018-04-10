@@ -23,7 +23,7 @@ export interface Packet {
 
 export class WorkerBridge {
     private port: any;
-    path = '/dev/ttyUSB0';
+    path: string;
     isOpen = false;
     latestPacket?: Date;
     private handlePacket?: (packet: Packet) => void;
@@ -35,6 +35,7 @@ export class WorkerBridge {
         console.log(builder_pb);
         let msg = builder_pb.I2CScanResult.deserializeBinary(testpb);
         console.log(msg, msg.getType(), msg.getDeviceList(), msg.toObject());
+        this.path = this.findDevice();
     }
 
     open(handleUpdate: (br: WorkerBridge) => void, handlePacket: (packet: Packet) => void): void {
@@ -62,6 +63,18 @@ export class WorkerBridge {
         const parser = new SerialPort.parsers.Readline();
         this.port.pipe(parser);
         parser.on('data', data => this.onData(data));
+    }
+
+    private findDevice(): string {
+        for (let path of ['/dev/ttyUSB0', '/dev/ttyUSB1']) {
+            try {
+                fs.accessSync(path, fs.constants.R_OK | fs.constants.W_OK);
+                return path;
+            } catch (err) {
+                // do nothing
+            }
+        }
+        return '<not found>';
     }
 
     private onData(tweliteData: string) {
