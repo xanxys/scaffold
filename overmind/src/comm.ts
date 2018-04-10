@@ -28,6 +28,8 @@ export class WorkerBridge {
     latestPacket?: Date;
     private handlePacket?: (packet: Packet) => void;
 
+    logPath = './state/packet_log';
+
     constructor(private fakePath?: string) {
         let testpb = Uint8Array.from([18, 2, 98, 106]);
         console.log(builder_pb);
@@ -103,6 +105,13 @@ export class WorkerBridge {
                 }
             }
         }
+
+        const packetLogEntry = {
+            time: new Date().toISOString(),
+            packet: packet,
+        };
+
+        fs.appendFile(this.logPath, JSON.stringify(packetLogEntry) + '\n', console.error);
         this.latestPacket = new Date();
         this.handlePacket(packet);
     }
