@@ -115,6 +115,8 @@ export class WorkerBridge {
 
                 if (type_map.has(packet.ty)) {
                     packet.data = type_map.get(packet.ty).deserializeBinary(packet.datagram).toObject();
+                } else {
+                    console.error("Unknown PacketType=", packet.ty);
                 }
             }
         }
@@ -123,8 +125,9 @@ export class WorkerBridge {
             time: new Date().toISOString(),
             packet: packet,
         };
-
-        fs.appendFile(this.logPath, JSON.stringify(packetLogEntry) + '\n', console.error);
+        
+        console.log(packetLogEntry);
+        fs.appendFileSync(this.logPath, JSON.stringify(packetLogEntry) + '\n');
         this.latestPacket = new Date();
         this.handlePacket(packet);
     }

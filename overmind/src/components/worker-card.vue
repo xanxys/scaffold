@@ -12,13 +12,6 @@
         </button>
     </div>
     <div class="panel-body row">
-        <div class="col-md-2">
-          <div :class="worker.power.classes">
-            <span class="glyphicon glyphicon-off"></span> {{worker.power.desc}}
-          </div>
-          <b>{{desc_plan}}</b>
-        </div>
-
         <div class="col-md-6">
           <input size="30" v-model="command_palette" @keyup.enter="send_palette"/><br/>
           <br/>
@@ -32,6 +25,17 @@
             </div>
           </div>
           <br/>
+        </div>
+
+        <div class="col-md-3">
+          STATUS
+          <pre>{{JSON.stringify(worker.status_cont, null, 1)}}</pre>
+
+          IO_STATUS
+          <pre>{{JSON.stringify(worker.io_status_cont, null, 1)}}</pre>
+
+          I2C_SCAN_RESULT
+          <pre>{{JSON.stringify(worker.i2c_scan_result_cont, null, 1)}}</pre>
         </div>
 
         <div class="col-md-3">

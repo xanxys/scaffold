@@ -15,6 +15,16 @@ interface Worker {
     out: Array<any>;
     power: any;
     readings: Array<any>;
+
+    //
+    status_time: Date;
+    status_cont: any;
+
+    io_status_time: Date;
+    io_status_cont: any;
+
+    i2c_scan_result_time: Date;
+    i2c_scan_result_cont: any;
 }
 
 interface WorkerEntry {
@@ -33,15 +43,13 @@ export class WorkerPool {
     hackWorldView: any;
 
     private readonly actionsPath = "state/workers.json";
-
-    public readonly typeToAddr = new Map([
-        ['FDW-RS', 2165185564],
-        ['TB', 4278401023]
-    ]);
+    private readonly workerTypeMapping: Map<number, string> = new Map();
 
     constructor(private bridge: WorkerBridge) {
         this.workers = [];
         this.lastUninit = null;
+
+        this.workerTypeMapping[builder_pb.WorkerType.BUILDER] = "TB";
 
         fs.readFile(this.actionsPath, "utf8", (err, data) => {
             const parsedData = <Array<WorkerEntry>>JSON.parse(data).workers;
@@ -98,57 +106,53 @@ export class WorkerPool {
     }
  
     handleDatagramInWorker(worker: Worker, packet: Packet) {
-        let message: any = {
-            status: 'known', // known, unknown, corrupt
-            timestamp: packet.srcTs / 1e3,
-        };
-        if (packet.data === null) {
-            message.status = 'corrupt';
-            message.head = 'CORRUPT JSON';
-            message.desc = String.fromCharCode.apply(String, packet.datagram);
-        } else if (packet.data.ty === undefined && packet.ty === undefined) {
-            message.status = 'corrupt';
-            message.head = 'MISSING TYPE';
-            message.desc = JSON.stringify(packet, null, 2);
-        } else {
-            let data = packet.data;
-            message.head = data.ty;
-            message.desc = JSON.stringify(data, null, 2);
-
-            if (data.ty === 'STATUS') {
-                worker.wtype = data.wtype;
-                worker.out = data.out;
-                let vcc = data.system['vcc/mV'];
-                let bat = data.system['bat/mV'];
-                if (vcc < bat) {
-                    // Known power init failure mode.
-                    worker.power.classes = {
-                        "bg-danger": true
-                    };
-                } else if (bat < 3300) {
-                    worker.power.classes = {
-                        "bg-warning": true
-                    };
-                } else {
-                    worker.power.classes = {
-                        "bg-primary": true
-                    };
-                }
-                worker.power.desc = bat + 'mV (Vcc=' + vcc + 'mV)';
-            } else if (data.ty === 'SENSOR_CACHE') {
-                worker.readings = worker.readings.concat(data.val);
-            } else if (packet.ty === builder_pb.PacketType.IO_STATUS) {
-                const gVector = new THREE.Vector3(data.sensor.accXMg, data.sensor.accYMg, data.sensor.accZMg).multiplyScalar(1e-3);
-                console.log('acc', gVector);
-                gVector.multiplyScalar(0.03);
-                gVector.z += 0.1;
-                this.hackWorldView.accVector.position.copy(gVector);
-                message.head = `IO_STATUS`;
-            } else {
-                message.status = 'unknown';
-                message.head = `?${data.ty}?`;
-            }
+        if (packet.data === null || packet.ty === undefined) {
+            console.error("Corrupt packet", packet);
+            let message: any = {
+                status: 'corrupt',
+                head: 'CORRUPT',
+                desc: String.fromCharCode.apply(String, packet.datagram),
+                timestamp: packet.srcTs / 1e3,
+            };
+            worker.messages.unshift(message);
+            return;
         }
-        worker.messages.unshift(message);
+
+        const data = packet.data;
+        if (packet.ty === builder_pb.PacketType.STATUS) {
+            worker.wtype = this.workerTypeMapping[data.workerType];
+
+            worker.status_time = new Date();
+            worker.status_cont = data;
+        } else if (packet.ty === builder_pb.PacketType.I2C_SCAN_RESULT) {
+            worker.i2c_scan_result_time = new Date();
+            worker.i2c_scan_result_cont = data;
+        } else if (packet.ty === builder_pb.PacketType.IO_STATUS) {
+            worker.io_status_time = new Date();
+            worker.io_status_cont = data;
+
+            const gVector = new THREE.Vector3(data.sensor.accXMg, data.sensor.accYMg, data.sensor.accZMg).multiplyScalar(1e-3);
+            console.log('acc', gVector);
+            gVector.multiplyScalar(0.03);
+            gVector.z += 0.1;
+            this.hackWorldView.accVector.position.copy(gVector);
+        } else if (packet.ty === builder_pb.PacketType.CHECKPOINT) {
+            let critName = '?';
+            new Map(Object.entries(builder_pb.Criticality)).forEach((enumValue: number, enumName: string) => {
+                console.log(enumName, enumValue);
+                if (enumValue === data.criticality) {
+                    critName = enumName;
+                }
+            });
+            let message: any = {
+                status: 'known',
+                head: 'Checkpoint(' + critName + ')',
+                desc: JSON.stringify(data, null, 2),
+                timestamp: packet.srcTs / 1e3,
+            };
+            worker.messages.unshift(message);
+        } else {
+            console.error("Unhandled packet type", packet.ty);
+        }
     }
 }
