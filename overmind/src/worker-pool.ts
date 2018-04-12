@@ -6,6 +6,7 @@ import { WorkerAddr, WorkerBridge } from './comm';
 import * as fs from 'fs';
 import * as builder_pb from './builder_pb';
 import * as THREE from 'three';
+import { enumNameOf } from './functional';
 
 interface Worker {
     addr: number;
@@ -104,7 +105,7 @@ export class WorkerPool {
             size: 50
         });
     }
- 
+
     handleDatagramInWorker(worker: Worker, packet: Packet) {
         if (packet.data === null || packet.ty === undefined) {
             console.error("Corrupt packet", packet);
@@ -137,22 +138,20 @@ export class WorkerPool {
             gVector.z += 0.1;
             this.hackWorldView.accVector.position.copy(gVector);
         } else if (packet.ty === builder_pb.PacketType.CHECKPOINT) {
-            let critName = '?';
-            new Map(Object.entries(builder_pb.Criticality)).forEach((enumValue: number, enumName: string) => {
-                console.log(enumName, enumValue);
-                if (enumValue === data.criticality) {
-                    critName = enumName;
-                }
-            });
-            let message: any = {
-                status: 'known',
-                head: 'Checkpoint(' + critName + ')',
-                desc: JSON.stringify(data, null, 2),
-                timestamp: packet.srcTs / 1e3,
-            };
-            worker.messages.unshift(message);
+            this.handleCheckpoint(worker, packet, data);
         } else {
             console.error("Unhandled packet type", packet.ty);
         }
+    }
+
+    private handleCheckpoint(worker: Worker, packet: Packet, data: builder_pb.Checkpoint) {
+        const critName = enumNameOf(data.criticality, builder_pb.Criticality);
+        let message: any = {
+            status: 'known',
+            head: `${critName}:L${data.atLine}@${data.file}`,
+            desc: `${enumNameOf(data.cause, builder_pb.Cause)} ${critName}`,
+            timestamp: packet.srcTs / 1e3,
+        };
+        worker.messages.unshift(message);
     }
 }

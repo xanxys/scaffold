@@ -96,7 +96,6 @@ export class WorkerBridge {
             packet.src = new DataView(ovm_packet).getUint32(0);
             packet.srcTs = new DataView(ovm_packet).getUint32(4);
             const ty = new DataView(ovm_packet).getUint8(8);
-            console.log(ty);
             if (ty === builder_pb.PacketType.LEGACY) {
                 packet.datagram = new Uint8Array(ovm_packet, 8);
                 try {
@@ -104,7 +103,6 @@ export class WorkerBridge {
                 } catch (e) { }
             } else {
                 packet.datagram = new Uint8Array(ovm_packet, 9);
-                console.log("incoming proto size", packet.datagram.length);
                 packet.ty = ty;
 
                 const type_map = new Map();
@@ -125,8 +123,7 @@ export class WorkerBridge {
             time: new Date().toISOString(),
             packet: packet,
         };
-        
-        console.log(packetLogEntry);
+
         fs.appendFileSync(this.logPath, JSON.stringify(packetLogEntry) + '\n');
         this.latestPacket = new Date();
         this.handlePacket(packet);

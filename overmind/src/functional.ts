@@ -11,3 +11,13 @@ export function comparing<V, K>(fn: (val: V) => K): (val1: V, val2: V) => number
         return 0;
     };
 }
+
+export function enumNameOf(protoVal: number, protoEnumObj: any, defaultValue = null): string? {
+    let name: string = null;
+    new Map(Object.entries(protoEnumObj)).forEach((enumValue: number, enumName: string) => {
+        if (enumValue === protoVal) {
+            name = enumName;
+        }
+    });
+    return name;
+}
