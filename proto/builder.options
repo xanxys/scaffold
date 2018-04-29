@@ -7,7 +7,11 @@ SystemStatus.*_mv int_size:IS_16
 SystemStatus.num_* int_size:IS_16
 
 OutputStatus.* int_size:IS_8
-SensorStatus.* int_size:IS_16
+
+SensorStatus.gryo_* int_size:IS_16
+SensorStatus.acc_* int_size:IS_16
+SensorStatus.optical_* int_size:IS_8
+
 ExecStatus.*_ms int_size:IS_16
 QueueStatus.* int_size:IS_8
 

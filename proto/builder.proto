@@ -152,6 +152,9 @@ message SensorStatus {
     sint32 acc_x_mg = 4;
     sint32 acc_y_mg = 5;
     sint32 acc_z_mg = 6;
+
+    // Rail sensor.
+    uint32 optical_rail = 7;
 }
 
 // Actuator output values at certain time.

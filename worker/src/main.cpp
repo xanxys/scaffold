@@ -25,6 +25,8 @@ void fill_sensor_status(SensorStatus& status) {
   status.acc_x_mg = odometry.vx;
   status.acc_y_mg = odometry.rot;
   status.acc_z_mg = 0;
+
+  status.optical_rail = sensor.get_sensor2();
 }
 
 class CommandHandler {
