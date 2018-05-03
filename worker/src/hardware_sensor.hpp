@@ -59,7 +59,9 @@ class MultiplexedSensor {
   uint8_t get_sensor_v() const { return value_cache[PHASE_SEN_T] >> 2; }
 
   uint16_t get_bat_mv() const {
-    uint32_t t = value_cache[PHASE_BAT] * 5000L;
+    // Vref = Vcc
+    // Vadc = Vbat / 2 (halved by the resistors)
+    uint32_t t = value_cache[PHASE_BAT] * (get_vcc_mv() * 2L);
     t /= 1024L;
     return t;
   }
