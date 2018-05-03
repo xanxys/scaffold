@@ -58,6 +58,7 @@ class Odometry {
   int16_t vx = 0;
   int16_t vy = 0;
 
+  // As seen from X+, CCW is positive (=forward)
   uint8_t angle = 0;
   int8_t num_rot = 0;
 
@@ -125,20 +126,23 @@ class Odometry {
     }
     vx = decode_value(result.x);
     vy = decode_value(result.y);
-    const uint8_t new_angle = atan2(vx >> 8, vy >> 8);
-    if (new_angle < 128) {
-      if (angle >= 128) {
-        num_rot++;
+    const uint8_t new_angle = 256 - atan2(vx >> 8, vy >> 8);  // convert from sensor coords to human coords.
+    const uint8_t delta = new_angle - angle;
+    if (delta < 128) {
+      // real angle increased
+      if (new_angle < angle) {
+        num_rot++;  // overflown
       }
     } else {
-      if (angle < 128) {
-        num_rot--;
+      // real angle decreased
+      if (new_angle > angle) {
+        num_rot--;  // underflown
       }
     }
     angle = new_angle;
   }
 
-  int16_t get_rot() const { return num_rot * 256 + angle; }
+  int16_t get_rot() const { return ((int16_t)num_rot) * 256 + angle; }
 
  private:
   void write_reg(uint8_t mem_addr, uint16_t val) {
