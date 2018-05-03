@@ -130,6 +130,10 @@ MaybeSlice TweliteInterface::get_datagram() {
   MaybeSlice packet = recv_sm.get_buffer();
   packet = validate_and_extract_modbus(packet);
   packet = validate_and_extract_overmind(packet);
+  if (packet.size > 0) {
+    num_valid_packet++;
+    data_bytes_recv += packet.size;
+  }
   return packet;
 }
 
@@ -174,6 +178,10 @@ uint32_t TweliteInterface::get_data_bytes_sent() const {
 
 uint32_t TweliteInterface::get_data_bytes_recv() const {
   return data_bytes_recv;
+}
+
+uint16_t TweliteInterface::get_num_valid_packet() const {
+  return num_valid_packet;
 }
 
 uint16_t TweliteInterface::get_num_invalid_packet() const {

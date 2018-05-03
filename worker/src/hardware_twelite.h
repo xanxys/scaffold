@@ -57,10 +57,11 @@ class TweliteRecvStateMachine {
 
 class TweliteInterface {
  private:
-  // Size of 01 command data (excludes TWELITE header / csum) sent.
+  // Size of 01 command data (excludes TWELITE header / csum / overmind packet header (i.e. addr / timestamp)) sent.
   uint32_t data_bytes_sent = 0;
   uint32_t data_bytes_recv = 0;
 
+  uint16_t num_valid_packet = 0;
   uint16_t num_invalid_packet = 0;
 
   TweliteRecvStateMachine recv_sm;
@@ -86,6 +87,7 @@ class TweliteInterface {
 
   uint32_t get_data_bytes_sent() const;
   uint32_t get_data_bytes_recv() const;
+  uint16_t get_num_valid_packet() const;
   uint16_t get_num_invalid_packet() const;
 
  private:

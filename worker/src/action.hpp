@@ -283,6 +283,7 @@ class ActionExecutorSingleton {
     status.bat_mv = sensor.get_bat_mv();
     status.recv_byte = twelite.get_data_bytes_recv();
     status.sent_byte = twelite.get_data_bytes_sent();
+    status.num_valid_packet = twelite.get_num_valid_packet();
     status.num_invalid_packet = twelite.get_num_invalid_packet();
   }
 

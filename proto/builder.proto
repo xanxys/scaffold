@@ -134,11 +134,13 @@ message IOStatus {
     OutputStatus output = 2;
 }
 
+// Next ID: 7
 message SystemStatus {
     uint32 vcc_mv = 1;
     uint32 bat_mv = 2;
     uint32 recv_byte = 3;
     uint32 sent_byte = 4;
+    uint32 num_valid_packet = 6;
     uint32 num_invalid_packet = 5;
 }
 
