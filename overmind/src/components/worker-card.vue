@@ -28,13 +28,13 @@
         </div>
 
         <div class="col-md-3">
-          STATUS
+          STATUS {{worker.status_time ? worker.status_time.toLocaleTimeString() : "unavailable"}}
           <pre>{{JSON.stringify(worker.status_cont, null, 1)}}</pre>
 
-          IO_STATUS
+          IO_STATUS {{worker.io_status_time ? worker.io_status_time.toLocaleTimeString() : "unavailable"}}
           <pre>{{JSON.stringify(worker.io_status_cont, null, 1)}}</pre>
 
-          I2C_SCAN_RESULT
+          I2C_SCAN_RESULT {{worker.i2c_scan_result_time ? worker.i2c_scan_result_time.toLocaleTimeString() : "unavailable"}}
           <pre>{{JSON.stringify(worker.i2c_scan_result_cont, null, 1)}}</pre>
         </div>
 
