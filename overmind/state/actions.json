@@ -4,13 +4,13 @@
       "wtype": "TB",
       "seq": "100t70,1!t0",
       "memo": "BackBitRp",
-      "used": 234
+      "used": 288
     },
     {
       "wtype": "TB",
       "seq": "100t-70,1!t0",
       "memo": "FwdBitRp",
-      "used": 202
+      "used": 238
     },
     {
       "wtype": "TB",
@@ -47,6 +47,12 @@
       "seq": "300v-120,700v-100S100,50v-80,1v0",
       "memo": "Rn",
       "used": 45
+    },
+    {
+      "wtype": "TB",
+      "seq": "200t-100,1t0",
+      "memo": "FwdB",
+      "used": 32
     },
     {
       "wtype": "TB",
@@ -110,9 +116,15 @@
     },
     {
       "wtype": "TB",
+      "seq": "200t100,1t0",
+      "memo": "BackB",
+      "used": 3
+    },
+    {
+      "wtype": "TB",
       "seq": "100t120,1!t0",
       "memo": "BackStrong",
-      "used": 1
+      "used": 26
     },
     {
       "wtype": "TB",

@@ -23,10 +23,11 @@ void fill_sensor_status(SensorStatus& status) {
   // status.acc_y_mg = convert_acc(imu.acc[0]);
   // status.acc_z_mg = convert_acc(imu.acc[2]);
   status.acc_x_mg = odometry.vx;
-  status.acc_y_mg = odometry.rot;
+ // status.acc_y_mg = odometry.rot;
   status.acc_z_mg = 0;
 
   status.optical_rail = sensor.get_sensor2();
+  status.odometry_rail = odometry.get_rot();
 }
 
 class CommandHandler {

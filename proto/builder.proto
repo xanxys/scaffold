@@ -155,6 +155,10 @@ message SensorStatus {
 
     // Rail sensor.
     uint32 optical_rail = 7;
+
+    // lower 8 bit: rotation parts
+    // upper 8 bit: number of rotations
+    sint32 odometry_rail = 8; 
 }
 
 // Actuator output values at certain time.

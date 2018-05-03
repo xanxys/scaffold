@@ -45,6 +45,7 @@ class Odometry {
       204, 201, 197, 193, 188, 184, 180, 175, 171, 166, 161, 156, 151,
       146, 141, 136, 131, 125, 120, 114, 109, 103, 97,  91,  85,  79,
       74,  68,  61,  55,  49,  43,  37,  31,  24,  18,  12,  6};
+
   const uint8_t QUAD_SIN[QUAD_ANGLE] = {
       0,   6,   12,  18,  24,  31,  37,  43,  49,  55,  61,  68,  74,
       79,  85,  91,  97,  103, 109, 114, 120, 125, 131, 136, 141, 146,
@@ -56,7 +57,9 @@ class Odometry {
   bool init_success = false;
   int16_t vx = 0;
   int16_t vy = 0;
-  uint8_t rot = 0;
+
+  uint8_t angle = 0;
+  int8_t num_rot = 0;
 
   void init() {
     // Reset command.
@@ -122,8 +125,20 @@ class Odometry {
     }
     vx = decode_value(result.x);
     vy = decode_value(result.y);
-    rot = atan2(vx >> 8, vy >> 8);
+    const uint8_t new_angle = atan2(vx >> 8, vy >> 8);
+    if (new_angle < 128) {
+      if (angle >= 128) {
+        num_rot++;
+      }
+    } else {
+      if (angle < 128) {
+        num_rot--;
+      }
+    }
+    angle = new_angle;
   }
+
+  int16_t get_rot() const { return num_rot * 256 + angle; }
 
  private:
   void write_reg(uint8_t mem_addr, uint16_t val) {
